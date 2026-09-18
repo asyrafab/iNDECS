@@ -24,16 +24,16 @@ class PkmRegistrationTest extends TestCase
 
     public function test_an_officer_can_register_a_complete_pkm_application(): void
     {
-        $response = $this->post(route('pkm.store'), $this->validPayload());
+        $response = $this->post(route('perancang.store'), $this->validPayload());
 
         $application = Application::query()->firstOrFail();
 
-        $response->assertRedirect(route('pkm.show', $application));
+        $response->assertRedirect(route('perancang.show', $application));
         $this->assertSame('PKM/2026/00001', $application->application_reference);
         $this->assertSame(ApplicationStage::Registration, $application->current_stage);
         $this->assertSame(ApplicationStatus::Submitted, $application->current_status);
 
-        $this->assertDatabaseHas('pkm_applications', [
+        $this->assertDatabaseHas('app_pkm_applications', [
             'application_id' => $application->id,
             'permission_category' => 'Pembangunan Baharu',
             'proposed_land_use' => 'Perumahan',
@@ -41,7 +41,7 @@ class PkmRegistrationTest extends TestCase
         $this->assertDatabaseCount('application_parties', 2);
         $this->assertDatabaseCount('application_sites', 1);
         $this->assertDatabaseCount('application_lots', 2);
-        $this->assertDatabaseCount('pkm_components', 1);
+        $this->assertDatabaseCount('app_pkm_components', 1);
         $this->assertDatabaseCount('stage_histories', 1);
         $this->assertDatabaseCount('audit_logs', 1);
 
@@ -52,11 +52,11 @@ class PkmRegistrationTest extends TestCase
 
     public function test_reference_numbers_are_sequential_within_the_submission_year(): void
     {
-        $this->post(route('pkm.store'), $this->validPayload())->assertRedirect();
+        $this->post(route('perancang.store'), $this->validPayload())->assertRedirect();
 
         $secondPayload = $this->validPayload();
         $secondPayload['application_title'] = 'Cadangan Kedua';
-        $this->post(route('pkm.store'), $secondPayload)->assertRedirect();
+        $this->post(route('perancang.store'), $secondPayload)->assertRedirect();
 
         $this->assertSame(
             ['PKM/2026/00001', 'PKM/2026/00002'],
@@ -67,10 +67,10 @@ class PkmRegistrationTest extends TestCase
 
     public function test_a_submitted_application_can_enter_completeness_review_once(): void
     {
-        $this->post(route('pkm.store'), $this->validPayload());
+        $this->post(route('perancang.store'), $this->validPayload());
         $application = Application::query()->firstOrFail();
 
-        $this->post(route('pkm.start-review', $application))
+        $this->post(route('perancang.start-review', $application))
             ->assertRedirect()
             ->assertSessionHas('success');
 
@@ -81,7 +81,7 @@ class PkmRegistrationTest extends TestCase
         $this->assertDatabaseCount('stage_histories', 2);
         $this->assertDatabaseCount('audit_logs', 2);
 
-        $this->post(route('pkm.start-review', $application))
+        $this->post(route('perancang.start-review', $application))
             ->assertRedirect()
             ->assertSessionHas('error');
 
@@ -93,7 +93,7 @@ class PkmRegistrationTest extends TestCase
         $payload = $this->validPayload();
         $payload['lots'] = [];
 
-        $this->post(route('pkm.store'), $payload)
+        $this->post(route('perancang.store'), $payload)
             ->assertSessionHasErrors('lots');
 
         $this->assertDatabaseCount('applications', 0);
@@ -101,15 +101,15 @@ class PkmRegistrationTest extends TestCase
 
     public function test_registered_application_is_visible_in_the_workspace(): void
     {
-        $this->post(route('pkm.store'), $this->validPayload());
+        $this->post(route('perancang.store'), $this->validPayload());
         $application = Application::query()->firstOrFail();
 
-        $this->get(route('pkm.index'))
+        $this->get(route('perancang.index'))
             ->assertOk()
             ->assertSee($application->application_reference)
             ->assertSee('Cadangan Perumahan Bersepadu');
 
-        $this->get(route('pkm.show', $application))
+        $this->get(route('perancang.show', $application))
             ->assertOk()
             ->assertSee('Pemaju Seberang Sdn. Bhd.')
             ->assertSee('Lot 101');

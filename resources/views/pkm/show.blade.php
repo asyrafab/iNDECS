@@ -5,7 +5,7 @@
 @section('content')
     <div class="record-heading">
         <div>
-            <a href="{{ route('pkm.index') }}" class="back-link">← Kembali ke senarai</a>
+            <a href="{{ route('perancang.index') }}" class="back-link">← Kembali ke senarai</a>
             <div class="record-reference-row">
                 <span class="record-type">PKM</span>
                 <span class="record-reference">{{ $application->application_reference }}</span>
@@ -15,12 +15,12 @@
             <p>{{ $application->description ?: 'Tiada keterangan tambahan direkodkan.' }}</p>
         </div>
         @if ($application->current_stage === \App\Enums\ApplicationStage::Registration && $application->current_status === \App\Enums\ApplicationStatus::Submitted)
-            <form method="POST" action="{{ route('pkm.start-review', $application) }}" data-confirm="Mulakan semakan kelengkapan untuk permohonan ini?">
+            <form method="POST" action="{{ route('perancang.start-review', $application) }}" data-confirm="Mulakan semakan kelengkapan untuk permohonan ini?">
                 @csrf
                 <button type="submit" class="button button-primary button-large">Mulakan semakan <span>→</span></button>
             </form>
         @elseif ($application->current_status === \App\Enums\ApplicationStatus::ReturnedForAmendment)
-            <form method="POST" action="{{ route('pkm.resubmit', $application) }}" data-confirm="Buka kitaran semakan baharu untuk pindaan ini?">
+            <form method="POST" action="{{ route('perancang.resubmit', $application) }}" data-confirm="Buka kitaran semakan baharu untuk pindaan ini?">
                 @csrf
                 <button type="submit" class="button button-primary button-large">Hantar semula pindaan <span>→</span></button>
             </form>
@@ -111,14 +111,14 @@
                                                 <strong>{{ $document->original_name }}</strong>
                                                 <small>Versi {{ $document->revision_number }} · {{ number_format($document->size_bytes / 1024, 0) }} KB · {{ $document->verification_status->label() }}</small>
                                             </div>
-                                            <a href="{{ route('pkm.documents.download', [$application, $document]) }}" class="button button-secondary button-small">Muat turun</a>
+                                            <a href="{{ route('perancang.documents.download', [$application, $document]) }}" class="button button-secondary button-small">Muat turun</a>
                                         </div>
                                     @else
                                         <p class="document-empty">Belum ada dokumen dimuat naik.</p>
                                     @endif
 
                                     @if (in_array($application->current_status, [\App\Enums\ApplicationStatus::InReview, \App\Enums\ApplicationStatus::ReturnedForAmendment], true))
-                                        <form method="POST" enctype="multipart/form-data" action="{{ route('pkm.documents.store', [$application, $item->documentType]) }}" class="document-upload-form">
+                                        <form method="POST" enctype="multipart/form-data" action="{{ route('perancang.documents.store', [$application, $item->documentType]) }}" class="document-upload-form">
                                             @csrf
                                             <input type="file" name="document" accept=".pdf,.jpg,.jpeg,.png" required aria-label="Pilih {{ $item->requirement_name }}">
                                             <button type="submit" class="button button-secondary button-small">{{ $document ? 'Muat naik versi baharu' : 'Muat naik' }}</button>
@@ -126,7 +126,7 @@
                                     @endif
 
                                     @if ($application->current_status === \App\Enums\ApplicationStatus::InReview)
-                                        <form method="POST" action="{{ route('pkm.completeness.items.update', [$application, $item]) }}" class="item-review-form">
+                                        <form method="POST" action="{{ route('perancang.completeness.items.update', [$application, $item]) }}" class="item-review-form">
                                             @csrf
                                             <select name="status" aria-label="Status semakan {{ $item->requirement_name }}">
                                                 @foreach (\App\Enums\CompletenessItemStatus::cases() as $status)
@@ -148,7 +148,7 @@
 
                     @if ($application->current_status === \App\Enums\ApplicationStatus::InReview)
                         <div class="review-actions">
-                            <form method="POST" action="{{ route('pkm.completeness.complete', $application) }}" data-confirm="Sahkan semua dokumen lengkap dan teruskan ke penilaian fi?">
+                            <form method="POST" action="{{ route('perancang.completeness.complete', $application) }}" data-confirm="Sahkan semua dokumen lengkap dan teruskan ke penilaian fi?">
                                 @csrf
                                 <label class="field">
                                     <span>Catatan keputusan <small>(pilihan)</small></span>
@@ -156,7 +156,7 @@
                                 </label>
                                 <button type="submit" class="button button-primary">Sahkan lengkap <span>→</span></button>
                             </form>
-                            <form method="POST" action="{{ route('pkm.completeness.return', $application) }}" data-confirm="Kembalikan permohonan ini untuk pindaan?">
+                            <form method="POST" action="{{ route('perancang.completeness.return', $application) }}" data-confirm="Kembalikan permohonan ini untuk pindaan?">
                                 @csrf
                                 <label class="field">
                                     <span>Sebab pemulangan <b>*</b></span>

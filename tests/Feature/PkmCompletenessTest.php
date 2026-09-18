@@ -35,15 +35,15 @@ class PkmCompletenessTest extends TestCase
     {
         $application = $this->registerApplication();
 
-        $this->post(route('pkm.start-review', $application))->assertSessionHas('success');
+        $this->post(route('perancang.start-review', $application))->assertSessionHas('success');
 
         $application->refresh();
         $this->assertSame(ApplicationStage::CompletenessCheck, $application->current_stage);
         $this->assertSame(ApplicationStatus::InReview, $application->current_status);
         $this->assertSame($this->officer->id, $application->assigned_to);
         $this->assertNotNull($application->due_date);
-        $this->assertDatabaseCount('pkm_completeness_reviews', 1);
-        $this->assertDatabaseCount('pkm_completeness_items', 6);
+        $this->assertDatabaseCount('app_pkm_completeness_reviews', 1);
+        $this->assertDatabaseCount('app_pkm_completeness_items', 6);
     }
 
     public function test_private_document_uploads_are_versioned(): void
@@ -51,7 +51,7 @@ class PkmCompletenessTest extends TestCase
         $application = $this->startReview();
         $documentType = DocumentType::query()->where('code', 'pkm_form')->firstOrFail();
 
-        $this->post(route('pkm.documents.store', [$application, $documentType]), [
+        $this->post(route('perancang.documents.store', [$application, $documentType]), [
             'document' => UploadedFile::fake()->create('borang-km.pdf', 120, 'application/pdf'),
         ])->assertSessionHas('success');
 
@@ -60,7 +60,7 @@ class PkmCompletenessTest extends TestCase
         $this->assertSame(1, $first->revision_number);
         $this->assertTrue($first->is_current);
 
-        $this->post(route('pkm.documents.store', [$application, $documentType]), [
+        $this->post(route('perancang.documents.store', [$application, $documentType]), [
             'document' => UploadedFile::fake()->create('borang-km-pindaan.pdf', 140, 'application/pdf'),
         ])->assertSessionHas('success');
 
@@ -74,7 +74,7 @@ class PkmCompletenessTest extends TestCase
         $application = $this->startReview();
         $item = PkmCompletenessItem::query()->where('is_required', true)->firstOrFail();
 
-        $this->post(route('pkm.completeness.items.update', [$application, $item]), [
+        $this->post(route('perancang.completeness.items.update', [$application, $item]), [
             'status' => CompletenessItemStatus::Complete->value,
         ])->assertSessionHas('error');
 
@@ -87,24 +87,24 @@ class PkmCompletenessTest extends TestCase
         $items = PkmCompletenessItem::query()->where('is_required', true)->with('documentType')->get();
 
         foreach ($items as $item) {
-            $this->post(route('pkm.documents.store', [$application, $item->documentType]), [
+            $this->post(route('perancang.documents.store', [$application, $item->documentType]), [
                 'document' => UploadedFile::fake()->create("{$item->documentType->code}.pdf", 100, 'application/pdf'),
             ])->assertSessionHas('success');
 
-            $this->post(route('pkm.completeness.items.update', [$application, $item]), [
+            $this->post(route('perancang.completeness.items.update', [$application, $item]), [
                 'status' => CompletenessItemStatus::Complete->value,
                 'remarks' => 'Disahkan.',
             ])->assertSessionHas('success');
         }
 
-        $this->post(route('pkm.completeness.complete', $application), [
+        $this->post(route('perancang.completeness.complete', $application), [
             'remarks' => 'Semua dokumen wajib lengkap.',
         ])->assertSessionHas('success');
 
         $application->refresh();
         $this->assertSame(ApplicationStage::FeeAssessment, $application->current_stage);
         $this->assertSame(ApplicationStatus::AwaitingPayment, $application->current_status);
-        $this->assertDatabaseHas('pkm_completeness_reviews', ['status' => 'complete']);
+        $this->assertDatabaseHas('app_pkm_completeness_reviews', ['status' => 'complete']);
     }
 
     public function test_an_incomplete_application_can_be_returned_and_resubmitted(): void
@@ -112,36 +112,36 @@ class PkmCompletenessTest extends TestCase
         $application = $this->startReview();
         $item = PkmCompletenessItem::query()->where('is_required', true)->firstOrFail();
 
-        $this->post(route('pkm.completeness.items.update', [$application, $item]), [
+        $this->post(route('perancang.completeness.items.update', [$application, $item]), [
             'status' => CompletenessItemStatus::Missing->value,
             'remarks' => 'Salinan tidak jelas.',
         ])->assertSessionHas('success');
 
-        $this->post(route('pkm.completeness.return', $application), [
+        $this->post(route('perancang.completeness.return', $application), [
             'remarks' => 'Muat naik salinan dokumen yang jelas.',
         ])->assertSessionHas('success');
 
         $this->assertSame(ApplicationStatus::ReturnedForAmendment, $application->fresh()->current_status);
 
-        $this->post(route('pkm.resubmit', $application))->assertSessionHas('success');
+        $this->post(route('perancang.resubmit', $application))->assertSessionHas('success');
 
         $application->refresh();
         $this->assertSame(ApplicationStatus::InReview, $application->current_status);
-        $this->assertDatabaseCount('pkm_completeness_reviews', 2);
-        $this->assertDatabaseHas('pkm_completeness_reviews', ['cycle_number' => 2, 'status' => 'in_progress']);
+        $this->assertDatabaseCount('app_pkm_completeness_reviews', 2);
+        $this->assertDatabaseHas('app_pkm_completeness_reviews', ['cycle_number' => 2, 'status' => 'in_progress']);
     }
 
     private function startReview(): Application
     {
         $application = $this->registerApplication();
-        $this->post(route('pkm.start-review', $application))->assertSessionHas('success');
+        $this->post(route('perancang.start-review', $application))->assertSessionHas('success');
 
         return $application->fresh();
     }
 
     private function registerApplication(): Application
     {
-        $this->post(route('pkm.store'), [
+        $this->post(route('perancang.store'), [
             'application_title' => 'Cadangan Perumahan Bersepadu',
             'application_description' => 'Cadangan pembangunan untuk ujian kelengkapan.',
             'external_reference' => 'OSC/2026/0200',

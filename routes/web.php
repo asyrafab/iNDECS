@@ -14,10 +14,10 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
     ->middleware('auth')
     ->name('logout');
 
-Route::middleware(['auth', 'pkm.access'])->group(function (): void {
+Route::middleware(['auth', 'perancang.access'])->group(function (): void {
     Route::get('/', DashboardController::class)->name('dashboard');
 
-    Route::prefix('pkm')->name('pkm.')->group(function (): void {
+    Route::prefix('perancang')->name('perancang.')->group(function (): void {
         Route::get('/', [PkmApplicationController::class, 'index'])->name('index');
         Route::get('/create', [PkmApplicationController::class, 'create'])->name('create');
         Route::post('/', [PkmApplicationController::class, 'store'])->name('store');

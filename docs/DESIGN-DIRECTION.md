@@ -20,9 +20,11 @@ binaan, perancah, runtuh, tukar guna); TEL telco structures and renewable permit
 Short codes for menus and compact UI only, never in letters or reports: RANC,
 BINA, KEJU, LAND.
 
-The existing PKM slice uses route `/pkm` and table prefix `pkm_`. It is brought into
-line with this table (route `/perancang`, prefix `APP_PKM_`) when PKM migrates onto the
-core workflow engine. Until then, do not add new tables or routes in the old style.
+The PKM slice's route (`/perancang`) and table prefix (`app_pkm_`, the lowercase
+snake_case form of `APP_PKM_`) were reconciled to this table on 2026-09-18. PHP class
+names (`PkmApplication`, `PkmApplicationController`, and so on) were kept as-is, since
+they name the PKM application type, not the module identity — see `AGENTS.md`, "type
+codes stay as-is". Do not add new tables or routes in any other style.
 
 Platform name is always `iNDECS` (lowercase i, uppercase NDECS). English name:
 Intergrated Development Control System. Bahasa Melayu: Sistem Bersepada Kawalan

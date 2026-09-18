@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('pkm_applications', function (Blueprint $table): void {
+        Schema::create('app_pkm_applications', function (Blueprint $table): void {
             $table->ulid('application_id')->primary();
             $table->string('permission_category', 100);
             $table->string('permission_type', 100);
@@ -27,7 +27,7 @@ return new class extends Migration
             $table->foreign('application_id')->references('id')->on('applications')->cascadeOnDelete();
         });
 
-        Schema::create('pkm_components', function (Blueprint $table): void {
+        Schema::create('app_pkm_components', function (Blueprint $table): void {
             $table->ulid('id')->primary();
             $table->ulid('application_id');
             $table->string('name');
@@ -37,14 +37,14 @@ return new class extends Migration
             $table->text('notes')->nullable();
             $table->timestamps();
 
-            $table->foreign('application_id')->references('application_id')->on('pkm_applications')->cascadeOnDelete();
+            $table->foreign('application_id')->references('application_id')->on('app_pkm_applications')->cascadeOnDelete();
             $table->index(['application_id', 'category']);
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('pkm_components');
-        Schema::dropIfExists('pkm_applications');
+        Schema::dropIfExists('app_pkm_components');
+        Schema::dropIfExists('app_pkm_applications');
     }
 };

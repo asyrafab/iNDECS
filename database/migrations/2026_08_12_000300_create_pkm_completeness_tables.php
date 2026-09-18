@@ -65,7 +65,7 @@ return new class extends Migration
             $table->index(['application_id', 'document_type_id', 'is_current'], 'application_document_current_index');
         });
 
-        Schema::create('pkm_completeness_reviews', function (Blueprint $table): void {
+        Schema::create('app_pkm_completeness_reviews', function (Blueprint $table): void {
             $table->ulid('id')->primary();
             $table->ulid('application_id');
             $table->unsignedSmallInteger('cycle_number');
@@ -81,7 +81,7 @@ return new class extends Migration
             $table->unique(['application_id', 'cycle_number']);
         });
 
-        Schema::create('pkm_completeness_items', function (Blueprint $table): void {
+        Schema::create('app_pkm_completeness_items', function (Blueprint $table): void {
             $table->id();
             $table->ulid('review_id');
             $table->foreignId('document_requirement_id')->nullable()->constrained()->nullOnDelete();
@@ -94,15 +94,15 @@ return new class extends Migration
             $table->timestamp('checked_at')->nullable();
             $table->timestamps();
 
-            $table->foreign('review_id')->references('id')->on('pkm_completeness_reviews')->cascadeOnDelete();
+            $table->foreign('review_id')->references('id')->on('app_pkm_completeness_reviews')->cascadeOnDelete();
             $table->unique(['review_id', 'document_type_id']);
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('pkm_completeness_items');
-        Schema::dropIfExists('pkm_completeness_reviews');
+        Schema::dropIfExists('app_pkm_completeness_items');
+        Schema::dropIfExists('app_pkm_completeness_reviews');
         Schema::dropIfExists('application_documents');
         Schema::dropIfExists('document_requirements');
         Schema::dropIfExists('document_types');

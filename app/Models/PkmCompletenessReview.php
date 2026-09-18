@@ -23,6 +23,8 @@ class PkmCompletenessReview extends Model
 {
     use HasUlids;
 
+    protected $table = 'app_pkm_completeness_reviews';
+
     public function application(): BelongsTo
     {
         return $this->belongsTo(Application::class);

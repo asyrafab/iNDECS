@@ -9,11 +9,11 @@
             <h1>Permohonan PKM</h1>
             <p>Daftar, cari dan jejak permohonan Kebenaran Merancang.</p>
         </div>
-        <a href="{{ route('pkm.create') }}" class="button button-primary"><span>＋</span> Daftar PKM</a>
+        <a href="{{ route('perancang.create') }}" class="button button-primary"><span>＋</span> Daftar PKM</a>
     </div>
 
     <section class="content-card">
-        <form method="GET" action="{{ route('pkm.index') }}" class="filter-bar">
+        <form method="GET" action="{{ route('perancang.index') }}" class="filter-bar">
             <label class="search-field">
                 <span class="sr-only">Cari permohonan</span>
                 <span class="search-icon">⌕</span>
@@ -30,7 +30,7 @@
             </label>
             <button class="button button-secondary" type="submit">Tapis</button>
             @if ($search !== '' || $selectedStatus)
-                <a href="{{ route('pkm.index') }}" class="button button-ghost">Kosongkan</a>
+                <a href="{{ route('perancang.index') }}" class="button button-ghost">Kosongkan</a>
             @endif
         </form>
 
@@ -58,7 +58,7 @@
                         @foreach ($applications as $application)
                             <tr>
                                 <td>
-                                    <a class="reference-link" href="{{ route('pkm.show', $application) }}">{{ $application->application_reference }}</a>
+                                    <a class="reference-link" href="{{ route('perancang.show', $application) }}">{{ $application->application_reference }}</a>
                                     <small>{{ $application->external_reference ?: 'Tiada rujukan OSC' }}</small>
                                 </td>
                                 <td>
@@ -69,7 +69,7 @@
                                 <td>{{ $application->sites->first()?->mukim ?? '—' }}</td>
                                 <td>{{ $application->current_stage->label() }}</td>
                                 <td><span class="status-badge status-{{ $application->current_status->value }}">{{ $application->current_status->label() }}</span></td>
-                                <td><a class="row-action" href="{{ route('pkm.show', $application) }}" aria-label="Buka {{ $application->application_reference }}">→</a></td>
+                                <td><a class="row-action" href="{{ route('perancang.show', $application) }}" aria-label="Buka {{ $application->application_reference }}">→</a></td>
                             </tr>
                         @endforeach
                     </tbody>

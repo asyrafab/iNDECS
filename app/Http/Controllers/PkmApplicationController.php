@@ -63,7 +63,7 @@ class PkmApplicationController extends Controller
         $application = $registration->register($request->validated());
 
         return redirect()
-            ->route('pkm.show', $application)
+            ->route('perancang.show', $application)
             ->with('success', "Permohonan {$application->application_reference} berjaya didaftarkan.");
     }
 

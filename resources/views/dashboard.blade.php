@@ -9,7 +9,7 @@
             <h1>Ringkasan PKM</h1>
             <p>Pantau permohonan Kebenaran Merancang dan tindakan yang perlu dimulakan.</p>
         </div>
-        <a href="{{ route('pkm.create') }}" class="button button-primary">
+        <a href="{{ route('perancang.create') }}" class="button button-primary">
             <span>＋</span> Daftar permohonan
         </a>
     </div>
@@ -55,7 +55,7 @@
                 <span class="eyebrow">Aktiviti terkini</span>
                 <h2>Permohonan terbaru</h2>
             </div>
-            <a href="{{ route('pkm.index') }}" class="text-link">Lihat semua <span>→</span></a>
+            <a href="{{ route('perancang.index') }}" class="text-link">Lihat semua <span>→</span></a>
         </div>
 
         @if ($recentApplications->isEmpty())
@@ -63,7 +63,7 @@
                 <span class="empty-icon">⌁</span>
                 <h3>Belum ada permohonan PKM</h3>
                 <p>Daftar permohonan pertama untuk mula menguji aliran kerja modul ini.</p>
-                <a href="{{ route('pkm.create') }}" class="button button-primary">Daftar PKM pertama</a>
+                <a href="{{ route('perancang.create') }}" class="button button-primary">Daftar PKM pertama</a>
             </div>
         @else
             <div class="table-wrap">
@@ -80,7 +80,7 @@
                     <tbody>
                         @foreach ($recentApplications as $application)
                             <tr>
-                                <td><a class="reference-link" href="{{ route('pkm.show', $application) }}">{{ $application->application_reference }}</a></td>
+                                <td><a class="reference-link" href="{{ route('perancang.show', $application) }}">{{ $application->application_reference }}</a></td>
                                 <td>
                                     <strong class="table-title">{{ $application->title }}</strong>
                                     <small>{{ $application->submission_date->format('d/m/Y') }}</small>

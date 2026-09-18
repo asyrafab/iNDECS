@@ -20,6 +20,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 ])]
 class PkmCompletenessItem extends Model
 {
+    protected $table = 'app_pkm_completeness_items';
+
     public function review(): BelongsTo
     {
         return $this->belongsTo(PkmCompletenessReview::class, 'review_id');

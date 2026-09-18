@@ -24,6 +24,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 ])]
 class PkmApplication extends Model
 {
+    protected $table = 'app_pkm_applications';
+
     protected $primaryKey = 'application_id';
 
     public $incrementing = false;

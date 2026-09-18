@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="page-heading">
-        <a href="{{ route('pkm.index') }}" class="back-link">← Kembali ke senarai</a>
+        <a href="{{ route('perancang.index') }}" class="back-link">← Kembali ke senarai</a>
         <span class="eyebrow">Pendaftaran permohonan</span>
         <h1>Daftar PKM baharu</h1>
         <p>Lengkapkan maklumat asas, pihak berkepentingan, tapak dan butiran perancangan.</p>
@@ -24,7 +24,7 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('pkm.store') }}" class="application-form">
+    <form method="POST" action="{{ route('perancang.store') }}" class="application-form">
         @csrf
 
         <section class="form-card">
@@ -324,7 +324,7 @@
         </section>
 
         <div class="form-actions">
-            <a href="{{ route('pkm.index') }}" class="button button-ghost">Batal</a>
+            <a href="{{ route('perancang.index') }}" class="button button-ghost">Batal</a>
             <div>
                 <small>Rujukan PKM dijana secara automatik</small>
                 <button type="submit" class="button button-primary button-large">Daftar permohonan <span>→</span></button>

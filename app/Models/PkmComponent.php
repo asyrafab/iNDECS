@@ -12,6 +12,8 @@ class PkmComponent extends Model
 {
     use HasUlids;
 
+    protected $table = 'app_pkm_components';
+
     public function pkmApplication(): BelongsTo
     {
         return $this->belongsTo(PkmApplication::class, 'application_id', 'application_id');

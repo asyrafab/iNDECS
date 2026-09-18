@@ -27,13 +27,13 @@
                     <span class="nav-icon">⌂</span>
                     Ringkasan
                 </a>
-                <a href="{{ route('pkm.index') }}" class="nav-link {{ request()->routeIs('pkm.*') ? 'active' : '' }}">
+                <a href="{{ route('perancang.index') }}" class="nav-link {{ request()->routeIs('perancang.*') ? 'active' : '' }}">
                     <span class="nav-icon">▤</span>
                     Permohonan PKM
                 </a>
 
                 <span class="nav-label nav-label-spaced">Akses pantas</span>
-                <a href="{{ route('pkm.create') }}" class="nav-link">
+                <a href="{{ route('perancang.create') }}" class="nav-link">
                     <span class="nav-icon">＋</span>
                     Daftar PKM
                 </a>
