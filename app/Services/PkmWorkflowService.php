@@ -164,7 +164,7 @@ class PkmWorkflowService
     {
         return DB::transaction(function () use ($application, $remarks, $actor): Application {
             $locked = Application::query()->lockForUpdate()->findOrFail($application->id);
-            $review = $locked->latestCompletenessReview()->with('items')->lockForUpdate()->firstOrFail();
+            $review = $this->lockLatestCompletenessReview($locked);
             $this->assertActiveReview($locked, $review);
 
             if ($review->items->contains(
@@ -195,7 +195,7 @@ class PkmWorkflowService
     {
         return DB::transaction(function () use ($application, $remarks, $actor): Application {
             $locked = Application::query()->lockForUpdate()->findOrFail($application->id);
-            $review = $locked->latestCompletenessReview()->with('items')->lockForUpdate()->firstOrFail();
+            $review = $this->lockLatestCompletenessReview($locked);
             $this->assertActiveReview($locked, $review);
 
             if (! $review->items->contains(
@@ -232,7 +232,7 @@ class PkmWorkflowService
                 throw new DomainException('Permohonan ini tidak sedang menunggu pindaan.');
             }
 
-            $previousReview = $locked->latestCompletenessReview()->with('items')->lockForUpdate()->firstOrFail();
+            $previousReview = $this->lockLatestCompletenessReview($locked);
             $review = $locked->completenessReviews()->create([
                 'cycle_number' => $previousReview->cycle_number + 1,
                 'status' => CompletenessReviewStatus::InProgress,
@@ -364,5 +364,26 @@ class PkmWorkflowService
         ]);
 
         return $application;
+    }
+
+    /**
+     * Resolve and row-lock the application's latest completeness review, with items eager loaded.
+     *
+     * `latestCompletenessReview()` is a `HasOne::ofMany('cycle_number', 'max')` relation, which
+     * compiles to a query with a GROUP BY / aggregate subquery. PostgreSQL rejects `FOR UPDATE`
+     * combined with GROUP BY ("Feature not supported"); SQLite silently ignores `lockForUpdate()`
+     * entirely, which is why this went unnoticed until migrating off SQLite. The caller already
+     * holds a row lock on the parent `Application`, so resolving the review's ID via the ofMany
+     * relation first (unlocked) is safe: no other transaction can start a new review for this
+     * application without first locking the same Application row.
+     */
+    private function lockLatestCompletenessReview(Application $application): PkmCompletenessReview
+    {
+        $reviewId = $application->latestCompletenessReview()->value('id');
+
+        return PkmCompletenessReview::query()
+            ->with('items')
+            ->lockForUpdate()
+            ->findOrFail($reviewId);
     }
 }

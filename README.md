@@ -27,33 +27,36 @@ The repository contains the first working slice of the **Permohonan Kebenaran Me
 
 The model keeps shared application data separate from `pkm_applications` and `pkm_components`, so the Bangunan, Kejuruteraan and Landskap modules reuse the same core.
 
-## Direction (decided 2026-09-18, not yet implemented)
+## Direction (decided 2026-09-18)
 
-- **Database:** PostgreSQL 16 with PostGIS. The SQLite setup below is the pre-decision state and is replaced by a Docker Compose environment during Phase A of the programme.
-- **Identity:** iNDECS issues OpenID Connect for the family; staff via the MBSP staff API or Active Directory, public users via shadow accounts and magic links.
-- **Core capabilities** (workflow engine, RBAC, fees and payments, notifications, SLA, letters, units registry, domain events) are built in `core` in the order iNDECS Bangunan needs them. PKM migrates onto the workflow engine as the proof of generality.
+- **Database:** PostgreSQL 16 with PostGIS, pgvector and pg_trgm — **implemented** as of this commit. `docker-compose.yml` provisions the cluster locally, with `indecs` and `airs` databases created side by side per docs/bangunan/11-indecs-core-roadmap.md. Route (`/pkm` → `/perancang`) and table (`pkm_*` → `app_pkm_*`) naming was also reconciled to `docs/DESIGN-DIRECTION.md`; PHP class names were left as-is since they name the PKM application type, which stays as-is per `AGENTS.md`.
+- **Identity:** iNDECS issues OpenID Connect for the family; staff via the MBSP staff API or Active Directory, public users via shadow accounts and magic links. Not yet implemented.
+- **Core capabilities** (workflow engine, RBAC, fees and payments, notifications, SLA, letters, units registry, domain events) are built in `core` in the order iNDECS Bangunan needs them. PKM migrates onto the workflow engine as the proof of generality. Not yet implemented.
 - **Visual direction:** Calm Intelligence, shared with AIRS.
-- **Engineering hygiene** (repositories, CI against PostgreSQL, secrets management, staging, tested backups) precedes module work. See `docs/bangunan/15-engineering-hygiene.md`.
+- **Engineering hygiene** (repositories, CI against PostgreSQL, secrets management, staging, tested backups) precedes module work. Git history and the PostgreSQL move are done; CI, staging and backups are not. See `docs/bangunan/15-engineering-hygiene.md`.
 
 ## Local setup (current slice)
 
 Requirements:
 
-- PHP 8.3 or newer
+- PHP 8.3 or newer, with the `pdo_pgsql` and `pgsql` extensions enabled
 - Composer 2
-- PHP extensions: PDO SQLite, mbstring, OpenSSL, cURL, fileinfo and ZIP
+- Docker Desktop (for the local PostgreSQL/PostGIS cluster)
+- PHP extensions: mbstring, OpenSSL, cURL, fileinfo and ZIP
 
 ```powershell
+docker compose up -d --build   # first run builds the postgis+pgvector image
 composer install
 Copy-Item .env.example .env
 # Set INDECS_DEMO_PASSWORD in .env to a strong local secret before the first seed.
 php artisan key:generate
-New-Item -ItemType File database/database.sqlite -Force
 php artisan migrate --seed
 php artisan serve
 ```
 
 Open `http://127.0.0.1:8000`.
+
+Test suite runs against a dedicated `indecs_test` database in the same cluster (see `phpunit.xml`); create it once with `docker exec indecs_postgres psql -U indecs -d indecs -c "CREATE DATABASE indecs_test;"` followed by the three `CREATE EXTENSION` statements in `docker/postgres-init/01-extensions-and-databases.sql`.
 
 The current interface does not require a frontend build. CSS and JavaScript are maintained as small, first-party assets under `public/`.
 

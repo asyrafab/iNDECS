@@ -1,0 +1,35 @@
+# Local development database cluster for the iNDECS family.
+#
+# Per docs/bangunan/11-indecs-core-roadmap.md section 2.1: one PostgreSQL
+# cluster, iNDECS as one database with schemas, AIRS as its own database
+# in the same cluster. This compose file provisions both databases so
+# AIRS (in ../Plan Review) can point at the same instance without a
+# separate container.
+#
+# Usage:
+#   docker compose up -d
+#   docker compose down          # stop, keep data
+#   docker compose down -v       # stop and wipe data (fresh start)
+
+services:
+  postgres:
+    build: ./docker/postgres
+    container_name: indecs_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: indecs
+      POSTGRES_PASSWORD: indecs_local_dev
+      POSTGRES_DB: indecs
+    ports:
+      - "5432:5432"
+    volumes:
+      - indecs_pgdata:/var/lib/postgresql/data
+      - ./docker/postgres-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U indecs -d indecs"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  indecs_pgdata:

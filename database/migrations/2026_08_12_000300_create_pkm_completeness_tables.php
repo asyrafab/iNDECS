@@ -60,9 +60,19 @@ return new class extends Migration
             $table->timestamps();
 
             $table->foreign('application_id')->references('id')->on('applications')->cascadeOnDelete();
-            $table->foreign('supersedes_id')->references('id')->on('application_documents')->nullOnDelete();
             $table->unique(['application_id', 'document_type_id', 'revision_number'], 'application_document_revision_unique');
             $table->index(['application_id', 'document_type_id', 'is_current'], 'application_document_current_index');
+        });
+
+        // Self-referencing foreign key added in a separate Schema::table() call, after
+        // the table above (and its ulid primary key) has fully committed. Laravel's
+        // schema builder defers a ulid column's `->primary()` to an ALTER TABLE ADD
+        // PRIMARY KEY that runs *after* all `foreign()` commands declared in the same
+        // Schema::create() block. SQLite tolerates that ordering; PostgreSQL rejects a
+        // foreign key referencing a column with no unique constraint yet, since it
+        // enforces each ALTER statement as it runs. See docs/bangunan/15-engineering-hygiene.md.
+        Schema::table('application_documents', function (Blueprint $table): void {
+            $table->foreign('supersedes_id')->references('id')->on('application_documents')->nullOnDelete();
         });
 
         Schema::create('app_pkm_completeness_reviews', function (Blueprint $table): void {
