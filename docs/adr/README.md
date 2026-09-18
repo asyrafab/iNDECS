@@ -1,0 +1,17 @@
+# Architecture Decision Records
+
+One file per decision, named `ADR-NNN-short-title.md`, numbered from 301. Never edit an accepted record; supersede it with a new one that references the old.
+
+Programme-level decisions (ADR-201 to ADR-210) are in `../bangunan/16-decision-log.md`.
+
+Template:
+
+```
+# ADR-NNN: Title
+
+Date: YYYY-MM-DD. Status: Proposed | Accepted | Superseded by ADR-MMM.
+
+## Context
+## Decision
+## Consequences
+```
