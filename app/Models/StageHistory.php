@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\ApplicationStage;
 use App\Enums\ApplicationStatus;
+use DomainException;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -20,6 +21,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 ])]
 class StageHistory extends Model
 {
+    protected static function booted(): void
+    {
+        static::updating(function (): never {
+            throw new DomainException('Rekod sejarah peringkat adalah tambah-sahaja dan tidak boleh diubah.');
+        });
+
+        static::deleting(function (): never {
+            throw new DomainException('Rekod sejarah peringkat adalah tambah-sahaja dan tidak boleh dipadam.');
+        });
+    }
+
     public function application(): BelongsTo
     {
         return $this->belongsTo(Application::class);

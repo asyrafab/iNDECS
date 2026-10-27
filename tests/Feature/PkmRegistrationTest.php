@@ -44,6 +44,16 @@ class PkmRegistrationTest extends TestCase
         $this->assertDatabaseCount('app_pkm_components', 1);
         $this->assertDatabaseCount('stage_histories', 1);
         $this->assertDatabaseCount('audit_logs', 1);
+        $this->assertDatabaseHas('stage_histories', [
+            'application_id' => $application->id,
+            'action' => 'application_registered',
+            'actor_id' => auth()->id(),
+        ]);
+        $this->assertDatabaseHas('audit_logs', [
+            'auditable_id' => $application->id,
+            'event' => 'created',
+            'actor_id' => auth()->id(),
+        ]);
 
         $snapshot = ApplicationParty::query()->where('role', 'applicant')->firstOrFail()->submitted_snapshot;
         $this->assertSame('Pemaju Seberang Sdn. Bhd.', $snapshot['name']);

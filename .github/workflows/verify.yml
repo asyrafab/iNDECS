@@ -1,0 +1,48 @@
+name: Verify
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: pdo_pgsql, pgsql, mbstring, fileinfo
+          coverage: none
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: composer install --no-interaction --prefer-dist
+      - run: npm ci
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          sed -i 's/^DB_PORT=.*/DB_PORT=5432/' .env
+          sed -i 's/^DB_DATABASE=.*/DB_DATABASE=indecs/' .env
+          php artisan key:generate
+          docker compose up -d --build --wait
+          docker compose exec -T postgres psql -U indecs -d indecs -f /docker-entrypoint-initdb.d/01-extensions-and-databases.sql
+      - run: php vendor/bin/pint --test
+      - run: composer audit
+      - run: npm audit
+      - run: php scripts/verify-database.php
+      - run: php artisan test
+        env:
+          DB_PORT: '5432'
+      - run: npm run build
+      - name: Database diagnostics
+        if: failure()
+        run: docker compose logs postgres
+      - name: Stop services
+        if: always()
+        run: docker compose down

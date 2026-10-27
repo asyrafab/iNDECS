@@ -32,7 +32,7 @@
                 <div>
                     <span class="eyebrow">Ruang kerja pegawai</span>
                     <h2>Log masuk ke iNDECS</h2>
-                    <p>Gunakan akaun jabatan yang telah dibenarkan.</p>
+                    <p>Gunakan akaun {{ config('indecs.staff_auth_driver') === 'local' ? 'jabatan' : 'MBSP' }} yang telah dibenarkan.</p>
                 </div>
 
                 @if ($errors->any())
@@ -43,8 +43,13 @@
                 @endif
 
                 <label class="field">
+                    @if (config('indecs.staff_auth_driver') !== 'local')
+                    <span>Nombor kakitangan</span>
+                    <input type="text" name="staff_number" value="{{ old('staff_number') }}" inputmode="numeric" maxlength="30" autocomplete="username" required autofocus>
+                    @else
                     <span>Emel</span>
                     <input type="email" name="email" value="{{ old('email') }}" autocomplete="username" required autofocus>
+                    @endif
                 </label>
 
                 <label class="field">
@@ -52,12 +57,15 @@
                     <input type="password" name="password" autocomplete="current-password" required>
                 </label>
 
+                @if (config('indecs.staff_auth_driver') === 'local')
                 <label class="checkbox-field">
                     <input type="checkbox" name="remember" value="1">
                     <span>Kekalkan sesi log masuk</span>
                 </label>
+                @endif
 
                 <button type="submit" class="button button-primary button-large">Log masuk <span>→</span></button>
+                <a href="{{ route('portal.login') }}">Akses orang awam</a>
             </form>
         </section>
     </main>

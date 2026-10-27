@@ -9,6 +9,7 @@ use App\Models\AuditLog;
 use App\Models\Lot;
 use App\Models\Party;
 use App\Models\Site;
+use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -17,9 +18,9 @@ class PkmRegistrationService
 {
     public function __construct(private readonly PkmReferenceGenerator $referenceGenerator) {}
 
-    public function register(array $data): Application
+    public function register(array $data, User $actor): Application
     {
-        return DB::transaction(function () use ($data): Application {
+        return DB::transaction(function () use ($data, $actor): Application {
             $submissionDate = CarbonImmutable::parse($data['submission_date']);
 
             $application = Application::query()->create([
@@ -102,6 +103,7 @@ class PkmRegistrationService
                 'new_stage' => ApplicationStage::Registration,
                 'new_status' => ApplicationStatus::Submitted,
                 'action' => 'application_registered',
+                'actor_id' => $actor->id,
                 'remarks' => 'Permohonan PKM didaftarkan dalam iNDECS.',
             ]);
 
@@ -109,6 +111,7 @@ class PkmRegistrationService
                 'auditable_type' => Application::class,
                 'auditable_id' => $application->id,
                 'event' => 'created',
+                'actor_id' => $actor->id,
                 'after_values' => [
                     'application_reference' => $application->application_reference,
                     'current_stage' => $application->current_stage->value,

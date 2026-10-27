@@ -9,6 +9,7 @@ use App\Models\DocumentType;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
@@ -48,6 +49,8 @@ class DatabaseSeeder extends Seeder
                 'is_active' => true,
             ],
         );
+
+        $this->seedCorePermissions();
 
         $officer = User::query()->firstOrNew(['email' => 'pegawai@indecs.test']);
         $officer->fill([
@@ -114,6 +117,89 @@ class DatabaseSeeder extends Seeder
                     'sort_order' => $requirement['order'],
                     'is_active' => true,
                 ],
+            );
+        }
+    }
+
+    private function seedCorePermissions(): void
+    {
+        $now = now();
+
+        collect([
+            ['id' => 'system_admin', 'label' => 'Pentadbir Sistem'],
+            ['id' => 'intake_officer', 'label' => 'Pegawai Pendaftaran'],
+            ['id' => 'planning_officer', 'label' => 'Pegawai Perancang'],
+            ['id' => 'senior_planning_officer', 'label' => 'Pegawai Kanan Perancang'],
+        ])->each(function (array $role) use ($now): void {
+            DB::table('core.roles')->updateOrInsert(
+                ['id' => $role['id']],
+                [
+                    'label' => $role['label'],
+                    'account_type' => 'staff',
+                    'is_active' => true,
+                    'updated_at' => $now,
+                    'created_at' => $now,
+                ],
+            );
+        });
+
+        collect([
+            [
+                'name' => 'perancang.pkm.access',
+                'label' => 'Akses modul PKM',
+                'description' => 'Membenarkan kakitangan membuka ruang kerja Permohonan Kebenaran Merancang.',
+            ],
+            [
+                'name' => 'perancang.pkm.register',
+                'label' => 'Daftar dan kemas kini dokumen PKM',
+                'description' => 'Membenarkan pendaftaran permohonan PKM baharu, muat naik dokumen dan penghantaran semula pindaan.',
+            ],
+            [
+                'name' => 'perancang.pkm.review',
+                'label' => 'Semakan kelengkapan PKM',
+                'description' => 'Membenarkan semakan kelengkapan dokumen, pengesahan lengkap atau pemulangan untuk pindaan.',
+            ],
+        ])->each(function (array $permission) use ($now): void {
+            DB::table('core.permissions')->updateOrInsert(
+                ['name' => $permission['name']],
+                [
+                    'label' => $permission['label'],
+                    'description' => $permission['description'],
+                    'updated_at' => $now,
+                    'created_at' => $now,
+                ],
+            );
+        });
+
+        $grants = [
+            'intake_officer' => ['perancang.pkm.access', 'perancang.pkm.register'],
+            'planning_officer' => ['perancang.pkm.access', 'perancang.pkm.register', 'perancang.pkm.review'],
+            'senior_planning_officer' => ['perancang.pkm.access', 'perancang.pkm.register', 'perancang.pkm.review'],
+        ];
+
+        foreach ($grants as $roleId => $permissions) {
+            foreach ($permissions as $permissionName) {
+                DB::table('core.role_permissions')->updateOrInsert(
+                    [
+                        'role_id' => $roleId,
+                        'permission_name' => $permissionName,
+                        'department_id' => 'JPBD',
+                        'application_type_id' => 'PKM',
+                    ],
+                    ['updated_at' => $now, 'created_at' => $now],
+                );
+            }
+        }
+
+        foreach (['perancang.pkm.access', 'perancang.pkm.register', 'perancang.pkm.review'] as $permissionName) {
+            DB::table('core.role_permissions')->updateOrInsert(
+                [
+                    'role_id' => 'system_admin',
+                    'permission_name' => $permissionName,
+                    'department_id' => null,
+                    'application_type_id' => null,
+                ],
+                ['updated_at' => $now, 'created_at' => $now],
             );
         }
     }

@@ -29,7 +29,7 @@ The model keeps shared application data separate from `pkm_applications` and `pk
 
 ## Direction (decided 2026-09-18)
 
-- **Database:** PostgreSQL 16 with PostGIS, pgvector and pg_trgm — **implemented** as of this commit. `docker-compose.yml` provisions the cluster locally, with `indecs` and `airs` databases created side by side per docs/bangunan/11-indecs-core-roadmap.md. Route (`/pkm` → `/perancang`) and table (`pkm_*` → `app_pkm_*`) naming was also reconciled to `docs/DESIGN-DIRECTION.md`; PHP class names were left as-is since they name the PKM application type, which stays as-is per `AGENTS.md`.
+- **Database:** PostgreSQL 18 with PostGIS and pg_trgm — **implemented** on the local Windows service (`127.0.0.1:5434`, database `iNDECS`, consolidating `iNDECS`, `AIRS` in schema `airs`, and `MIDR` in schemas `catalogue`, `core`, `application`, `publish`). Route (`/pkm` → `/perancang`) and table (`pkm_*` → `app_pkm_*`) naming was also reconciled to `docs/DESIGN-DIRECTION.md`; PHP class names were left as-is since they name the PKM application type, which stays as-is per `AGENTS.md`.
 - **Identity:** iNDECS issues OpenID Connect for the family; staff via the MBSP staff API or Active Directory, public users via shadow accounts and magic links. Not yet implemented.
 - **Core capabilities** (workflow engine, RBAC, fees and payments, notifications, SLA, letters, units registry, domain events) are built in `core` in the order iNDECS Bangunan needs them. PKM migrates onto the workflow engine as the proof of generality. Not yet implemented.
 - **Visual direction:** Calm Intelligence, shared with AIRS.
@@ -41,11 +41,10 @@ Requirements:
 
 - PHP 8.3 or newer, with the `pdo_pgsql` and `pgsql` extensions enabled
 - Composer 2
-- Docker Desktop (for the local PostgreSQL/PostGIS cluster)
+- Local PostgreSQL 18 + PostGIS service (`postgresql-x64-18` on `127.0.0.1:5434`)
 - PHP extensions: mbstring, OpenSSL, cURL, fileinfo and ZIP
 
 ```powershell
-docker compose up -d --build   # first run builds the postgis+pgvector image
 composer install
 Copy-Item .env.example .env
 # Set INDECS_DEMO_PASSWORD in .env to a strong local secret before the first seed.
@@ -56,11 +55,18 @@ php artisan serve
 
 Open `http://127.0.0.1:8000`.
 
-Test suite runs against a dedicated `indecs_test` database in the same cluster (see `phpunit.xml`); create it once with `docker exec indecs_postgres psql -U indecs -d indecs -c "CREATE DATABASE indecs_test;"` followed by the three `CREATE EXTENSION` statements in `docker/postgres-init/01-extensions-and-databases.sql`.
+The test suite runs against a dedicated `indecs_test` database on the local PostgreSQL 18 instance (`127.0.0.1:5434`, see `phpunit.xml`). See [the local development runbook](docs/runbooks/local-development.md) for guarded migration verification.
 
 The current interface does not require a frontend build. CSS and JavaScript are maintained as small, first-party assets under `public/`.
 
 ## Verification
+
+Public account access is available at `/portal/login`, with registration, Google
+OAuth (after client configuration) and passwordless email access. Staff continue
+at `/login`. See [Google and public access setup](docs/runbooks/google-and-public-access.md).
+Local emails are captured by Mailpit at `http://localhost:8025`. Public application
+submission forms and case correspondence remain pending; these routes implement
+identity only.
 
 ```powershell
 php vendor/bin/pint --test

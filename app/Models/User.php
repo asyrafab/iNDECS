@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Services\CorePermissionService;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -11,12 +12,21 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['department_id', 'role', 'is_active', 'name', 'email', 'password'])]
+#[Fillable(['department_id', 'district', 'role', 'is_active', 'name', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
+
+    /**
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'account_type' => 'staff',
+        'is_active' => true,
+        'has_password' => true,
+    ];
 
     public function department(): BelongsTo
     {
@@ -25,16 +35,30 @@ class User extends Authenticatable
 
     public function canAccessPkm(): bool
     {
-        if (! $this->is_active) {
+        return $this->canPerformPkm('perancang.pkm.access');
+    }
+
+    public function canPerformPkm(string $permission): bool
+    {
+        if (! $this->is_active || $this->account_type !== 'staff') {
             return false;
         }
 
-        if ($this->role === 'system_admin') {
+        return app(CorePermissionService::class)->userCan($this, $permission, $this->department_id, 'PKM');
+    }
+
+    public function canAccessApplication(Application $application): bool
+    {
+        if (! $this->canAccessPkm() || $application->application_type_id !== 'PKM') {
+            return false;
+        }
+
+        if ($this->role === 'system_admin' || blank($this->district)) {
             return true;
         }
 
-        return $this->department_id === 'JPBD'
-            && in_array($this->role, ['intake_officer', 'planning_officer', 'senior_planning_officer'], true);
+        return $application->sites()->where('district', $this->district)->exists()
+            || $application->lots()->where('district', $this->district)->exists();
     }
 
     /**
@@ -47,7 +71,14 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'is_active' => 'boolean',
+            'has_password' => 'boolean',
             'password' => 'hashed',
         ];
+    }
+
+    public function isPublicAccount(): bool
+    {
+        return $this->is_active && in_array($this->account_type, ['public', 'guest'], true)
+            && $this->staff_number === null && $this->department_id === null && $this->role === 'public_applicant';
     }
 }

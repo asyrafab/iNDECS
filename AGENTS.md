@@ -120,6 +120,10 @@ application, two = linked pair, three = development case.
 
 ## Working rules
 
+- Public identity pages use `.public-header`, `.public-brand`, `.public-shell`,
+  `.public-tabs`, `.public-form`, `.public-section` and `.public-details` in
+  `indecs.css`. They are unframed account surfaces using the shared tokens.
+
 - Bahasa Melayu is the interface language (`lang/ms`). Application type codes stay as-is.
 - Reuse the existing class names in `public/css/indecs.css` before inventing new ones. If you
   need a new component, add it to that file in the same idiom and document it here.

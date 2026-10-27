@@ -30,6 +30,7 @@ class PkmApplicationController extends Controller
 
         $applications = Application::query()
             ->pkm()
+            ->visibleTo($request->user())
             ->with(['pkm', 'sites'])
             ->when($search !== '', function ($query) use ($search): void {
                 $query->where(function ($query) use ($search): void {
@@ -60,16 +61,17 @@ class PkmApplicationController extends Controller
         StorePkmApplicationRequest $request,
         PkmRegistrationService $registration,
     ): RedirectResponse {
-        $application = $registration->register($request->validated());
+        $application = $registration->register($request->validated(), $request->user());
 
         return redirect()
             ->route('perancang.show', $application)
             ->with('success', "Permohonan {$application->application_reference} berjaya didaftarkan.");
     }
 
-    public function show(Application $application): View
+    public function show(Request $request, Application $application): View
     {
         abort_unless($application->application_type_id === 'PKM', 404);
+        abort_unless($request->user()->canAccessApplication($application), 403);
 
         $application->load([
             'pkm.components',
@@ -95,6 +97,8 @@ class PkmApplicationController extends Controller
         Application $application,
         PkmWorkflowService $workflow,
     ): RedirectResponse {
+        abort_unless($request->user()->canAccessApplication($application), 403);
+
         try {
             $workflow->startCompletenessReview($application, $request->user());
         } catch (DomainException $exception) {
@@ -110,6 +114,8 @@ class PkmApplicationController extends Controller
         DocumentType $documentType,
         PkmDocumentService $documents,
     ): RedirectResponse {
+        abort_unless($request->user()->canAccessApplication($application), 403);
+
         try {
             $document = $documents->upload(
                 $application,
@@ -125,10 +131,12 @@ class PkmApplicationController extends Controller
     }
 
     public function downloadDocument(
+        Request $request,
         Application $application,
         ApplicationDocument $document,
     ): StreamedResponse {
         abort_unless($application->application_type_id === 'PKM' && $document->application_id === $application->id, 404);
+        abort_unless($request->user()->canAccessApplication($application), 403);
         abort_unless(Storage::disk('local')->exists($document->storage_path), 404);
 
         return Storage::disk('local')->download($document->storage_path, $document->original_name);
@@ -140,6 +148,8 @@ class PkmApplicationController extends Controller
         PkmCompletenessItem $item,
         PkmWorkflowService $workflow,
     ): RedirectResponse {
+        abort_unless($request->user()->canAccessApplication($application), 403);
+
         try {
             $workflow->reviewItem(
                 $application,
@@ -160,6 +170,7 @@ class PkmApplicationController extends Controller
         Application $application,
         PkmWorkflowService $workflow,
     ): RedirectResponse {
+        abort_unless($request->user()->canAccessApplication($application), 403);
         $data = $request->validate(['remarks' => ['nullable', 'string', 'max:2000']]);
 
         try {
@@ -176,6 +187,7 @@ class PkmApplicationController extends Controller
         Application $application,
         PkmWorkflowService $workflow,
     ): RedirectResponse {
+        abort_unless($request->user()->canAccessApplication($application), 403);
         $data = $request->validate(['remarks' => ['required', 'string', 'max:2000']]);
 
         try {
@@ -192,6 +204,8 @@ class PkmApplicationController extends Controller
         Application $application,
         PkmWorkflowService $workflow,
     ): RedirectResponse {
+        abort_unless($request->user()->canAccessApplication($application), 403);
+
         try {
             $workflow->resubmit($application, $request->user());
         } catch (DomainException $exception) {

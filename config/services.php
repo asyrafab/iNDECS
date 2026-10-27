@@ -1,6 +1,20 @@
 <?php
 
 return [
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI', rtrim(env('APP_URL', 'http://localhost:8000'), '/').'/portal/google/callback'),
+    ],
+    'mbsp_staff' => [
+        'url' => env('MBSP_STAFF_API_URL', ''),
+        'basic_username' => env('MBSP_STAFF_API_BASIC_USERNAME', ''),
+        'basic_password' => env('MBSP_STAFF_API_BASIC_PASSWORD', ''),
+        'api_key' => env('MBSP_STAFF_API_KEY', ''),
+        'api_token' => env('MBSP_STAFF_API_TOKEN', ''),
+        'password_mode' => env('MBSP_STAFF_API_PASSWORD_MODE', 'md5'),
+        'ca_bundle' => env('MBSP_STAFF_API_CA_BUNDLE', ''),
+    ],
 
     /*
     |--------------------------------------------------------------------------

@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Middleware\EnsurePkmAccess;
+use App\Http\Middleware\EnsurePkmPermission;
+use App\Http\Middleware\EnsurePublicAccess;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -15,7 +17,11 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'perancang.access' => EnsurePkmAccess::class,
+            'perancang.permission' => EnsurePkmPermission::class,
+            'public.access' => EnsurePublicAccess::class,
         ]);
+        $middleware->redirectUsersTo(fn (Request $request) => $request->user()?->isPublicAccount()
+            ? route('portal.home') : route('dashboard'));
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

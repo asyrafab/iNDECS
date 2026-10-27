@@ -40,6 +40,19 @@ class Application extends Model
         return $query->where('application_type_id', 'PKM');
     }
 
+    public function scopeVisibleTo(Builder $query, User $user): Builder
+    {
+        if ($user->role === 'system_admin' || blank($user->district)) {
+            return $query;
+        }
+
+        return $query->where(function (Builder $districtQuery) use ($user): void {
+            $districtQuery
+                ->whereHas('sites', fn (Builder $siteQuery) => $siteQuery->where('district', $user->district))
+                ->orWhereHas('lots', fn (Builder $lotQuery) => $lotQuery->where('district', $user->district));
+        });
+    }
+
     public function applicationType(): BelongsTo
     {
         return $this->belongsTo(ApplicationType::class);

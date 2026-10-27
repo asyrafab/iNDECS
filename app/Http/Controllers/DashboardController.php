@@ -5,12 +5,13 @@ namespace App\Http\Controllers;
 use App\Enums\ApplicationStatus;
 use App\Models\Application;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function __invoke(): View
+    public function __invoke(Request $request): View
     {
-        $base = Application::query()->pkm();
+        $base = Application::query()->pkm()->visibleTo($request->user());
 
         $metrics = [
             'total' => (clone $base)->count(),
@@ -21,6 +22,7 @@ class DashboardController extends Controller
 
         $recentApplications = Application::query()
             ->pkm()
+            ->visibleTo($request->user())
             ->with(['pkm', 'sites'])
             ->latest('submission_date')
             ->latest('created_at')

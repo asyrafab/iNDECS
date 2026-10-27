@@ -19,13 +19,14 @@
     </source>
     <php>
         <env name="APP_ENV" value="testing"/>
+        <env name="INDECS_STAFF_AUTH_DRIVER" value="local" force="true"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
         <env name="CACHE_STORE" value="array"/>
         <env name="DB_CONNECTION" value="pgsql"/>
         <env name="DB_HOST" value="127.0.0.1"/>
-        <env name="DB_PORT" value="5432"/>
+        <env name="DB_PORT" value="5434"/>
         <env name="DB_DATABASE" value="indecs_test"/>
         <env name="DB_USERNAME" value="indecs"/>
         <env name="DB_PASSWORD" value="indecs_local_dev"/>

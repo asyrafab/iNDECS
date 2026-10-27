@@ -25,6 +25,9 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
+            'account_type' => 'staff',
+            'is_active' => true,
+            'has_password' => true,
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),

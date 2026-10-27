@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use DomainException;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 
@@ -17,6 +18,17 @@ use Illuminate\Database\Eloquent\Model;
 class AuditLog extends Model
 {
     public const UPDATED_AT = null;
+
+    protected static function booted(): void
+    {
+        static::updating(function (): never {
+            throw new DomainException('Rekod audit adalah tambah-sahaja dan tidak boleh diubah.');
+        });
+
+        static::deleting(function (): never {
+            throw new DomainException('Rekod audit adalah tambah-sahaja dan tidak boleh dipadam.');
+        });
+    }
 
     protected function casts(): array
     {
