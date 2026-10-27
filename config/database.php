@@ -83,7 +83,7 @@ return [
             'charset' => env('DB_CHARSET', 'utf8'),
             'prefix' => '',
             'prefix_indexes' => true,
-            'search_path' => 'public,core',
+            'search_path' => 'public,core,bangunan',
             'sslmode' => env('DB_SSLMODE', 'prefer'),
         ],
 

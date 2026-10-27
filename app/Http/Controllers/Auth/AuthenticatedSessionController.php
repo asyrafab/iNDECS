@@ -21,13 +21,19 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
         $request->session()->regenerate();
 
-        if (! $request->user()?->canAccessPkm()) {
+        $user = $request->user();
+
+        if (! $user?->canAccessStaffWorkspace()) {
             Auth::logout();
 
             return back()->withErrors(['email' => 'Akaun ini tidak mempunyai akses kepada modul PKM.']);
         }
 
-        return redirect()->intended(route('dashboard'));
+        $defaultRoute = $user->canAccessPkm()
+            ? route('dashboard')
+            : route('bangunan.legacy.index');
+
+        return redirect()->intended($defaultRoute);
     }
 
     public function destroy(Request $request): RedirectResponse

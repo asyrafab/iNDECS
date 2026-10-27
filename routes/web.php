@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\BangunanLegacyController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PkmApplicationController;
 use Illuminate\Support\Facades\Route;
@@ -48,4 +49,9 @@ Route::middleware(['auth', 'perancang.access'])->group(function (): void {
             ->middleware('perancang.permission:perancang.pkm.register')
             ->name('resubmit');
     });
+});
+
+Route::middleware(['auth', 'bangunan.legacy'])->prefix('bangunan')->name('bangunan.')->group(function (): void {
+    Route::get('/legacy', [BangunanLegacyController::class, 'index'])->name('legacy.index');
+    Route::get('/legacy/{legacyPermohonan}', [BangunanLegacyController::class, 'show'])->name('legacy.show');
 });

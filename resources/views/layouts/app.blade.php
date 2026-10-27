@@ -22,28 +22,40 @@
             </a>
 
             <nav class="primary-nav" aria-label="Navigasi utama">
-                <span class="nav-label">Ruang kerja</span>
-                <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                    <span class="nav-icon">⌂</span>
-                    Ringkasan
-                </a>
-                <a href="{{ route('perancang.index') }}" class="nav-link {{ request()->routeIs('perancang.*') ? 'active' : '' }}">
-                    <span class="nav-icon">▤</span>
-                    Permohonan PKM
-                </a>
+                @if (auth()->user()?->canAccessPkm())
+                    <span class="nav-label">Ruang kerja</span>
+                    <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                        <span class="nav-icon">⌂</span>
+                        Ringkasan
+                    </a>
+                    <a href="{{ route('perancang.index') }}" class="nav-link {{ request()->routeIs('perancang.*') ? 'active' : '' }}">
+                        <span class="nav-icon">▤</span>
+                        Permohonan PKM
+                    </a>
 
-                <span class="nav-label nav-label-spaced">Akses pantas</span>
-                <a href="{{ route('perancang.create') }}" class="nav-link">
-                    <span class="nav-icon">＋</span>
-                    Daftar PKM
-                </a>
+                    @if (auth()->user()?->canPerformPkm('perancang.pkm.register'))
+                        <span class="nav-label nav-label-spaced">Akses pantas</span>
+                        <a href="{{ route('perancang.create') }}" class="nav-link">
+                            <span class="nav-icon">＋</span>
+                            Daftar PKM
+                        </a>
+                    @endif
+                @endif
+
+                @if (auth()->user()?->canAccessBangunanLegacy())
+                    <span class="nav-label {{ auth()->user()?->canAccessPkm() ? 'nav-label-spaced' : '' }}">iNDECS Bangunan</span>
+                    <a href="{{ route('bangunan.legacy.index') }}" class="nav-link {{ request()->routeIs('bangunan.*') ? 'active' : '' }}">
+                        <span class="nav-icon">⌕</span>
+                        Carian Rekod Warisan
+                    </a>
+                @endif
             </nav>
 
             <div class="sidebar-note">
                 <span class="dot-live"></span>
                 <div>
-                    <strong>Modul perintis</strong>
-                    <small>Jabatan Perancang Bandar</small>
+                    <strong>{{ request()->routeIs('bangunan.*') ? 'iNDECS Bangunan' : 'Modul perintis' }}</strong>
+                    <small>{{ request()->routeIs('bangunan.*') ? 'Jabatan Bangunan' : 'Jabatan Perancang Bandar' }}</small>
                 </div>
             </div>
         </aside>
@@ -53,7 +65,7 @@
                 <button class="menu-button" type="button" data-menu-toggle aria-label="Buka menu">☰</button>
                 <div class="topbar-context">
                     <span>Majlis Bandaraya Seberang Perai</span>
-                    <strong>Modul Kebenaran Merancang</strong>
+                    <strong>{{ request()->routeIs('bangunan.*') ? 'iNDECS Bangunan' : 'Modul Kebenaran Merancang' }}</strong>
                 </div>
                 @include('partials.theme-control')
                 <div class="user-chip" aria-label="Pengguna semasa">

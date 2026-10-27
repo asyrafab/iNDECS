@@ -31,7 +31,7 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Jabatan Kejuruteraan', 'is_active' => true],
         );
 
-        Department::query()->updateOrCreate(
+        $building = Department::query()->updateOrCreate(
             ['id' => 'JBANG'],
             ['name' => 'Jabatan Bangunan', 'is_active' => true],
         );
@@ -49,6 +49,23 @@ class DatabaseSeeder extends Seeder
                 'is_active' => true,
             ],
         );
+
+        collect([
+            ['id' => 'PB', 'name' => 'Pelan Bangunan Penuh'],
+            ['id' => 'PBK', 'name' => 'Pelan Tambahan / Ubahsuai Kecil'],
+            ['id' => 'PBS', 'name' => 'Pelan Bangunan Sementara dan Permit Sementara Seksyen 19'],
+            ['id' => 'PMT', 'name' => 'Permit Bangunan (Bahan Binaan, Perancah, Runtuh, Tukar Guna)'],
+            ['id' => 'TEL', 'name' => 'Struktur Telekomunikasi dan Permit Boleh Baharu'],
+        ])->each(function (array $type) use ($building): void {
+            ApplicationType::query()->updateOrCreate(
+                ['id' => $type['id']],
+                [
+                    'name' => $type['name'],
+                    'primary_department_id' => $building->id,
+                    'is_active' => true,
+                ],
+            );
+        });
 
         $this->seedCorePermissions();
 
@@ -130,6 +147,8 @@ class DatabaseSeeder extends Seeder
             ['id' => 'intake_officer', 'label' => 'Pegawai Pendaftaran'],
             ['id' => 'planning_officer', 'label' => 'Pegawai Perancang'],
             ['id' => 'senior_planning_officer', 'label' => 'Pegawai Kanan Perancang'],
+            ['id' => 'building_officer', 'label' => 'Pegawai Bangunan'],
+            ['id' => 'senior_building_officer', 'label' => 'Pegawai Kanan Bangunan'],
         ])->each(function (array $role) use ($now): void {
             DB::table('core.roles')->updateOrInsert(
                 ['id' => $role['id']],
@@ -158,6 +177,11 @@ class DatabaseSeeder extends Seeder
                 'name' => 'perancang.pkm.review',
                 'label' => 'Semakan kelengkapan PKM',
                 'description' => 'Membenarkan semakan kelengkapan dokumen, pengesahan lengkap atau pemulangan untuk pindaan.',
+            ],
+            [
+                'name' => 'bangunan.legacy.view',
+                'label' => 'Carian rekod warisan Bangunan',
+                'description' => 'Membenarkan carian dan semakan baca-sahaja rekod warisan MPSP_Bangunan dalam iNDECS Bangunan.',
             ],
         ])->each(function (array $permission) use ($now): void {
             DB::table('core.permissions')->updateOrInsert(
@@ -191,7 +215,19 @@ class DatabaseSeeder extends Seeder
             }
         }
 
-        foreach (['perancang.pkm.access', 'perancang.pkm.register', 'perancang.pkm.review'] as $permissionName) {
+        foreach (['building_officer', 'senior_building_officer'] as $roleId) {
+            DB::table('core.role_permissions')->updateOrInsert(
+                [
+                    'role_id' => $roleId,
+                    'permission_name' => 'bangunan.legacy.view',
+                    'department_id' => 'JBANG',
+                    'application_type_id' => null,
+                ],
+                ['updated_at' => $now, 'created_at' => $now],
+            );
+        }
+
+        foreach (['perancang.pkm.access', 'perancang.pkm.register', 'perancang.pkm.review', 'bangunan.legacy.view'] as $permissionName) {
             DB::table('core.role_permissions')->updateOrInsert(
                 [
                     'role_id' => 'system_admin',

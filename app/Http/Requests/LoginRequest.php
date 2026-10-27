@@ -57,7 +57,7 @@ class LoginRequest extends FormRequest
 
             $user = $profile === null ? null : User::query()
                 ->where('staff_number', $profile['staff_number'])->where('is_active', true)->first();
-            $authenticated = $user?->canAccessPkm() === true;
+            $authenticated = $user?->canAccessStaffWorkspace() === true;
             $failureMessage = $profile === null
                 ? 'MBSP tidak mengesahkan nombor kakitangan atau kata laluan ini. Sila semak maklumat log masuk MBSP anda.'
                 : 'Pengesahan MBSP berjaya, tetapi akses iNDECS belum dibenarkan. Sila hubungi pentadbir iNDECS.';

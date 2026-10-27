@@ -40,8 +40,8 @@ final class LinkStaffAccount extends Command
                 return self::FAILURE;
             }
 
-            if (! $user->canAccessPkm()) {
-                $this->error('Akaun iNDECS ini belum aktif atau belum mempunyai akses staff PKM.');
+            if (! $user->canAccessStaffWorkspace()) {
+                $this->error('Akaun iNDECS ini belum aktif atau belum mempunyai akses ruang kerja staff.');
 
                 return self::FAILURE;
             }

@@ -2,6 +2,36 @@
 
 Last updated: 2026-10-27.
 
+## iNDECS Bangunan Read-Only Legacy Lookup Slice (ADR-308)
+
+- Added [ADR-308](docs/adr/ADR-308-bangunan-legacy-readonly-lookup.md) and
+  migration `2026_09_21_000900_create_bangunan_legacy_lookup_tables.php`:
+  - Provisioned PostgreSQL schema `bangunan` and read-only legacy lookup tables
+    `bangunan.legacy_permohonan` (`PERMOHONAN1`), `bangunan.legacy_perunding`
+    (`PERUNDING`), `bangunan.legacy_bangunan` (`BANGUNAN1`), and
+    `bangunan.legacy_ccc` (`CCC`) with `pg_trgm` GIN indexes on file reference,
+    serial number, applicant, lot, and location.
+  - Updated `config/database.php` `pgsql.search_path` to `'public,core,bangunan'`
+    so schema rebuilds and migrations manage `bangunan` tables cleanly.
+- Seeded the five `JBANG` application family codes (`PB`, `PBK`, `PBS`, `PMT`,
+  `TEL`), `JBANG` roles (`building_officer`, `senior_building_officer`), and
+  permission `bangunan.legacy.view` in `DatabaseSeeder`.
+- Added read-only Eloquent models (`LegacyPermohonan`, `LegacyPerunding`,
+  `LegacyBangunan`, `LegacyCcc`) that block all Eloquent writes/deletes and
+  evaluate effective legacy status using the verified `frmMain.fetch` branch-date
+  hierarchy (`PmnTkhTolak`, `PmnTkhBatal`, `PmnTkhTarikBalikR`, `PmnTkhLulus`,
+  `PmnTkhTangguh` ahead of `PmnStatus`).
+- Added `BangunanLegacySyncService` and console command
+  `php artisan bangunan:sync-legacy` to load scrubbed legacy snapshots and print
+  reconciliation counts.
+- Added `EnsureBangunanLegacyAccess` (`bangunan.legacy` middleware),
+  `BangunanLegacyController`, and Bahasa Melayu Blade views (`bangunan/legacy/index`
+  and `bangunan/legacy/show`) under `/bangunan/legacy`, including shared
+  `PmnNorujukan` sibling lineage and `CCC` multi-parent (`needs_review`) warnings.
+- Added `tests/Feature/BangunanLegacyLookupTest.php`.
+- Verification: `php scripts/verify-database.php` passed; `php artisan test`
+  passed (**74 tests, 405 assertions**); `php vendor/bin/pint --test` passed.
+
 ## Append-Only Audit/History and District/Action RBAC Increment (ADR-306, ADR-307)
 
 - Added [ADR-306](docs/adr/ADR-306-append-only-audit-and-history.md) and

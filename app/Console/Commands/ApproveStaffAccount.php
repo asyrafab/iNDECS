@@ -44,19 +44,16 @@ final class ApproveStaffAccount extends Command
             return self::FAILURE;
         }
 
-        $hasPkmAccess = DB::table('core.role_permissions')
+        $hasWorkspaceAccess = DB::table('core.role_permissions')
             ->where('role_id', $role)
-            ->where('permission_name', 'perancang.pkm.access')
+            ->whereIn('permission_name', ['perancang.pkm.access', 'bangunan.legacy.view'])
             ->where(function ($query) use ($departmentId): void {
                 $query->whereNull('department_id')->orWhere('department_id', $departmentId);
             })
-            ->where(function ($query): void {
-                $query->whereNull('application_type_id')->orWhere('application_type_id', 'PKM');
-            })
             ->exists();
 
-        if (! $hasPkmAccess) {
-            $this->error('Role dan jabatan ini belum mempunyai akses PKM.');
+        if (! $hasWorkspaceAccess) {
+            $this->error('Role dan jabatan ini belum mempunyai akses ruang kerja iNDECS.');
 
             return self::FAILURE;
         }

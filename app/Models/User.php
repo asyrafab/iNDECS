@@ -47,6 +47,33 @@ class User extends Authenticatable
         return app(CorePermissionService::class)->userCan($this, $permission, $this->department_id, 'PKM');
     }
 
+    public function canAccessBangunanLegacy(): bool
+    {
+        if (! $this->is_active || $this->account_type !== 'staff') {
+            return false;
+        }
+
+        return app(CorePermissionService::class)->userCan($this, 'bangunan.legacy.view', $this->department_id, null);
+    }
+
+    public function canAccessStaffWorkspace(): bool
+    {
+        return $this->canAccessPkm() || $this->canAccessBangunanLegacy();
+    }
+
+    public function canAccessLegacyPermohonan(LegacyPermohonan $permohonan): bool
+    {
+        if (! $this->canAccessBangunanLegacy() || $permohonan->is_excluded_test_record) {
+            return false;
+        }
+
+        if ($this->role === 'system_admin' || blank($this->district)) {
+            return true;
+        }
+
+        return $permohonan->district === $this->district;
+    }
+
     public function canAccessApplication(Application $application): bool
     {
         if (! $this->canAccessPkm() || $application->application_type_id !== 'PKM') {
