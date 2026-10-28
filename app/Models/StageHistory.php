@@ -32,6 +32,11 @@ class StageHistory extends Model
         });
     }
 
+    public function actor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'actor_id');
+    }
+
     public function application(): BelongsTo
     {
         return $this->belongsTo(Application::class);

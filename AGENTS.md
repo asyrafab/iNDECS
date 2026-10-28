@@ -120,6 +120,23 @@ application, two = linked pair, three = development case.
 
 ## Working rules
 
+- The approved workspace (ADR-311) has a persistent navy sidebar shared by all
+  departments. `.workspace-switcher` exposes authorised departments only;
+  `.workspace-body`, `.topbar-actions`, `.workspace-footer`, `.record-tabs` and
+  `.catalogue-tools` organise existing screens. `.indecs-mark` renders the unchanged
+  three-square geometry; `mark-reversed`, `mark-small` and `mark-entry` are its variants.
+- `<x-icon>` uses the local Lucide sprite and `<x-mark>` uses shared token colours.
+  The upstream icon licence and pinned version live in `public/vendor/`.
+- `.amira-panel`, `.amira-context`, `.amira-prompts`, `.amira-answer` and
+  `.amira-composer` are shared assistant components. Until AIRS integration exists,
+  AMIRA provides explicitly labelled local page guidance only. Derive record
+  context from the authorised route-bound model, never a Blade loop variable.
+  No external AI calls, fabricated findings, automatic form submissions or status
+  changes. Keep evidence separate from guidance and officer actions.
+- `data-motion="reduced"` and the OS preference disable motion. Animation durations
+  and easing are tokens. Accent-filled primary actions use the deeper action token
+  to keep white labels readable; the brand accent stays teal.
+
 - Public identity pages use `.public-header`, `.public-brand`, `.public-shell`,
   `.public-tabs`, `.public-form`, `.public-section` and `.public-details` in
   `indecs.css`. They are unframed account surfaces using the shared tokens.

@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="page-heading">
-        <a href="{{ route('perancang.index') }}" class="back-link">← Kembali ke senarai</a>
+        <a href="{{ route('perancang.index') }}" class="back-link"><x-icon name="arrow-left" /> Kembali ke senarai</a>
         <span class="eyebrow">Pendaftaran permohonan</span>
         <h1>Daftar PKM baharu</h1>
         <p>Lengkapkan maklumat asas, pihak berkepentingan, tapak dan butiran perancangan.</p>
@@ -12,7 +12,7 @@
 
     @if ($errors->any())
         <div class="alert alert-error validation-summary" role="alert">
-            <span>!</span>
+            <x-icon name="circle-alert" />
             <div>
                 <strong>Sila semak maklumat yang dimasukkan.</strong>
                 <ul>
@@ -180,7 +180,7 @@
             <div class="form-divider"></div>
             <div class="repeater-heading">
                 <h3 class="subsection-title">Senarai lot <b>*</b></h3>
-                <button type="button" class="button button-small button-secondary" data-repeater-add="lots">＋ Tambah lot</button>
+                <button type="button" class="button button-small button-secondary" data-repeater-add="lots"><x-icon name="plus" /> Tambah lot</button>
             </div>
             <div data-repeater="lots">
                 <div data-repeater-items>
@@ -210,7 +210,7 @@
                                     <option value="square_metre" @selected(($lot['land_area_unit'] ?? '') === 'square_metre')>m²</option>
                                 </select>
                             </label>
-                            <button type="button" class="remove-row" data-repeater-remove aria-label="Buang lot">×</button>
+                            <button type="button" class="remove-row" data-repeater-remove aria-label="Buang lot"><x-icon name="x" /></button>
                         </div>
                     @endforeach
                 </div>
@@ -222,7 +222,7 @@
                         <label class="field"><span>Seksyen</span><input name="lots[__INDEX__][section]"></label>
                         <label class="field"><span>Keluasan</span><input type="number" step="0.0001" min="0" name="lots[__INDEX__][land_area]"></label>
                         <label class="field compact-field"><span>Unit</span><select name="lots[__INDEX__][land_area_unit]"><option value="hectare">ha</option><option value="square_metre">m²</option></select></label>
-                        <button type="button" class="remove-row" data-repeater-remove aria-label="Buang lot">×</button>
+                        <button type="button" class="remove-row" data-repeater-remove aria-label="Buang lot"><x-icon name="x" /></button>
                     </div>
                 </template>
             </div>
@@ -295,7 +295,7 @@
                     <h3 class="subsection-title">Komponen pembangunan <span>Pilihan</span></h3>
                     <p class="helper-text">Pecahkan cadangan kepada komponen seperti kediaman, komersial atau kemudahan.</p>
                 </div>
-                <button type="button" class="button button-small button-secondary" data-repeater-add="components">＋ Tambah komponen</button>
+                <button type="button" class="button button-small button-secondary" data-repeater-add="components"><x-icon name="plus" /> Tambah komponen</button>
             </div>
             <div data-repeater="components">
                 <div data-repeater-items>
@@ -306,7 +306,7 @@
                             <label class="field"><span>Kategori</span><input name="components[{{ $index }}][category]" value="{{ $component['category'] ?? '' }}"></label>
                             <label class="field"><span>Bil. unit</span><input type="number" min="0" name="components[{{ $index }}][number_of_units]" value="{{ $component['number_of_units'] ?? '' }}"></label>
                             <label class="field"><span>Luas lantai (m²)</span><input type="number" step="0.01" min="0" name="components[{{ $index }}][floor_area]" value="{{ $component['floor_area'] ?? '' }}"></label>
-                            <button type="button" class="remove-row" data-repeater-remove aria-label="Buang komponen">×</button>
+                            <button type="button" class="remove-row" data-repeater-remove aria-label="Buang komponen"><x-icon name="x" /></button>
                         </div>
                     @endforeach
                 </div>
@@ -317,7 +317,7 @@
                         <label class="field"><span>Kategori</span><input name="components[__INDEX__][category]"></label>
                         <label class="field"><span>Bil. unit</span><input type="number" min="0" name="components[__INDEX__][number_of_units]"></label>
                         <label class="field"><span>Luas lantai (m²)</span><input type="number" step="0.01" min="0" name="components[__INDEX__][floor_area]"></label>
-                        <button type="button" class="remove-row" data-repeater-remove aria-label="Buang komponen">×</button>
+                        <button type="button" class="remove-row" data-repeater-remove aria-label="Buang komponen"><x-icon name="x" /></button>
                     </div>
                 </template>
             </div>
@@ -327,7 +327,7 @@
             <a href="{{ route('perancang.index') }}" class="button button-ghost">Batal</a>
             <div>
                 <small>Rujukan PKM dijana secara automatik</small>
-                <button type="submit" class="button button-primary button-large">Daftar permohonan <span>→</span></button>
+                <button type="submit" class="button button-primary button-large">Daftar permohonan <span><x-icon name="arrow-right" /></span></button>
             </div>
         </div>
     </form>

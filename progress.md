@@ -1,6 +1,45 @@
 # iNDECS Progress
 
-Last updated: 2026-10-27.
+Last updated: 2026-10-28.
+
+## Shared document verification for Bangunan (ADR-310)
+
+Implemented 2026-10-28 on the existing Bangunan/core review branch:
+
+- Added shared `core.document_catalogues`, case-specific `core.document_checklists` and snapshotted checklist items, plus scan metadata on existing application documents. The department catalogue reuses core document types and requirements. Existing case snapshots remain stable after later catalogue edits.
+- Added authorised catalogue configuration with source reference and version checks. Only authorised senior building officers/system administrators may publish. No department checklist content, application records or user accounts were seeded.
+- Added private content-validated, SHA-256 document revisions through ApplicationDocumentService and the DocumentScanner contract. Replacements preserve old revisions and reset verification; failed metadata writes remove the new blob and roll back the old current revision. The ClamAV adapter refuses detections, unavailable scanning, errors and timeouts.
+- Added granular upload/verify/configure permissions and configured workflow guards for opening a checklist, returning for correction, resubmitting and completing document verification. Required current revisions must be accepted before fee assessment; optional supplied documents must be reviewed or explicitly waived. State changes and document mutations preserve actor audit and row-version checks.
+- Added protected downloads with department/type/district, case ownership and checksum enforcement, including historical revisions. Added operational document/review and catalogue screens using the existing Blade shell/classes, with mobile layout checks and working revision history.
+- Installed official portable ClamAV 1.5.4 under ignored `.tools/clamav/`. Verified the archive's detached signature against the key obtained from the official Talos download page, downloaded/verified official signature databases through FreshClam, and successfully scanned a generated safe PDF through the actual application adapter. Local executable/database/certificate paths are in untracked `.env`; committed configuration defaults to Linux `clamscan`. No scan bypass or recurring automation was added.
+- Applied only the additive migration and dedicated BangunanDocumentWorkflowSeeder to the verified local development database. Existing application count was unchanged. Added ADR-310 and `docs/runbooks/bangunan-document-verification.md` with operating, deployment, signature maintenance and recovery instructions.
+
+Verification: **114 tests, 790 assertions passed** (22 new document-verification cases); guarded PostgreSQL migration/rollback/re-migration passed; Pint and `git diff --check` passed. Scanner adapter tests cover clean/detected/error/missing-process outcomes, with explicit test doubles confined to tests. Browser checks used actual Blade responses from disposable test records, including catalogue row addition, revision expansion and a mobile width check (content 375px / viewport 375px). A final Blade directive error was corrected and the full suite rerun successfully.
+
+Remaining: authorised department officers must enter the confirmed family checklists before operational verification can start. Next development increment is fee-rule configuration and fee assessment, followed by later guarded stages. No payment, approval, production cutover or hosted Linux CI result is claimed. Existing PKM behavior remains for Phase 2; its historical upload service has not yet moved onto the new scanner-backed core service. All changes remain local pending pull request and hosted CI.
+
+## Operational Bangunan registration and shared workflow (ADR-309)
+
+Implemented 2026-10-27 in the existing iNDECS Laravel application:
+
+- Added authenticated `/bangunan` list, search/type/status filters, scoped metrics, registration and case-detail routes for PB, PBK, PBS, PMT and TEL. Reused the shared Blade shell, CSS classes, tokens, theme controls and existing core records. No prototype mode or sample application data was added to the local development database.
+- Stored department fields in `bangunan.app_pb_applications`; core applications, parties, sites, lots, references and actor-attributed audit/history are created atomically. PB requires an OSC reference. Department, type and district constraints apply to lists, forms, details and transitions. New roles/accounts were not created or promoted.
+- Added shared ApplicationReferenceGenerator, retaining PkmReferenceGenerator as a compatible wrapper. Added versioned core workflow templates/transitions and a pinned application template. WorkflowService locks records and validates permissions, source state and expected row version before appending history and audit. The first configured transition starts document verification; existing PKM workflow remains unchanged.
+- Explicitly rejected cross-module application IDs in PKM controllers after broadening the shared application access method. Added cross-module regression coverage, including administrators.
+- Corrected shared lot-repeater indexes after row removal/addition and shared mobile-header overflow. Reused record-side layout; did not introduce parallel UI components.
+- Aligned canonical programme roadmap/decision records and DESIGN-DIRECTION with the accepted order: module rollout 1 Bangunan, 2 PKM. Fixed the Ubuntu CI migration-check step to use its PostgreSQL port 5432.
+- Added deployment/operation notes in `docs/runbooks/bangunan-registration.md` and ADR-309 before implementation.
+
+Verification:
+
+- Full PostgreSQL suite passed: **92 tests, 616 assertions** (18 new Bangunan cases).
+- Guarded migration/rollback/re-migration passed on disposable `indecs_test`.
+- Changed-file Pint and `git diff --check` passed.
+- Actual Blade responses from test requests checked in browser at desktop and mobile widths. Mobile DOM width matched viewport (375px) after the header fix. Adding, removing and re-adding lots retained unique sequential field indexes. Test-view capture is optional and stored only under ignored `.tools/bangunan-ui/`.
+- Applied only the additive migration and dedicated BangunanWorkflowSeeder to the verified loopback local iNDECS database; existing application count unchanged. No full reseed or application/user test data was inserted there.
+- Started the real local application at http://127.0.0.1:8000/bangunan; normal staff authentication remains required. The source is intended for Linux deployment and Ubuntu CI; this session's executable tests ran on the current Windows workstation with PostgreSQL. Hosted Linux CI has not been run for this increment.
+
+Remaining work: family-specific document requirements/storage and verification completion, then fee assessment and later guarded transitions. Legacy lookup remains separate; no operational legacy cutover, permit/approval issuance, AIRS invocation or production deployment is claimed. Changes remain local and require a pull request and hosted green CI before merge.
 
 ## iNDECS Bangunan Read-Only Legacy Lookup Slice (ADR-308)
 
@@ -480,3 +519,37 @@ No commit, push or pull request was created.
 Update this file after each implementation increment with changed files,
 verification results and remaining work. Do not mark programme phases complete
 based solely on documentation or unexecuted test configuration.
+
+## Approved workspace redesign — 2026-10-28
+
+The programme owner approved the navy-sidebar concept and authorised combining
+this work with the existing Bangunan registration/document increments in one PR.
+
+- Google Sans retained across shared tokens and the optional Vite stylesheet;
+  removed the superseded Archivo/Instrument Sans setup and accent picker.
+- Applied the navy/teal theme to staff/public identity, Perancang, operational
+  Bangunan, document catalogues/revisions/verification and legacy lookups.
+- Added local Lucide icons, recurring iNDECS marks, finite motion with user/OS
+  reduction controls, permission-filtered department links and record navigation.
+- Added AMIRA's keyboard-accessible context rail/dialog. Guidance is explicitly
+  local; a live AIRS assistant connection remains unavailable. No external AI
+  calls or assistant-driven business writes were introduced.
+- Added ADR-311 and the theme/AMIRA runbook; retained existing Bangunan business
+  rules, scopes, document ownership checks and append-only history.
+- Cleared the pre-existing security audit failures with compatible lockfile
+  updates: five Composer package updates and npm's supported audit fixes.
+
+Verification on the final dependency set: 119 PostgreSQL tests / 849 assertions
+passed; Pint, compiled Blade views, JavaScript syntax, Composer validation and
+production build passed. Composer/npm report no security advisories. The guarded
+PostgreSQL migration/seed/rollback/re-migrate check passed on indecs_test. Browser
+review covered light/dark Bangunan lists/cases/documents, mobile forms/drawers,
+AMIRA context and Escape/focus return, lot repeaters, public registration and
+staff login. Google Sans loaded successfully. The normal application database
+was inspected read-only and has no pending migrations; no application records
+were migrated for the redesign.
+
+Remaining capability: implement the authenticated AIRS assistant API separately;
+AMIRA's local-guidance availability notice must stay until then. Fees, payments
+and later Bangunan stages retain their existing roadmap scope. Hosted CI and PR
+status are recorded in the linked review rather than inferred from local checks.

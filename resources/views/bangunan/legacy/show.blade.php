@@ -5,7 +5,7 @@
 @section('content')
     <div class="record-heading">
         <div>
-            <a href="{{ route('bangunan.legacy.index') }}" class="back-link">← Kembali ke carian warisan</a>
+            <a href="{{ route('bangunan.legacy.index') }}" class="back-link"><x-icon name="arrow-left" /> Kembali ke carian warisan</a>
             <div class="record-reference-row">
                 <span class="record-type">WARISAN BANGUNAN</span>
                 <span class="record-reference">{{ $record->pmn_no_rujukan }}</span>
@@ -19,7 +19,7 @@
 
     <section class="workflow-banner">
         <div class="workflow-current">
-            <span class="workflow-symbol">◎</span>
+            <span class="workflow-symbol"><x-icon name="circle-dot" /></span>
             <div>
                 <small>Status berkesan (hierarki tarikh cabang)</small>
                 <strong>{{ $record->effectiveStatusLabel() }}</strong>
@@ -214,7 +214,7 @@
                     <div class="party-list">
                         @foreach ($siblings as $sibling)
                             <article>
-                                <span class="party-avatar">↗</span>
+                                <span class="party-avatar"><x-icon name="arrow-up-right" /></span>
                                 <div>
                                     <small>Siri {{ $sibling->pmn_no_siri }} · {{ $sibling->pmn_tkh_pohon?->format('d/m/Y') ?? '—' }}</small>
                                     <strong><a class="reference-link" href="{{ route('bangunan.legacy.show', $sibling) }}">{{ $sibling->pmn_tajuk ?: $sibling->pmn_no_rujukan }}</a></strong>

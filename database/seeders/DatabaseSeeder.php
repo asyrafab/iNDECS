@@ -68,6 +68,8 @@ class DatabaseSeeder extends Seeder
         });
 
         $this->seedCorePermissions();
+        $this->call(BangunanWorkflowSeeder::class);
+        $this->call(BangunanDocumentWorkflowSeeder::class);
 
         $officer = User::query()->firstOrNew(['email' => 'pegawai@indecs.test']);
         $officer->fill([

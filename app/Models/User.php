@@ -47,6 +47,23 @@ class User extends Authenticatable
         return app(CorePermissionService::class)->userCan($this, $permission, $this->department_id, 'PKM');
     }
 
+    public function canPerformBangunan(string $action, string $type): bool
+    {
+        return in_array($type, BangunanApplication::TYPES, true)
+            && app(CorePermissionService::class)->userCan($this, 'bangunan.application.'.$action, $this->department_id, $type);
+    }
+
+    public function canAccessBangunan(): bool
+    {
+        foreach (BangunanApplication::TYPES as $type) {
+            if ($this->canPerformBangunan('access', $type)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function canAccessBangunanLegacy(): bool
     {
         if (! $this->is_active || $this->account_type !== 'staff') {
@@ -58,7 +75,7 @@ class User extends Authenticatable
 
     public function canAccessStaffWorkspace(): bool
     {
-        return $this->canAccessPkm() || $this->canAccessBangunanLegacy();
+        return $this->canAccessPkm() || $this->canAccessBangunan() || $this->canAccessBangunanLegacy();
     }
 
     public function canAccessLegacyPermohonan(LegacyPermohonan $permohonan): bool
@@ -76,7 +93,11 @@ class User extends Authenticatable
 
     public function canAccessApplication(Application $application): bool
     {
-        if (! $this->canAccessPkm() || $application->application_type_id !== 'PKM') {
+        $canAccess = $application->application_type_id === 'PKM'
+            ? $this->canAccessPkm()
+            : ($application->responsible_department_id === 'JBANG' && $this->canPerformBangunan('access', $application->application_type_id));
+
+        if (! $canAccess) {
             return false;
         }
 

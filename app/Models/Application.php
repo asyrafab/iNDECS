@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable([
+    'workflow_template_id',
     'development_case_id',
     'application_type_id',
     'application_reference',
@@ -71,6 +72,11 @@ class Application extends Model
     public function assignee(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    public function bangunan(): HasOne
+    {
+        return $this->hasOne(BangunanApplication::class);
     }
 
     public function pkm(): HasOne

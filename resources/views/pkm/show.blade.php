@@ -5,7 +5,7 @@
 @section('content')
     <div class="record-heading">
         <div>
-            <a href="{{ route('perancang.index') }}" class="back-link">← Kembali ke senarai</a>
+            <a href="{{ route('perancang.index') }}" class="back-link"><x-icon name="arrow-left" /> Kembali ke senarai</a>
             <div class="record-reference-row">
                 <span class="record-type">PKM</span>
                 <span class="record-reference">{{ $application->application_reference }}</span>
@@ -17,19 +17,20 @@
         @if ($application->current_stage === \App\Enums\ApplicationStage::Registration && $application->current_status === \App\Enums\ApplicationStatus::Submitted)
             <form method="POST" action="{{ route('perancang.start-review', $application) }}" data-confirm="Mulakan semakan kelengkapan untuk permohonan ini?">
                 @csrf
-                <button type="submit" class="button button-primary button-large">Mulakan semakan <span>→</span></button>
+                <button type="submit" class="button button-primary button-large">Mulakan semakan <span><x-icon name="arrow-right" /></span></button>
             </form>
         @elseif ($application->current_status === \App\Enums\ApplicationStatus::ReturnedForAmendment)
             <form method="POST" action="{{ route('perancang.resubmit', $application) }}" data-confirm="Buka kitaran semakan baharu untuk pindaan ini?">
                 @csrf
-                <button type="submit" class="button button-primary button-large">Hantar semula pindaan <span>→</span></button>
+                <button type="submit" class="button button-primary button-large">Hantar semula pindaan <span><x-icon name="arrow-right" /></span></button>
             </form>
         @endif
     </div>
 
+    @include('partials.record-navigation', ['recordNavigation' => array_filter(['Ringkasan' => '#ringkasan', 'Borang Jabatan' => '#borang-jabatan', 'Dokumen' => $activeReview ? '#dokumen' : null, 'Pemohon & Perunding' => '#pihak', 'Tapak & Lot' => '#tapak', 'Garis Masa' => '#garis-masa'])])
     <section class="workflow-banner">
         <div class="workflow-current">
-            <span class="workflow-symbol">◎</span>
+            <span class="workflow-symbol"><x-icon name="circle-dot" /></span>
             <div>
                 <small>Peringkat semasa</small>
                 <strong>{{ $application->current_stage->label() }}</strong>
@@ -56,7 +57,7 @@
 
     <div class="record-layout">
         <div class="record-main">
-            <section class="content-card detail-card">
+            <section class="content-card detail-card" id="ringkasan">
                 <div class="card-heading">
                     <div>
                         <span class="eyebrow">Ringkasan</span>
@@ -91,7 +92,7 @@
                             @php($document = $currentDocuments->get($item->document_type_id))
                             <article class="completeness-item item-status-{{ $item->status->value }}">
                                 <div class="item-status-symbol">
-                                    @if ($item->status === \App\Enums\CompletenessItemStatus::Complete) ✓
+                                    @if ($item->status === \App\Enums\CompletenessItemStatus::Complete) <x-icon name="check" />
                                     @elseif ($item->status === \App\Enums\CompletenessItemStatus::Missing) !
                                     @else {{ str_pad((string) $loop->iteration, 2, '0', STR_PAD_LEFT) }}
                                     @endif
@@ -154,7 +155,7 @@
                                     <span>Catatan keputusan <small>(pilihan)</small></span>
                                     <input type="text" name="remarks" placeholder="Ringkasan semakan kelengkapan">
                                 </label>
-                                <button type="submit" class="button button-primary">Sahkan lengkap <span>→</span></button>
+                                <button type="submit" class="button button-primary">Sahkan lengkap <span><x-icon name="arrow-right" /></span></button>
                             </form>
                             <form method="POST" action="{{ route('perancang.completeness.return', $application) }}" data-confirm="Kembalikan permohonan ini untuk pindaan?">
                                 @csrf
@@ -175,7 +176,7 @@
                 </section>
             @endif
 
-            <section class="content-card detail-card">
+            <section class="content-card detail-card" id="borang-jabatan">
                 <div class="card-heading">
                     <div>
                         <span class="eyebrow">Parameter teknikal</span>
@@ -219,7 +220,7 @@
                 </div>
             </section>
 
-            <section class="content-card detail-card">
+            <section class="content-card detail-card" id="tapak">
                 <div class="card-heading">
                     <div>
                         <span class="eyebrow">Lokasi</span>
@@ -249,7 +250,7 @@
         </div>
 
         <aside class="record-side">
-            <section class="content-card side-card">
+            <section class="content-card side-card" id="pihak">
                 <div class="card-heading"><div><span class="eyebrow">Pihak</span><h2>Pemohon & perunding</h2></div></div>
                 <div class="party-list">
                     @foreach ($application->applicationParties as $applicationParty)
@@ -282,7 +283,7 @@
                 </section>
             @endif
 
-            <section class="content-card side-card">
+            <section class="content-card side-card" id="garis-masa">
                 <div class="card-heading"><div><span class="eyebrow">Jejak audit</span><h2>Garis masa</h2></div></div>
                 <ol class="timeline">
                     @foreach ($application->stageHistory as $history)

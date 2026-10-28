@@ -6,7 +6,9 @@ The product vision is in [docs/OVERVIEW.md](docs/OVERVIEW.md). The binding desig
 
 ## Current capability
 
-The repository contains the first working slice of the **Permohonan Kebenaran Merancang (PKM)** module. Implementation decisions and discovery items for this slice are in [docs/PKM-FIRST-SLICE.md](docs/PKM-FIRST-SLICE.md).
+**Bangunan is the first module rollout; PKM follows as Phase 2.** The operational Bangunan increment now includes registration for PB/PBK/PBS/PMT/TEL, case lists and scoped access, shared reference sequences and workflow, department-confirmed document catalogues, scanned private document revisions, officer verification, correction/resubmission, and guarded progression to fee assessment. Open `/bangunan` with an authorised staff account. Fees, payments and approvals remain future increments. See the [registration runbook](docs/runbooks/bangunan-registration.md) and [document-verification runbook](docs/runbooks/bangunan-document-verification.md).
+
+Existing PKM capability is retained: the repository contains the first working slice of the **Permohonan Kebenaran Merancang (PKM)** module. Implementation decisions and discovery items for this slice are in [docs/PKM-FIRST-SLICE.md](docs/PKM-FIRST-SLICE.md).
 
 - PKM dashboard and searchable application list
 - Validated PKM registration form
@@ -25,14 +27,19 @@ The repository contains the first working slice of the **Permohonan Kebenaran Me
 - Immutable stage history, audit records and optimistic row versioning
 - Responsive server-rendered interface in Bahasa Melayu
 
-The model keeps shared application data separate from `pkm_applications` and `pkm_components`, so the Bangunan, Kejuruteraan and Landskap modules reuse the same core.
+The model keeps shared application data separate from `app_pkm_applications` and `app_pkm_components`, so the Bangunan, Kejuruteraan and Landskap modules reuse the same core.
 
 ## Direction (decided 2026-09-18)
 
 - **Database:** PostgreSQL 18 with PostGIS and pg_trgm — **implemented** on the local Windows service (`127.0.0.1:5434`, database `iNDECS`, consolidating `iNDECS`, `AIRS` in schema `airs`, and `MIDR` in schemas `catalogue`, `core`, `application`, `publish`). Route (`/pkm` → `/perancang`) and table (`pkm_*` → `app_pkm_*`) naming was also reconciled to `docs/DESIGN-DIRECTION.md`; PHP class names were left as-is since they name the PKM application type, which stays as-is per `AGENTS.md`.
 - **Identity:** iNDECS issues OpenID Connect for the family; staff via the MBSP staff API or Active Directory, public users via shadow accounts and magic links. Not yet implemented.
-- **Core capabilities** (workflow engine, RBAC, fees and payments, notifications, SLA, letters, units registry, domain events) are built in `core` in the order iNDECS Bangunan needs them. PKM migrates onto the workflow engine as the proof of generality. Not yet implemented.
+- **Core capabilities** (workflow engine, RBAC, fees and payments, notifications, SLA, letters, units registry, domain events) are built in `core` in the order iNDECS Bangunan needs them. Shared references, scoped RBAC, the initial workflow and document-verification services are implemented for Bangunan. PKM workflow migration follows Bangunan acceptance in Phase 2 (ADR-211); fees, payments and later capabilities remain outstanding.
 - **Visual direction:** Calm Intelligence, shared with AIRS.
+- **Approved workspace:** navy sidebar, Google Sans, shared teal accent, responsive
+  light/dark modes, local Lucide icons and reduced-motion support across staff,
+  public, Perancang and Bangunan screens. AMIRA provides local page guidance;
+  live AIRS conversation is not yet connected. See the
+  [theme and AMIRA runbook](docs/runbooks/theme-and-amira.md).
 - **Engineering hygiene** (repositories, CI against PostgreSQL, secrets management, staging, tested backups) precedes module work. Git history and the PostgreSQL move are done; CI, staging and backups are not. See `docs/bangunan/15-engineering-hygiene.md`.
 
 ## Local setup (current slice)

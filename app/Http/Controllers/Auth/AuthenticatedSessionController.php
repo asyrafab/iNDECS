@@ -26,12 +26,12 @@ class AuthenticatedSessionController extends Controller
         if (! $user?->canAccessStaffWorkspace()) {
             Auth::logout();
 
-            return back()->withErrors(['email' => 'Akaun ini tidak mempunyai akses kepada modul PKM.']);
+            return back()->withErrors(['email' => 'Akaun ini tidak mempunyai akses kepada ruang kerja staf iNDECS.']);
         }
 
-        $defaultRoute = $user->canAccessPkm()
+        $defaultRoute = $user->canAccessBangunan() ? route('bangunan.index') : ($user->canAccessPkm()
             ? route('dashboard')
-            : route('bangunan.legacy.index');
+            : route('bangunan.legacy.index'));
 
         return redirect()->intended($defaultRoute);
     }

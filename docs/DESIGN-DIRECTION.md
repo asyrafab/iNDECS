@@ -82,7 +82,7 @@ parallel components.
 | Table | `.data-table` | 1px header rule, 1px soft row rules, soft ground row hover, tabular numerals |
 | Status | `.status-badge` + `.status-compliant`, `.status-attention`, `.status-critical`, `.status-info`, `.status-ai`, `.status-pending` | tinted fill, dark text of same hue; never more than the six |
 | Card | `.content-card`, `.form-card`, `.detail-card`, `.side-card` | white surface, 1px border, `--radius-md`, no shadow except `.raised` |
-| Nav | `.sidebar`, `.nav-link`, `.nav-link.active` | active = accent text on soft-teal fill with `--radius-sm` |
+| Nav | `.sidebar`, `.nav-link`, `.nav-link.active` | persistent navy environment; active = light teal text on the sidebar active token with `--radius-sm` |
 | Alert | `.alert`, `-success`, `-error`, `-info` | tinted fill with 4px left edge in the status hue |
 | Metrics | `.metric-grid`, `.metric-card` | navy figures, muted labels; one card may carry the accent |
 | Timeline | `.timeline` | done steps accent filled, current step accent outline, future steps neutral |
@@ -95,8 +95,10 @@ Bangunan-led, per `docs/bangunan/11-indecs-core-roadmap.md`: Phase A foundation 
 PostgreSQL, identity, RBAC) months 0 to 3; Phase B Bangunan operational with the core
 engine, fees, letters, meetings and units, legacy retired, months 3 to 10; Phase C public
 portal, AIRS Building Plan review, E-Submission and OSC3Plus links, months 10 to 15;
-Phase D intelligence and linkage, months 15 to 21; Phase E field operations and second
-department onboarding. PKM migrates onto the core engine during Phase B.
+Phase D intelligence and linkage, months 15 to 21. Module rollout Phase 1 is Bangunan
+through A–D. Module rollout Phase 2 is PKM, beginning in E after Bangunan acceptance
+and operational handover (ADR-211). Existing PKM remains supported; its workflow
+migration does not gate Bangunan Phase B. PKM scope and dates are estimated separately.
 
 ## 6. Print and documents
 
@@ -163,3 +165,37 @@ from `theme.js`'s setter.
 Values are the AIRS creative direction palette so that iNDECS and AIRS read as one
 product line. Changing a value here changes it for the family; do it in `mbsp-ui` once
 that package exists.
+
+## 9. Approved navy workspace and AMIRA (2026-10-28)
+
+ADR-311 records the programme owner's approval of the interactive navy concept.
+Google Sans remains the font throughout, with Segoe UI and system-ui fallbacks.
+Navy is the shared environment, not a department colour picker: the sidebar uses
+`--color-sidebar-*` in both modes, and working surfaces follow the selected mode.
+Departments are distinguished by their names, icons and permission-filtered links.
+Unimplemented departments are not advertised as working navigation.
+
+Use the existing card, form, review and table classes. `.workspace-switcher` is the
+native-details department picker. `.workspace-body` holds content and the AMIRA
+rail. `.record-tabs` links only to sections and routes that actually exist. Existing
+Bangunan, document-catalogue, verification, Perancang and legacy pages share them.
+The public account surface remains unframed and carries the MBSP crest first.
+
+`<x-mark>` repeats the exact three-square geometry in sidebar, workspace header,
+footer and identity surfaces. A finite assembly animation accompanies entry.
+Cards do not loop, pulse or shimmer. Panel and interaction transitions use motion
+tokens. Both the accessibility control and OS reduced-motion preference suppress
+animations. Keyboard users can skip to content and close drawers with Escape.
+
+AMIRA is labelled **Pembantu AI iNDECS**, supporting the iNDECS brand. The current
+implementation offers local page guidance, form-label assistance and links to
+visible actions. It explicitly states that the AIRS connection is unavailable.
+It does not simulate a live model, fabricate confidence or review findings, send
+data externally, fill forms, submit decisions or bypass permission checks. Record
+context comes only from the authorised route-bound record. A future AIRS adapter
+must follow document 12's integration boundary and document 14's evidence rules.
+
+Primary buttons use `--color-action` (the deeper teal fill) and
+`--color-on-accent`; small text uses the darker accent step. Six semantic status
+roles each define matching background and text tokens in both modes. Legacy
+browser accent preferences are ignored and removed by `theme.js`.

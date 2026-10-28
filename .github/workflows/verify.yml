@@ -36,6 +36,8 @@ jobs:
       - run: composer audit
       - run: npm audit
       - run: php scripts/verify-database.php
+        env:
+          DB_PORT: '5432'
       - run: php artisan test
         env:
           DB_PORT: '5432'
