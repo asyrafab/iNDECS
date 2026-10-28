@@ -14,7 +14,7 @@
 
     <section class="metric-grid" aria-label="Metrik rekod warisan Bangunan">
         <article class="metric-card metric-ink">
-            <span class="metric-icon">▤</span>
+            <span class="metric-icon"><x-icon name="files" /></span>
             <div>
                 <span>Jumlah Rekod</span>
                 <strong>{{ number_format($metrics['total']) }}</strong>
@@ -22,7 +22,7 @@
             </div>
         </article>
         <article class="metric-card metric-green">
-            <span class="metric-icon">✓</span>
+            <span class="metric-icon"><x-icon name="check" /></span>
             <div>
                 <span>Pelan Lulus</span>
                 <strong>{{ number_format($metrics['approved']) }}</strong>
@@ -30,7 +30,7 @@
             </div>
         </article>
         <article class="metric-card metric-blue">
-            <span class="metric-icon">◷</span>
+            <span class="metric-icon"><x-icon name="clock-3" /></span>
             <div>
                 <span>Dalam Proses</span>
                 <strong>{{ number_format($metrics['in_process']) }}</strong>
@@ -51,7 +51,7 @@
         <form method="GET" action="{{ route('bangunan.legacy.index') }}" class="filter-bar">
             <label class="search-field">
                 <span class="sr-only">Cari rekod warisan</span>
-                <span class="search-icon">⌕</span>
+                <span class="search-icon"><x-icon name="search" /></span>
                 <input type="search" name="search" value="{{ $search }}" placeholder="Cari no. rujukan fail, no. siri, lot, pemohon atau lokasi…">
             </label>
             <label>
@@ -80,7 +80,7 @@
 
         @if ($records->isEmpty())
             <div class="empty-state compact">
-                <span class="empty-icon">⌕</span>
+                <span class="empty-icon"><x-icon name="search" /></span>
                 <h3>Tiada rekod warisan ditemui</h3>
                 <p>Cuba ubah kata kunci carian, penapis daerah atau jalankan penyegerakan salinan warisan.</p>
             </div>
@@ -123,7 +123,7 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <a class="row-action" href="{{ route('bangunan.legacy.show', $record) }}" aria-label="Buka {{ $record->pmn_no_rujukan }}">→</a>
+                                    <a class="row-action" href="{{ route('bangunan.legacy.show', $record) }}" aria-label="Buka {{ $record->pmn_no_rujukan }}"><x-icon name="arrow-right" /></a>
                                 </td>
                             </tr>
                         @endforeach
@@ -134,15 +134,15 @@
             @if ($records->hasPages())
                 <nav class="pagination" aria-label="Navigasi halaman">
                     @if ($records->onFirstPage())
-                        <span class="button button-ghost disabled">← Sebelumnya</span>
+                        <span class="button button-ghost disabled"><x-icon name="arrow-left" /> Sebelumnya</span>
                     @else
-                        <a class="button button-ghost" href="{{ $records->previousPageUrl() }}">← Sebelumnya</a>
+                        <a class="button button-ghost" href="{{ $records->previousPageUrl() }}"><x-icon name="arrow-left" /> Sebelumnya</a>
                     @endif
                     <span>Halaman {{ $records->currentPage() }} daripada {{ $records->lastPage() }}</span>
                     @if ($records->hasMorePages())
-                        <a class="button button-ghost" href="{{ $records->nextPageUrl() }}">Seterusnya →</a>
+                        <a class="button button-ghost" href="{{ $records->nextPageUrl() }}">Seterusnya <x-icon name="arrow-right" /></a>
                     @else
-                        <span class="button button-ghost disabled">Seterusnya →</span>
+                        <span class="button button-ghost disabled">Seterusnya <x-icon name="arrow-right" /></span>
                     @endif
                 </nav>
             @endif

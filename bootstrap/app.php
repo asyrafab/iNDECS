@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureBangunanAccess;
 use App\Http\Middleware\EnsureBangunanLegacyAccess;
 use App\Http\Middleware\EnsurePkmAccess;
 use App\Http\Middleware\EnsurePkmPermission;
@@ -17,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
+            'bangunan.access' => EnsureBangunanAccess::class,
             'bangunan.legacy' => EnsureBangunanLegacyAccess::class,
             'perancang.access' => EnsurePkmAccess::class,
             'perancang.permission' => EnsurePkmPermission::class,
@@ -27,6 +29,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
             if ($user?->isPublicAccount()) {
                 return route('portal.home');
+            }
+
+            if ($user?->canAccessBangunan()) {
+                return route('bangunan.index');
             }
 
             if ($user?->canAccessBangunanLegacy() && ! $user->canAccessPkm()) {

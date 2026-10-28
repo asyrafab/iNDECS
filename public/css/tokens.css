@@ -1,194 +1,97 @@
-/* iNDECS — Modernist design tokens.
-   Single source of truth for colour, type, spacing, radius and elevation.
-   NEVER hard-code a hex, a font name, or a px value that exists here.
-   Derived from the Modernist design system (mono red on a light ground,
-   Archivo throughout, zero radius, strong 2px rules). */
-
-@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap');
-
+/* iNDECS — Calm Intelligence. Shared appearance, type, spacing and motion. */
+@import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&display=swap');
 :root {
-  /* ground and ink */
-  --color-bg: #f3f2f2;
-  --color-surface: #ffffff;
-  --color-text: #201e1d;
-  --color-accent: #ec3013;
-  --color-divider: color-mix(in srgb, #201e1d 40%, transparent);
-  --color-rule-soft: color-mix(in srgb, #201e1d 18%, transparent);
-
-  /* neutral ramp */
-  --color-neutral-100: #f8f4f4;
-  --color-neutral-200: #eae7e7;
-  --color-neutral-300: #d7d3d3;
-  --color-neutral-400: #bab6b6;
-  --color-neutral-500: #9b9797;
-  --color-neutral-600: #7d7979;
-  --color-neutral-700: #605d5d;
-  --color-neutral-800: #444141;
-  --color-neutral-900: #2d2b2b;
-
-  /* accent ramp — 700 for accent-coloured body text, 600 for pressed */
-  --color-accent-100: #fff2ef;
-  --color-accent-200: #ffe0d9;
-  --color-accent-300: #ffc4b8;
-  --color-accent-400: #ff9783;
-  --color-accent-500: #ff563c;
-  --color-accent-600: #dd2b0f;
-  --color-accent-700: #ae1800;
-  --color-accent-800: #7c1405;
-  --color-accent-900: #4d170e;
-
-  /* type */
-  --font-heading: "Archivo", system-ui, sans-serif;
-  --font-heading-weight: 800;
-  --font-body: "Archivo", system-ui, sans-serif;
-
-  /* spacing */
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-6: 24px;
-  --space-8: 32px;
-  --space-12: 48px;
-
-  /* radius — zero on purpose. Do not raise these. */
-  --radius-sm: 0px;
-  --radius-md: 0px;
-  --radius-lg: 0px;
-
-  /* elevation — rules do the organising; shadows are a last resort */
-  --shadow-sm: 0 1px 2px color-mix(in srgb, #2d2b2b 14%, transparent);
-  --shadow-md: 0 3px 10px color-mix(in srgb, #2d2b2b 16%, transparent);
-  --shadow-lg: 0 12px 32px color-mix(in srgb, #2d2b2b 22%, transparent);
-
-  /* rule weights */
-  --rule-strong: 2px;
-  --rule-hair: 1px;
-}
-
-/* ============================================================
-   THEMES — set on <html>:
-     data-theme="light" | "dark"   (absent = follow the OS)
-     data-accent="merah" | "hijau" | "biru" | "ambar"
-   Only the token values below change. No component rule in
-   indecs.css may branch on theme — if you need a per-theme
-   value, add a token here instead.
-   ============================================================ */
-
-:root {
-  --color-on-accent: #ffffff;
-  --color-focus: var(--color-accent);
-  /* theme-dependent assets are tokens too — no component branches on theme */
+  color-scheme: light;
+  --color-navy: #102a43; --color-slate: #334e68;
+  --color-bg: #f7f9fb; --color-bg-soft: #e6f4f4; --color-surface: #ffffff;
+  --color-text: #172b3a; --color-text-muted: #596e80;
+  --color-border: #dce4ea; --color-border-soft: #edf1f4;
+  --color-accent: #2c9da0;
+  --color-accent-100: #e6f4f4; --color-accent-200: #cce9e8; --color-accent-300: #a4d7d6;
+  --color-accent-400: #69bfbe; --color-accent-500: #2c9da0; --color-accent-600: #197c80;
+  --color-accent-700: #14676b; --color-accent-800: #105256; --color-accent-900: #0c3e43;
+  --color-neutral-100: #f1f5f8; --color-neutral-200: #e5edf2; --color-neutral-300: #d1dce5;
+  --color-neutral-400: #acbfce; --color-neutral-500: #71869a; --color-neutral-600: var(--color-text-muted);
+  --color-neutral-700: #40596e; --color-neutral-800: #263f53; --color-neutral-900: #172b3a;
+  --status-compliant-bg: #e8f5ed; --status-compliant-text: #1e6546;
+  --status-attention-bg: #fff4db; --status-attention-text: #805600;
+  --status-critical-bg: #fcecec; --status-critical-text: #9d3030;
+  --status-info-bg: #eaf2fb; --status-info-text: #285c89;
+  --status-ai-bg: #f0edfa; --status-ai-text: #584699;
+  --status-pending-bg: #edf1f5; --status-pending-text: #526575;
   --asset-mark: url('../img/indecs-mark.svg');
-}
-:root[data-theme="dark"] { --asset-mark: url('../img/indecs-mark-reversed.svg'); }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) { --asset-mark: url('../img/indecs-mark-reversed.svg'); }
+
+  --color-divider: var(--color-border); --color-rule-soft: var(--color-border-soft);
+  --color-on-accent: #ffffff; --color-focus: var(--color-accent);
+  --color-action: #197c80; --color-action-hover: #14676b; --color-action-pressed: #105256;
+  --color-sidebar-bg: #102a43; --color-sidebar-text: #edf5fa; --color-sidebar-muted: #bdcfdf;
+  --color-sidebar-border: #29465e; --color-sidebar-hover: #1a3a53;
+  --color-sidebar-active: #17464f; --color-sidebar-active-text: #bcf0ed;
+  --color-backdrop: #102a4370;
+  --status-compliant: #2f8f63; --status-attention: #d89b2b; --status-critical: #c94b4b;
+  --status-info: #3f7cac; --status-ai: #7a68c9; --status-pending: #8a99a8;
+  --font-heading: 'Google Sans', 'Segoe UI', system-ui, sans-serif;
+  --font-body: 'Google Sans', 'Segoe UI', system-ui, sans-serif;
+  --font-heading-weight: 600;
+  --font-size-label: 11px; --font-size-xs: 12px; --font-size-sm: 13px; --font-size-base: 14px;
+  --font-size-body: 15px; --font-size-lg: 16px; --font-size-xl: 18px; --font-size-title: 20px;
+  --font-size-brand: 24px; --font-size-heading: 28px; --font-size-metric: 32px;
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 20px;
+  --space-6: 24px; --space-8: 32px; --space-10: 40px; --space-12: 48px; --space-16: 64px;
+  --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px; --radius-full: 999px;
+  --rule-strong: 1px; --rule-hair: 1px;
+  --shadow-raised: 0 8px 28px #102a4314;
+  --shadow-sm: var(--shadow-raised); --shadow-md: var(--shadow-raised); --shadow-lg: var(--shadow-raised);
+  --sidebar-width: 248px; --assistant-width: 360px; --icon-size: 18px; --control-height: 44px;
+  --duration-fast: 160ms; --duration-normal: 280ms; --duration-slow: 600ms;
+  --ease-standard: cubic-bezier(.2, .7, .2, 1);
+  --asset-mark-reversed: url('../img/indecs-mark-reversed.svg');
 }
 
-/* — dark ground. The neutral ramp reverses so 100 stays the
-     "subtle fill" step and 900 stays the "strong ink" step in
-     both themes; component CSS never needs to know which. — */
 :root[data-theme="dark"] {
-  --color-bg: #1a1918;
-  --color-surface: #232120;
-  --color-text: #f3f2f2;
-  --color-divider: color-mix(in srgb, #f3f2f2 40%, transparent);
-  --color-rule-soft: color-mix(in srgb, #f3f2f2 20%, transparent);
-
-  --color-neutral-100: #2b2928;
-  --color-neutral-200: #363433;
-  --color-neutral-300: #474443;
-  --color-neutral-400: #605d5d;
-  --color-neutral-500: #7d7979;
-  --color-neutral-600: #9b9797;
-  --color-neutral-700: #bab6b6;
-  --color-neutral-800: #d7d3d3;
-  --color-neutral-900: #eae7e7;
-
-  /* on a dark ground the pressed step goes lighter, and accent
-     text takes a light ramp step to stay legible */
-  --color-accent-100: #2e1a16;
-  --color-accent-200: #40201a;
-  --color-accent-300: #5d2a20;
-  --color-accent-400: #8c3a29;
-  --color-accent-500: #c14b32;
-  --color-accent-600: #ff563c;
-  --color-accent-700: #ff9783;
-  --color-accent-800: #ffc4b8;
-  --color-accent-900: #ffe0d9;
-
-  --shadow-sm: 0 1px 2px color-mix(in srgb, #000 40%, transparent);
-  --shadow-md: 0 3px 10px color-mix(in srgb, #000 46%, transparent);
-  --shadow-lg: 0 12px 32px color-mix(in srgb, #000 56%, transparent);
+  color-scheme: dark;
+  --color-navy: #dceaf5; --color-slate: #b7ccdd;
+  --color-bg: #0b1927; --color-bg-soft: #133536; --color-surface: #122538;
+  --color-text: #e4edf4; --color-text-muted: #adbfce;
+  --color-border: #2d455a; --color-border-soft: #253b4e;
+  --color-accent-100: #133536; --color-accent-200: #19494a; --color-accent-300: #226568;
+  --color-accent-400: #2d8588; --color-accent-500: #2c9da0; --color-accent-600: #197c80;
+  --color-accent-700: #7fd4d1; --color-accent-800: #afe5e1; --color-accent-900: #d0f2ee;
+  --color-neutral-100: #192f43; --color-neutral-200: #243e54; --color-neutral-300: #345168;
+  --color-neutral-400: #56748b; --color-neutral-500: #8aa3b7;
+  --color-neutral-700: #bfceda; --color-neutral-800: #d6e2ec; --color-neutral-900: #e4edf4;
+  --status-compliant-bg: #173c31; --status-compliant-text: #93dab0;
+  --status-attention-bg: #40351e; --status-attention-text: #f1cc7d;
+  --status-critical-bg: #482a33; --status-critical-text: #ffb3b3;
+  --status-info-bg: #1c3856; --status-info-text: #a3cdf2;
+  --status-ai-bg: #302d50; --status-ai-text: #c5baf5;
+  --status-pending-bg: #2b3d4b; --status-pending-text: #c2d1dc;
+  --asset-mark: var(--asset-mark-reversed);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --color-bg: #1a1918;
-    --color-surface: #232120;
-    --color-text: #f3f2f2;
-    --color-divider: color-mix(in srgb, #f3f2f2 40%, transparent);
-    --color-rule-soft: color-mix(in srgb, #f3f2f2 20%, transparent);
-
-    --color-neutral-100: #2b2928;
-    --color-neutral-200: #363433;
-    --color-neutral-300: #474443;
-    --color-neutral-400: #605d5d;
-    --color-neutral-500: #7d7979;
-    --color-neutral-600: #9b9797;
-    --color-neutral-700: #bab6b6;
-    --color-neutral-800: #d7d3d3;
-    --color-neutral-900: #eae7e7;
-
-    --color-accent-100: #2e1a16;
-    --color-accent-200: #40201a;
-    --color-accent-300: #5d2a20;
-    --color-accent-400: #8c3a29;
-    --color-accent-500: #c14b32;
-    --color-accent-600: #ff563c;
-    --color-accent-700: #ff9783;
-    --color-accent-800: #ffc4b8;
-    --color-accent-900: #ffe0d9;
-
-    --shadow-sm: 0 1px 2px color-mix(in srgb, #000 40%, transparent);
-    --shadow-md: 0 3px 10px color-mix(in srgb, #000 46%, transparent);
-    --shadow-lg: 0 12px 32px color-mix(in srgb, #000 56%, transparent);
+    color-scheme: dark;
+    --color-navy: #dceaf5; --color-slate: #b7ccdd;
+    --color-bg: #0b1927; --color-bg-soft: #133536; --color-surface: #122538;
+    --color-text: #e4edf4; --color-text-muted: #adbfce;
+    --color-border: #2d455a; --color-border-soft: #253b4e;
+    --color-accent-100: #133536; --color-accent-200: #19494a; --color-accent-300: #226568;
+    --color-accent-400: #2d8588; --color-accent-500: #2c9da0; --color-accent-600: #197c80;
+    --color-accent-700: #7fd4d1; --color-accent-800: #afe5e1; --color-accent-900: #d0f2ee;
+    --color-neutral-100: #192f43; --color-neutral-200: #243e54; --color-neutral-300: #345168;
+    --color-neutral-400: #56748b; --color-neutral-500: #8aa3b7;
+    --color-neutral-700: #bfceda; --color-neutral-800: #d6e2ec; --color-neutral-900: #e4edf4;
+    --status-compliant-bg: #173c31; --status-compliant-text: #93dab0;
+    --status-attention-bg: #40351e; --status-attention-text: #f1cc7d;
+    --status-critical-bg: #482a33; --status-critical-text: #ffb3b3;
+    --status-info-bg: #1c3856; --status-info-text: #a3cdf2;
+    --status-ai-bg: #302d50; --status-ai-text: #c5baf5;
+    --status-pending-bg: #2b3d4b; --status-pending-text: #c2d1dc;
+    --asset-mark: var(--asset-mark-reversed);
   }
 }
-
-/* — accent choice. Four curated options only; no free colour
-     picker. Merah is the default and needs no attribute. — */
-:root[data-accent="merah"] { --accent-base: #ec3013; }
-:root[data-accent="hijau"] { --accent-base: #20845e; }
-:root[data-accent="biru"]  { --accent-base: #2669d8; }
-:root[data-accent="ambar"] { --accent-base: #a96813; }
-
-/* When an accent is chosen, its ramp is derived from the base so
-   every hover, pressed and tint step follows automatically. */
-:root[data-accent] {
-  --color-accent: var(--accent-base);
-  --color-accent-100: color-mix(in srgb, var(--accent-base) 10%, var(--color-bg));
-  --color-accent-200: color-mix(in srgb, var(--accent-base) 22%, var(--color-bg));
-  --color-accent-300: color-mix(in srgb, var(--accent-base) 40%, var(--color-bg));
-  --color-accent-400: color-mix(in srgb, var(--accent-base) 62%, var(--color-bg));
-  --color-accent-500: var(--accent-base);
-  --color-accent-600: color-mix(in srgb, var(--accent-base) 86%, #000);
-  --color-accent-700: color-mix(in srgb, var(--accent-base) 72%, #000);
-  --color-accent-800: color-mix(in srgb, var(--accent-base) 54%, #000);
-  --color-accent-900: color-mix(in srgb, var(--accent-base) 38%, #000);
-}
-
-/* On a dark ground the accent ramp runs the other way: the deep
-   steps become the tints and the light steps carry text. */
-:root[data-theme="dark"][data-accent] {
-  --color-accent-100: color-mix(in srgb, var(--accent-base) 16%, var(--color-bg));
-  --color-accent-200: color-mix(in srgb, var(--accent-base) 26%, var(--color-bg));
-  --color-accent-300: color-mix(in srgb, var(--accent-base) 40%, var(--color-bg));
-  --color-accent-400: color-mix(in srgb, var(--accent-base) 60%, var(--color-bg));
-  --color-accent-500: var(--accent-base);
-  --color-accent-600: color-mix(in srgb, var(--accent-base) 80%, #fff);
-  --color-accent-700: color-mix(in srgb, var(--accent-base) 62%, #fff);
-  --color-accent-800: color-mix(in srgb, var(--accent-base) 44%, #fff);
-  --color-accent-900: color-mix(in srgb, var(--accent-base) 28%, #fff);
+:root[data-motion="reduced"] { --duration-fast: 0ms; --duration-normal: 0ms; --duration-slow: 0ms; }
+@media (prefers-reduced-motion: reduce) {
+  :root { --duration-fast: 0ms; --duration-normal: 0ms; --duration-slow: 0ms; }
 }

@@ -9,14 +9,16 @@
             <h1>Ringkasan PKM</h1>
             <p>Pantau permohonan Kebenaran Merancang dan tindakan yang perlu dimulakan.</p>
         </div>
+        @if (auth()->user()->canPerformPkm('perancang.pkm.register'))
         <a href="{{ route('perancang.create') }}" class="button button-primary">
-            <span>＋</span> Daftar permohonan
+            <span><x-icon name="plus" /></span> Daftar permohonan
         </a>
+        @endif
     </div>
 
     <section class="metric-grid" aria-label="Metrik permohonan">
         <article class="metric-card metric-ink">
-            <span class="metric-icon">▤</span>
+            <span class="metric-icon"><x-icon name="files" /></span>
             <div>
                 <span>Jumlah PKM</span>
                 <strong>{{ number_format($metrics['total']) }}</strong>
@@ -24,7 +26,7 @@
             </div>
         </article>
         <article class="metric-card metric-blue">
-            <span class="metric-icon">↗</span>
+            <span class="metric-icon"><x-icon name="arrow-up-right" /></span>
             <div>
                 <span>Baharu dihantar</span>
                 <strong>{{ number_format($metrics['submitted']) }}</strong>
@@ -32,7 +34,7 @@
             </div>
         </article>
         <article class="metric-card metric-amber">
-            <span class="metric-icon">◷</span>
+            <span class="metric-icon"><x-icon name="clock-3" /></span>
             <div>
                 <span>Dalam semakan</span>
                 <strong>{{ number_format($metrics['in_review']) }}</strong>
@@ -40,7 +42,7 @@
             </div>
         </article>
         <article class="metric-card metric-green">
-            <span class="metric-icon">✓</span>
+            <span class="metric-icon"><x-icon name="check" /></span>
             <div>
                 <span>Diluluskan</span>
                 <strong>{{ number_format($metrics['approved']) }}</strong>
@@ -55,15 +57,17 @@
                 <span class="eyebrow">Aktiviti terkini</span>
                 <h2>Permohonan terbaru</h2>
             </div>
-            <a href="{{ route('perancang.index') }}" class="text-link">Lihat semua <span>→</span></a>
+            <a href="{{ route('perancang.index') }}" class="text-link">Lihat semua <span><x-icon name="arrow-right" /></span></a>
         </div>
 
         @if ($recentApplications->isEmpty())
             <div class="empty-state">
-                <span class="empty-icon">⌁</span>
+                <span class="empty-icon"><x-icon name="folder-open" /></span>
                 <h3>Belum ada permohonan PKM</h3>
-                <p>Daftar permohonan pertama untuk mula menguji aliran kerja modul ini.</p>
+                <p>Permohonan dalam skop akses anda akan dipaparkan di sini.</p>
+                @if (auth()->user()->canPerformPkm('perancang.pkm.register'))
                 <a href="{{ route('perancang.create') }}" class="button button-primary">Daftar PKM pertama</a>
+                @endif
             </div>
         @else
             <div class="table-wrap">

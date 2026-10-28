@@ -88,7 +88,17 @@ Date: 2026-09-18. Status: Accepted. Supersedes version 1 phase plan.
 
 **Context.** Management brought iNDECS Bangunan forward.
 
-**Decision.** Core capabilities are built in the order Bangunan needs them, generically, in `core`. PKM is migrated onto the workflow engine during Phase B as proof of generality. Phases A to E in document 11.
+**Decision.** Core capabilities are built in the order Bangunan needs them, generically, in `core`. The original PKM migration during Phase B is superseded by ADR-211; PKM now follows Bangunan in module rollout Phase 2. Phases A to E in document 11.
+
+---
+
+## ADR-211: Bangunan first, PKM second
+
+Date: 2026-10-27. Status: Accepted. Supersedes the PKM migration timing in ADR-209.
+
+**Decision.** Module rollout Phase 1 delivers Bangunan through technical milestones A to D. Module rollout Phase 2 delivers PKM (Perancang), starting in milestone E only after Bangunan acceptance and operational handover. PKM is the next module before Kejuruteraan and Landskap. Milestones A to E remain technical milestones, distinct from module rollout numbering.
+
+**Consequences.** Remove PKM workflow migration as a Phase B dependency. Validate the shared engine against Bangunan's five families first. Maintain existing PKM functionality and shared-platform regression checks during Bangunan delivery. In Phase 2, configure and migrate PKM, reconcile records and history, verify permissions and obtain end-to-end acceptance. Estimate PKM scope and dates separately; the indicative 21-month Bangunan plan is not a PKM completion commitment.
 
 ---
 

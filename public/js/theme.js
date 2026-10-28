@@ -1,52 +1,56 @@
-/* iNDECS theme preference — mode (light/dark/system) and accent.
-   Stored per browser in localStorage; applied to <html> as
-   data-theme and data-accent. Load this in <head> BEFORE the
-   stylesheet render so there is no flash of the wrong theme:
-
-     <script src="{{ asset('js/theme.js') }}"></script>
-
-   To persist the choice per user instead, POST the two values to
-   your own endpoint from onChange below and render the attributes
-   server-side on <html>. */
+/* Apply appearance before CSS loads. Storage is optional; one shared teal accent. */
 (function () {
-  var MODE = 'indecs.theme.mode';   // 'light' | 'dark' | 'system'
-  var ACCENT = 'indecs.theme.accent'; // 'merah' | 'hijau' | 'biru' | 'ambar'
-  var root = document.documentElement;
-
-  function apply() {
-    var mode = localStorage.getItem(MODE) || 'system';
-    if (mode === 'system') root.removeAttribute('data-theme');
-    else root.setAttribute('data-theme', mode);
-
-    var accent = localStorage.getItem(ACCENT) || 'merah';
-    root.setAttribute('data-accent', accent);
-    sync();
-  }
-
-  function sync() {
-    var mode = localStorage.getItem(MODE) || 'system';
-    var accent = localStorage.getItem(ACCENT) || 'merah';
-    document.querySelectorAll('[data-theme-mode]').forEach(function (b) {
-      b.setAttribute('aria-pressed', String(b.dataset.themeMode === mode));
+    const root = document.documentElement;
+    const modes = ['light', 'dark', 'system'];
+    let mode = 'system';
+    let motion = 'system';
+    function read(key, fallback) {
+        try { return localStorage.getItem(key) || fallback; } catch { return fallback; }
+    }
+    function write(key, value) {
+        try { localStorage.setItem(key, value); } catch { /* In-memory preference remains usable. */ }
+    }
+    function sync() {
+        document.querySelectorAll('[data-theme-mode]').forEach(button => {
+            button.setAttribute('aria-pressed', String(button.dataset.themeMode === mode));
+        });
+        document.querySelectorAll('[data-motion-toggle]').forEach(button => {
+            button.setAttribute('aria-pressed', String(motion === 'reduced'));
+        });
+    }
+    function apply() {
+        if (mode === 'system') root.removeAttribute('data-theme');
+        else root.dataset.theme = mode;
+        root.dataset.motion = motion;
+        root.removeAttribute('data-accent');
+        sync();
+    }
+    const stored = read('indecs.theme.mode', 'system');
+    mode = modes.includes(stored) ? stored : 'system';
+    motion = read('indecs.theme.motion', 'system') === 'reduced' ? 'reduced' : 'system';
+    try { localStorage.removeItem('indecs.theme.accent'); } catch { /* Legacy accent is ignored. */ }
+    window.iNDECSTheme = {
+        setMode(value) {
+            if (!modes.includes(value)) return;
+            mode = value; write('indecs.theme.mode', value); apply();
+        },
+        setMotion(value) {
+            motion = value === 'reduced' ? 'reduced' : 'system';
+            write('indecs.theme.motion', motion); apply();
+        }
+    };
+    apply();
+    document.addEventListener('DOMContentLoaded', sync);
+    document.addEventListener('click', event => {
+        const button = event.target.closest('[data-theme-mode]');
+        if (button) window.iNDECSTheme.setMode(button.dataset.themeMode);
+        if (event.target.closest('[data-motion-toggle]')) {
+            window.iNDECSTheme.setMotion(motion === 'reduced' ? 'system' : 'reduced');
+        }
     });
-    document.querySelectorAll('[data-theme-accent]').forEach(function (b) {
-      b.setAttribute('aria-pressed', String(b.dataset.themeAccent === accent));
+    window.addEventListener('storage', event => {
+        if (event.key === 'indecs.theme.mode') mode = modes.includes(event.newValue) ? event.newValue : 'system';
+        if (event.key === 'indecs.theme.motion') motion = event.newValue === 'reduced' ? 'reduced' : 'system';
+        apply();
     });
-  }
-
-  window.iNDECSTheme = {
-    setMode: function (m) { localStorage.setItem(MODE, m); apply(); },
-    setAccent: function (a) { localStorage.setItem(ACCENT, a); apply(); }
-  };
-
-  apply();
-
-  document.addEventListener('click', function (e) {
-    var mode = e.target.closest('[data-theme-mode]');
-    if (mode) { window.iNDECSTheme.setMode(mode.dataset.themeMode); return; }
-    var accent = e.target.closest('[data-theme-accent]');
-    if (accent) window.iNDECSTheme.setAccent(accent.dataset.themeAccent);
-  });
-
-  document.addEventListener('DOMContentLoaded', sync);
 })();

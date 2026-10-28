@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
+    'scan_status',
+    'scanned_at',
     'application_id',
     'document_type_id',
     'revision_number',
@@ -61,6 +63,7 @@ class ApplicationDocument extends Model
             'revision_number' => 'integer',
             'size_bytes' => 'integer',
             'uploaded_at' => 'datetime',
+            'scanned_at' => 'datetime',
             'verified_at' => 'datetime',
             'verification_status' => DocumentVerificationStatus::class,
             'is_current' => 'boolean',

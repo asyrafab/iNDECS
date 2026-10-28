@@ -97,6 +97,7 @@ class PkmApplicationController extends Controller
         Application $application,
         PkmWorkflowService $workflow,
     ): RedirectResponse {
+        abort_unless($application->application_type_id === 'PKM', 404);
         abort_unless($request->user()->canAccessApplication($application), 403);
 
         try {
@@ -114,6 +115,7 @@ class PkmApplicationController extends Controller
         DocumentType $documentType,
         PkmDocumentService $documents,
     ): RedirectResponse {
+        abort_unless($application->application_type_id === 'PKM', 404);
         abort_unless($request->user()->canAccessApplication($application), 403);
 
         try {
@@ -136,6 +138,7 @@ class PkmApplicationController extends Controller
         ApplicationDocument $document,
     ): StreamedResponse {
         abort_unless($application->application_type_id === 'PKM' && $document->application_id === $application->id, 404);
+        abort_unless($application->application_type_id === 'PKM', 404);
         abort_unless($request->user()->canAccessApplication($application), 403);
         abort_unless(Storage::disk('local')->exists($document->storage_path), 404);
 
@@ -148,6 +151,7 @@ class PkmApplicationController extends Controller
         PkmCompletenessItem $item,
         PkmWorkflowService $workflow,
     ): RedirectResponse {
+        abort_unless($application->application_type_id === 'PKM', 404);
         abort_unless($request->user()->canAccessApplication($application), 403);
 
         try {
@@ -170,6 +174,7 @@ class PkmApplicationController extends Controller
         Application $application,
         PkmWorkflowService $workflow,
     ): RedirectResponse {
+        abort_unless($application->application_type_id === 'PKM', 404);
         abort_unless($request->user()->canAccessApplication($application), 403);
         $data = $request->validate(['remarks' => ['nullable', 'string', 'max:2000']]);
 
@@ -187,6 +192,7 @@ class PkmApplicationController extends Controller
         Application $application,
         PkmWorkflowService $workflow,
     ): RedirectResponse {
+        abort_unless($application->application_type_id === 'PKM', 404);
         abort_unless($request->user()->canAccessApplication($application), 403);
         $data = $request->validate(['remarks' => ['required', 'string', 'max:2000']]);
 
@@ -204,6 +210,7 @@ class PkmApplicationController extends Controller
         Application $application,
         PkmWorkflowService $workflow,
     ): RedirectResponse {
+        abort_unless($application->application_type_id === 'PKM', 404);
         abort_unless($request->user()->canAccessApplication($application), 403);
 
         try {

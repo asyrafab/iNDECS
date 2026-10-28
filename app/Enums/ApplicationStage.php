@@ -5,6 +5,7 @@ namespace App\Enums;
 enum ApplicationStage: string
 {
     case Registration = 'registration';
+    case DocumentVerification = 'document_verification';
     case CompletenessCheck = 'completeness_check';
     case FeeAssessment = 'fee_assessment';
     case PaymentVerification = 'payment_verification';
@@ -20,6 +21,7 @@ enum ApplicationStage: string
     {
         return match ($this) {
             self::Registration => 'Pendaftaran',
+            self::DocumentVerification => 'Pengesahan Dokumen dan Pelan',
             self::CompletenessCheck => 'Semakan Lengkap',
             self::FeeAssessment => 'Penilaian Fi',
             self::PaymentVerification => 'Pengesahan Bayaran',

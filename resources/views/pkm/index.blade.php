@@ -5,18 +5,20 @@
 @section('content')
     <div class="page-heading heading-with-action">
         <div>
-            <span class="eyebrow">Modul 01</span>
+            <span class="eyebrow">iNDECS Perancang · Jabatan Perancang Bandar</span>
             <h1>Permohonan PKM</h1>
             <p>Daftar, cari dan jejak permohonan Kebenaran Merancang.</p>
         </div>
-        <a href="{{ route('perancang.create') }}" class="button button-primary"><span>＋</span> Daftar PKM</a>
+        @if (auth()->user()->canPerformPkm('perancang.pkm.register'))
+        <a href="{{ route('perancang.create') }}" class="button button-primary"><x-icon name="plus" /> Daftar PKM</a>
+        @endif
     </div>
 
     <section class="content-card">
         <form method="GET" action="{{ route('perancang.index') }}" class="filter-bar">
             <label class="search-field">
                 <span class="sr-only">Cari permohonan</span>
-                <span class="search-icon">⌕</span>
+                <span class="search-icon"><x-icon name="search" /></span>
                 <input type="search" name="search" value="{{ $search }}" placeholder="Cari rujukan, OSC atau tajuk…">
             </label>
             <label>
@@ -36,7 +38,7 @@
 
         @if ($applications->isEmpty())
             <div class="empty-state compact">
-                <span class="empty-icon">⌕</span>
+                <span class="empty-icon"><x-icon name="search" /></span>
                 <h3>Tiada permohonan ditemui</h3>
                 <p>Cuba ubah carian atau daftar satu permohonan baharu.</p>
             </div>
@@ -69,7 +71,7 @@
                                 <td>{{ $application->sites->first()?->mukim ?? '—' }}</td>
                                 <td>{{ $application->current_stage->label() }}</td>
                                 <td><span class="status-badge status-{{ $application->current_status->value }}">{{ $application->current_status->label() }}</span></td>
-                                <td><a class="row-action" href="{{ route('perancang.show', $application) }}" aria-label="Buka {{ $application->application_reference }}">→</a></td>
+                                <td><a class="row-action" href="{{ route('perancang.show', $application) }}" aria-label="Buka {{ $application->application_reference }}"><x-icon name="arrow-right" /></a></td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -79,15 +81,15 @@
             @if ($applications->hasPages())
                 <nav class="pagination" aria-label="Navigasi halaman">
                     @if ($applications->onFirstPage())
-                        <span class="button button-ghost disabled">← Sebelumnya</span>
+                        <span class="button button-ghost disabled"><x-icon name="arrow-left" /> Sebelumnya</span>
                     @else
-                        <a class="button button-ghost" href="{{ $applications->previousPageUrl() }}">← Sebelumnya</a>
+                        <a class="button button-ghost" href="{{ $applications->previousPageUrl() }}"><x-icon name="arrow-left" /> Sebelumnya</a>
                     @endif
                     <span>Halaman {{ $applications->currentPage() }} daripada {{ $applications->lastPage() }}</span>
                     @if ($applications->hasMorePages())
-                        <a class="button button-ghost" href="{{ $applications->nextPageUrl() }}">Seterusnya →</a>
+                        <a class="button button-ghost" href="{{ $applications->nextPageUrl() }}">Seterusnya <x-icon name="arrow-right" /></a>
                     @else
-                        <span class="button button-ghost disabled">Seterusnya →</span>
+                        <span class="button button-ghost disabled">Seterusnya <x-icon name="arrow-right" /></span>
                     @endif
                 </nav>
             @endif
