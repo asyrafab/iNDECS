@@ -21,7 +21,8 @@
                 <div class="map-popup-body" data-map-popup-body></div>
             </div>
         </div>
-        <aside class="map-panel map-sheet" id="osc-map-panel" aria-label="Peta">
+        <aside class="map-panel map-sheet" id="osc-map-panel" role="dialog" aria-labelledby="osc-map-panel-title">
+            <h2 class="map-panel-title map-panel-heading" id="osc-map-panel-title" tabindex="-1">Peta</h2>
             <section class="map-panel-section">
                 <div class="map-tools" role="group" aria-label="Alat">
                     <button type="button" class="button button-secondary button-small" data-map-tool="distance" aria-pressed="false">Ukur jarak</button>

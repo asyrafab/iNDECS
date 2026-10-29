@@ -109,6 +109,15 @@ final class MeetingMapScreenTest extends TestCase
         $this->actingAs($other)->get(route('osc.meetings.map', $this->meeting))->assertForbidden();
     }
 
+    public function test_bottom_sheet_markup_is_an_accessible_dialog(): void
+    {
+        $html = $this->actingAs($this->member)->get(route('osc.meetings.map', $this->meeting))->assertOk()->getContent();
+
+        $this->assertMatchesRegularExpression('/<aside[^>]*id="osc-map-panel"[^>]*role="dialog"[^>]*aria-labelledby="osc-map-panel-title"/', $html);
+        $this->assertMatchesRegularExpression('/<h2[^>]*id="osc-map-panel-title"[^>]*tabindex="-1"/', $html);
+        $this->assertMatchesRegularExpression('/<button[^>]*data-map-sheet-toggle[^>]*aria-expanded="false"[^>]*aria-controls="osc-map-panel"/', $html);
+    }
+
     public function test_peta_button_on_meeting_page(): void
     {
         $this->actingAs($this->member)->get(route('osc.meetings.show', $this->meeting))

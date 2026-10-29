@@ -14,20 +14,33 @@
     const palette = gis.palette;
     const geojson = new ol.format.GeoJSON();
 
+    /* Bottom sheet (below 768px): a non-modal dialog. Focus moves to its heading on open and back to the toggle on close. */
     const panel = document.getElementById('osc-map-panel');
     const toggle = document.querySelector('[data-map-sheet-toggle]');
-    if (toggle && panel) {
-        toggle.addEventListener('click', () => {
-            const open = panel.dataset.open !== 'true';
-            panel.dataset.open = String(open);
-            toggle.setAttribute('aria-expanded', String(open));
-        });
+    const panelTitle = document.getElementById('osc-map-panel-title');
+    const wide = window.matchMedia('(min-width: 768px)');
+    function syncRole() {
+        if (!panel) return;
+        if (wide.matches) { panel.removeAttribute('role'); panel.removeAttribute('aria-labelledby'); }
+        else { panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-labelledby', 'osc-map-panel-title'); }
     }
-    const setSheet = open => {
+    syncRole();
+    wide.addEventListener('change', () => { syncRole(); setSheet(false, false); });
+    function setSheet(open, restoreFocus) {
         if (!panel || !toggle) return;
+        const wasOpen = panel.dataset.open === 'true';
         panel.dataset.open = String(open);
         toggle.setAttribute('aria-expanded', String(open));
-    };
+        if (wide.matches) return;
+        if (open && panelTitle) { void panel.offsetHeight; panelTitle.focus({ preventScroll: true }); }
+        else if (!open && wasOpen && restoreFocus !== false) toggle.focus();
+    }
+    if (toggle && panel) {
+        toggle.addEventListener('click', () => setSheet(panel.dataset.open !== 'true'));
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && panel.dataset.open === 'true' && !wide.matches) setSheet(false);
+        });
+    }
 
     /* Styles, cached per palette refresh. */
     let styleCache = {};
@@ -64,7 +77,6 @@
 
     function layoutLayer(url, corners) {
         const image = new Image();
-        image.crossOrigin = 'anonymous';
         let source;
         const points = corners.map(c => ol.proj.fromLonLat(c)); // top-left, top-right, bottom-right, bottom-left
         const extent = ol.extent.boundingExtent(points);
@@ -89,8 +101,13 @@
             ratio: 1,
         });
         image.addEventListener('load', () => source.changed());
-        image.src = url;
         const layer = new ol.layer.Image({ source: source, extent: extent });
+        image.addEventListener('error', () => {
+            layer.setVisible(false);
+            layoutGroup.getLayers().remove(layer);
+            console.warn('Pelan susun atur tidak dapat dimuatkan.');
+        });
+        image.src = url;
         gis.addSwipeLayer(layer);
         return layer;
     }
