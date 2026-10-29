@@ -12,6 +12,7 @@ use App\Models\Osc\LayoutImage;
 use App\Models\Osc\Meeting;
 use App\Models\User;
 use App\Services\Osc\AgendaService;
+use App\Services\Osc\LayoutImageService;
 use App\Services\Osc\MeetingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -360,30 +361,45 @@ final class LayoutImageTest extends TestCase
         $features = $this->actingAs($this->member)->getJson(route('osc.meetings.map-data', $this->meeting))->assertOk()->json('features');
         $this->assertNotEmpty($features);
         foreach ($features as $feature) {
+            $this->assertNotSame('legacy', $feature['properties']['kind']);
             $this->assertNull($feature['properties']['layout_url'] ?? null);
             $this->assertNull($feature['properties']['layout_corners'] ?? null);
         }
     }
 
-    public function test_failed_attempt_never_deletes_a_committed_content_addressed_file(): void
+    public function test_attempt_losing_a_concurrent_placement_never_deletes_the_committed_file(): void
     {
         $this->place();
-        $first = $this->itemLayout();
-        // Another attempt with identical bytes has already committed the final file for the next version.
-        $png = $this->png(400, 300);
-        $final = 'osc/layouts/items/'.$this->item->id.'/'.hash_file('sha256', $png->getRealPath()).'.png';
-        Storage::disk('local')->put($final, (string) file_get_contents($png->getRealPath()));
+        $test = $this;
+        $this->app->instance(DocumentScanner::class, new class($test) implements DocumentScanner
+        {
+            private bool $inside = false;
 
-        $this->place($this->planner, ['layout' => $png, 'expected_version' => 99])->assertSessionHasErrors(['layout' => self::STALE]);
+            public function __construct(private readonly LayoutImageTest $test) {}
 
-        Storage::disk('local')->assertExists($final);
-        Storage::disk('local')->assertExists($first->path);
-        $this->assertSame($first->path, $this->itemLayout()->path);
+            public function assertClean(string $path): void
+            {
+                if ($this->inside) {
+                    return;
+                }
+                $this->inside = true;
+                // While attempt A is being scanned, attempt B (same bytes, same version) commits completely.
+                $this->test->commitConcurrentPlacement();
+            }
+        });
+
+        $this->place($this->planner, ['layout' => $this->png(400, 300), 'expected_version' => 1])
+            ->assertSessionHasErrors(['layout' => self::STALE]);
+
+        $layout = $this->itemLayout();
+        $this->assertSame([2, $this->secretary->id], [$layout->row_version, $layout->placed_by]);
+        $this->assertSame('osc/layouts/items/'.$this->item->id.'/'.$layout->sha256.'.png', $layout->path);
+        Storage::disk('local')->assertExists($layout->path);
         $this->assertSame([], Storage::disk('local')->allFiles('osc/layouts/tmp'));
+    }
 
-        // A successful attempt reuses the existing final file and still leaves no temporary file.
-        $this->place($this->planner, ['layout' => $this->png(400, 300), 'expected_version' => 1])->assertSessionHasNoErrors();
-        $this->assertSame($final, $this->itemLayout()->path);
-        $this->assertSame([], Storage::disk('local')->allFiles('osc/layouts/tmp'));
+    public function commitConcurrentPlacement(): void
+    {
+        app(LayoutImageService::class)->place($this->item, $this->png(400, 300), $this->points(), 1, $this->secretary);
     }
 }
