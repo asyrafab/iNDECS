@@ -264,6 +264,21 @@ final class AgendaPublishingTest extends TestCase
         $this->assertDatabaseCount('core.osc_agenda_versions', 0);
     }
 
+    #[DataProvider('lockedStatuses')]
+    public function test_closed_meeting_refuses_endorse(MeetingStatus $status): void
+    {
+        DepartmentSetting::query()->create(['department_id' => 'JBANG', 'requires_endorsement' => true]);
+        $item = $this->propose('Bangunan', 'JBANG');
+        $this->meeting->update(['status' => $status]);
+
+        $this->assertRefused('Agenda mesyuarat ini tidak lagi boleh diubah.',
+            fn () => $this->service()->endorse($item, $item->row_version, $this->chair));
+
+        $fresh = $item->fresh();
+        $this->assertSame(AgendaItemStatus::Proposed, $fresh->status);
+        $this->assertSame($item->row_version, $fresh->row_version);
+    }
+
     public function test_in_progress_meeting_still_allows_accept(): void
     {
         $item = $this->propose('A');

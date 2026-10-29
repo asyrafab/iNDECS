@@ -10,7 +10,7 @@ Implemented 2026-10-29 on branch `feat/eosc-foundation` (not yet merged), inside
 - Added `app/Services/Osc` (MeetingService, AgendaService, AgendaPaperService, OscAccess) and `/osc` screens: meeting creation with per-meeting chair and cut-offs, linked proposals from Bangunan/PKM pages, standalone items, optional head-of-department endorsement, secretary accept/return/reorder/publish, versioned agenda with change list, link-only email notification, ClamAV-scanned PDF papers (50 MB, versioned, views audited). Agenda changes refused on closed meetings; visibility limited by role. Staff accounts only until Plan 4.
 - Added `docs/runbooks/eosc-agenda.md` and ADR-314. Design, plan and runbook mirrored to the eOSC+ folder.
 
-Verification: **184 tests, 1215 assertions passed** on a full `php artisan test` run.
+Verification: **186 tests, 1221 assertions passed** on a full `php artisan test` run.
 
 Remaining: review and merge; Plan 2 (map) is next. No map, decision panel, attendee access or legacy migration is claimed.
 

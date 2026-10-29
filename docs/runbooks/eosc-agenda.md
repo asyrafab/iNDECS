@@ -38,7 +38,7 @@ A manager opens `/osc` and chooses to create a meeting. Enter the meeting number
 - **Tutup cadangan** (proposal cut-off): after this, officers cannot propose items. Managers still can.
 - **Tutup kertas kerja** (paper cut-off): accepted items without a paper after this time are flagged as missing a paper.
 
-Choose the chairperson (set per meeting, not a fixed role), secretary, optional STENO and the members. All must be active staff. Members can be changed later; this is audited and refused once the meeting is closed or minutes confirmed. A new meeting starts as a draft.
+Choose the chairperson (set per meeting, not a fixed role), secretary, optional STENO and the members. All must be active staff. Members are set when the meeting is created. Changing them later needs a screen that is planned for Plan 3; Plan 1 has none. A new meeting starts as a draft.
 
 ## Proposing items
 
@@ -64,7 +64,7 @@ Set `requires_endorsement` back to false to switch it off. There is no screen fo
 Managers review proposed items on the meeting screen:
 
 - **Terima** accepts the item onto the agenda.
-- **Return** sends it back to the department with a required reason, which the proposer sees.
+- **Kembalikan** sends it back to the department with a required reason, which the proposer sees.
 - Accepted items are ordered with the reorder action.
 - **Terbitkan agenda** publishes. Each publish creates a new version (1, 2, ...) that stores the ordered items and a list of changes against the previous version. Members are emailed a link only; the agenda and papers are never in the email.
 
@@ -72,7 +72,7 @@ Agenda changes are refused once the meeting is closed or minutes confirmed. Ever
 
 ## Papers
 
-The item's presenter, proposer or a manager can upload a paper. Rules: PDF only, up to 50 MB, virus-scanned by ClamAV before storage (a detection, an unavailable scanner, an error or a timeout all refuse the upload; there is no bypass). Each upload is a new version and old versions are kept with a SHA-256 checksum. Every view of a paper is audited. Configure ClamAV as described in the document-verification runbook.
+The item's presenter, proposer or a manager can upload a paper. Rules: PDF only, up to 50 MB, virus-scanned by ClamAV. The file is stored first and then scanned; if the scan detects a virus, the scanner is unavailable, or it errors or times out, the stored file is deleted and the upload never becomes a version (there is no bypass). Each upload is a new version and old versions are kept with a SHA-256 checksum. Every view of a paper is audited. Configure ClamAV as described in the document-verification runbook.
 
 ## What people see
 

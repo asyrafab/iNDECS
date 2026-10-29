@@ -74,6 +74,7 @@ final class AgendaService
         abort_unless($actor->canPerformOsc('osc.agenda.endorse', $item->department_id), 403);
 
         return DB::transaction(function () use ($item, $expectedVersion, $actor): AgendaItem {
+            $this->assertAgendaEditable(Meeting::query()->lockForUpdate()->findOrFail($item->meeting_id));
             $record = AgendaItem::query()->lockForUpdate()->findOrFail($item->id);
             if ($record->row_version !== $expectedVersion) {
                 throw ValidationException::withMessages(['item' => 'Rekod telah berubah. Muat semula sebelum meneruskan.']);
