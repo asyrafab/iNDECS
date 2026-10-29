@@ -12,10 +12,12 @@ use App\Enums\Osc\MeetingStatus;
 use App\Enums\Osc\TablingPurpose;
 use App\Models\Application;
 use App\Models\Osc\AgendaItem;
+use App\Models\Osc\AgendaItemPaper;
 use App\Models\Osc\DepartmentSetting;
 use App\Models\Osc\Meeting;
 use App\Models\Site;
 use App\Models\User;
+use App\Services\Osc\AgendaPaperService;
 use App\Services\Osc\AgendaService;
 use App\Services\Osc\MeetingService;
 use App\Services\Osc\OscAccess;
@@ -314,6 +316,62 @@ final class OscScreensTest extends TestCase
         $item->update(['proposed_by' => $this->officer->id]);
         $this->assertTrue(OscAccess::canViewMeeting($this->officer, $this->meeting));
         $this->assertFalse(OscAccess::canViewMeeting($this->outsider, $this->meeting));
+    }
+
+    private function paperFor(AgendaItem $item): AgendaItemPaper
+    {
+        return app(AgendaPaperService::class)->upload($item, $this->pdf(), $this->secretary);
+    }
+
+    public function test_paper_access_follows_item_visibility(): void
+    {
+        $endorser = User::factory()->create(['role' => 'senior_building_officer', 'department_id' => 'JBANG']);
+        $other = User::factory()->create(['role' => 'building_officer', 'department_id' => 'JBANG']);
+        $a = $this->propose('Perkara A', $this->officer, 'JBANG');
+        $b = $this->propose('Perkara B', $other, 'JBANG');
+        $b->update(['proposed_by' => $other->id]);
+        $jpbd = $this->propose('Perkara JPBD', $this->member, 'JPBD');
+        $accepted = $this->propose('Perkara Diterima', $this->officer, 'JBANG');
+        $returned = $this->propose('Perkara Dikembalikan', $this->officer, 'JBANG');
+        $svc = app(AgendaService::class);
+        $svc->accept($accepted, $accepted->row_version, $this->secretary);
+        $svc->returnToDepartment($returned, $returned->row_version, 'Tidak lengkap', $this->secretary);
+        $svc->publish($this->meeting, $this->meeting->fresh()->row_version, $this->secretary);
+        [$pa, $pb, $pj, $pacc, $pret] = array_map(fn ($i) => $this->paperFor($i->fresh()), [$a, $b, $jpbd, $accepted, $returned]);
+
+        $this->actingAs($endorser)->get(route('osc.papers.show', $pj))->assertForbidden();
+        $this->actingAs($endorser)->get(route('osc.papers.show', $pa))->assertOk();
+        $this->actingAs($other)->get(route('osc.papers.show', $pb))->assertOk();
+        $this->actingAs($other)->get(route('osc.papers.show', $pa))->assertForbidden();
+        $this->actingAs($this->member)->get(route('osc.papers.show', $pret))->assertForbidden();
+        $this->actingAs($this->member)->get(route('osc.papers.show', $pa))->assertForbidden();
+        $this->actingAs($this->member)->get(route('osc.papers.show', $pacc))->assertOk();
+        foreach ([$pa, $pb, $pj, $pacc, $pret] as $paper) {
+            $this->actingAs($this->secretary)->get(route('osc.papers.show', $paper))->assertOk();
+        }
+    }
+
+    public function test_can_view_item_branches(): void
+    {
+        $item = $this->propose('Perkara A', $this->member, 'JPBD');
+        $item->update(['proposed_by' => $this->officer->id]);
+        $item = $item->fresh();
+        $endorser = User::factory()->create(['role' => 'senior_planning_officer', 'department_id' => 'JPBD']);
+        $planningHead = User::factory()->create(['role' => 'senior_building_officer', 'department_id' => 'JBANG']);
+        $this->assertTrue(OscAccess::canViewItem($this->secretary, $item));
+        $this->assertTrue(OscAccess::canViewItem($this->member, $item));
+        $this->assertTrue(OscAccess::canViewItem($this->officer, $item));
+        $this->assertTrue(OscAccess::canViewItem($endorser, $item));
+        $this->assertFalse(OscAccess::canViewItem($planningHead, $item));
+        $this->assertFalse(OscAccess::canViewItem($this->outsider, $item));
+        $svc = app(AgendaService::class);
+        $svc->accept($item, $item->row_version, $this->secretary);
+        $this->assertFalse(OscAccess::canViewItem($this->chair, $item->fresh()), 'draft meeting');
+        $svc->publish($this->meeting, $this->meeting->fresh()->row_version, $this->secretary);
+        $this->assertTrue(OscAccess::canViewItem($this->chair, $item->fresh()));
+        $late = $this->propose('Perkara Lewat', $this->officer, 'JPBD');
+        $svc->accept($late, $late->row_version, $this->secretary);
+        $this->assertFalse(OscAccess::canViewItem($this->chair, $late->fresh()), 'accepted after last publish');
     }
 
     public function test_closed_meeting_hides_agenda_actions(): void

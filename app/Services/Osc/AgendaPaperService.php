@@ -71,7 +71,7 @@ final class AgendaPaperService
     public function download(AgendaItemPaper $paper, User $actor): StreamedResponse
     {
         $item = $paper->item()->with('meeting')->firstOrFail();
-        abort_unless(OscAccess::canViewMeeting($actor, $item->meeting), 403);
+        abort_unless(OscAccess::canViewItem($actor, $item), 403);
 
         $disk = Storage::disk('local');
         abort_unless($disk->exists($paper->path), 409, 'Fail kertas kerja tidak sah.');

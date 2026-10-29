@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Services\Osc;
 
+use App\Enums\Osc\AgendaItemStatus;
 use App\Enums\Osc\MeetingStatus;
+use App\Models\Osc\AgendaItem;
+use App\Models\Osc\AgendaVersion;
 use App\Models\Osc\Meeting;
 use App\Models\User;
 
@@ -42,5 +45,22 @@ final class OscAccess
         return $meeting->items()->reorder()->distinct()->pluck('department_id')
             ->filter(fn ($department) => $user->canPerformOsc('osc.agenda.endorse', (string) $department))
             ->values()->all();
+    }
+
+    public static function canViewItem(User $user, AgendaItem $item): bool
+    {
+        if (self::canManage($user) || $item->presenter_id === $user->id || $item->proposed_by === $user->id) {
+            return true;
+        }
+        if ($user->canPerformOsc('osc.agenda.endorse', (string) $item->department_id)) {
+            return true;
+        }
+        $meeting = $item->meeting;
+        if ($item->status !== AgendaItemStatus::Accepted || $meeting->status === MeetingStatus::Draft || ! self::isMember($user, $meeting)) {
+            return false;
+        }
+        $latest = AgendaVersion::query()->where('meeting_id', $meeting->id)->orderByDesc('version')->first();
+
+        return $latest !== null && in_array($item->id, array_column($latest->items, 'id'), true);
     }
 }
