@@ -26,3 +26,5 @@ roles so that the modules do not collide and the identifiers stay predictable.
 Later eOSC+ work follows these names without further decisions. Permission checks
 go through `CorePermissionService` via `User::canPerformOsc()`. Renaming any of the
 above needs a superseding ADR.
+
+`core.osc_meeting_members` has no `row_version`: members are only ever replaced as a whole set under the parent meeting's `row_version` lock (`MeetingService::setMembers`). `core.osc_department_settings` has no `row_version` in Plan 1 because no application screen writes it; an administrator sets rows per the runbook. Any future screen that edits department settings must first add `row_version`.
