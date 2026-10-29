@@ -68,6 +68,13 @@ return [
     'timezone' => 'UTC',
 
     /*
+    | Timezone in which officers enter and read meeting times (eOSC+). Instants
+    | are stored in UTC; only parsing of form input and display use this zone.
+    */
+
+    'display_timezone' => env('DISPLAY_TIMEZONE', 'Asia/Kuala_Lumpur'),
+
+    /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration
     |--------------------------------------------------------------------------

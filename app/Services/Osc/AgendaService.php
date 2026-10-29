@@ -97,7 +97,8 @@ final class AgendaService
 
         return DB::transaction(function () use ($item, $expectedVersion, $actor): AgendaItem {
             // The meeting lock serialises position allocation between concurrent accepts.
-            $this->assertAgendaEditable(Meeting::query()->lockForUpdate()->findOrFail($item->meeting_id));
+            $meeting = Meeting::query()->lockForUpdate()->findOrFail($item->meeting_id);
+            $this->assertAgendaEditable($meeting);
             $record = $this->lockItem($item, $expectedVersion);
             if ($record->status === AgendaItemStatus::Proposed && $this->requiresEndorsement($record->department_id)) {
                 throw ValidationException::withMessages(['item' => 'Cadangan ini perlu disokong ketua jabatan terlebih dahulu.']);
@@ -110,6 +111,7 @@ final class AgendaService
             $before = ['status' => $record->status->value, 'position' => $record->position];
             $record->update(['status' => AgendaItemStatus::Accepted, 'position' => $position,
                 'return_reason' => null, 'row_version' => $record->row_version + 1]);
+            $this->bumpMeeting($meeting);
             $this->audit($record, 'osc_item_accepted', $actor, $before,
                 ['status' => AgendaItemStatus::Accepted->value, 'position' => $position]);
 
@@ -126,7 +128,8 @@ final class AgendaService
         }
 
         return DB::transaction(function () use ($item, $expectedVersion, $reason, $actor): AgendaItem {
-            $this->assertAgendaEditable(Meeting::query()->lockForUpdate()->findOrFail($item->meeting_id));
+            $meeting = Meeting::query()->lockForUpdate()->findOrFail($item->meeting_id);
+            $this->assertAgendaEditable($meeting);
             $record = $this->lockItem($item, $expectedVersion);
             if ($record->status === AgendaItemStatus::Returned) {
                 throw ValidationException::withMessages(['item' => 'Cadangan ini telah dikembalikan.']);
@@ -134,6 +137,7 @@ final class AgendaService
             $before = ['status' => $record->status->value, 'position' => $record->position];
             $record->update(['status' => AgendaItemStatus::Returned, 'position' => null,
                 'return_reason' => $reason, 'row_version' => $record->row_version + 1]);
+            $this->bumpMeeting($meeting);
             $this->audit($record, 'osc_item_returned', $actor, $before,
                 ['status' => AgendaItemStatus::Returned->value, 'position' => null, 'return_reason' => $reason]);
 
@@ -294,6 +298,12 @@ final class AgendaService
         $this->assertAgendaEditable($record);
 
         return $record;
+    }
+
+    /** Accept and return change the agenda, so a publish or reorder prepared before them must be refused. */
+    private function bumpMeeting(Meeting $locked): void
+    {
+        $locked->update(['row_version' => $locked->row_version + 1]);
     }
 
     private function assertAgendaEditable(Meeting $locked): void

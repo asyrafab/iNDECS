@@ -38,6 +38,9 @@ Route::get('/', function (Request $request) {
     if ($request->user()->canAccessBangunanLegacy() && ! $request->user()->canAccessPkm()) {
         return to_route('bangunan.legacy.index');
     }
+    if (! $request->user()->canAccessPkm() && $request->user()->canAccessOsc()) {
+        return to_route('osc.meetings.index');
+    }
     abort_unless($request->user()->canAccessPkm(), 403);
 
     return app(DashboardController::class)($request);

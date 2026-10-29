@@ -29,11 +29,7 @@ class AuthenticatedSessionController extends Controller
             return back()->withErrors(['email' => 'Akaun ini tidak mempunyai akses kepada ruang kerja staf iNDECS.']);
         }
 
-        $defaultRoute = $user->canAccessBangunan() ? route('bangunan.index') : ($user->canAccessPkm()
-            ? route('dashboard')
-            : route('bangunan.legacy.index'));
-
-        return redirect()->intended($defaultRoute);
+        return redirect()->intended($user->staffHomeRoute());
     }
 
     public function destroy(Request $request): RedirectResponse

@@ -384,6 +384,20 @@ final class OscScreensTest extends TestCase
             ->assertSee('Perkara Menunggu')->assertDontSee('Terima')->assertDontSee('Kembalikan')->assertDontSee('Terbitkan agenda');
     }
 
+    public function test_return_forms_carry_the_confirmation(): void
+    {
+        $waiting = $this->propose('Perkara Menunggu');
+        $accepted = $this->propose('Perkara Diterima');
+        app(AgendaService::class)->accept($accepted, $accepted->row_version, $this->secretary);
+
+        $html = $this->actingAs($this->secretary)->get(route('osc.meetings.show', $this->meeting))->assertOk()->getContent();
+        foreach ([$waiting, $accepted] as $item) {
+            $action = preg_quote(route('osc.items.return', $item), '/');
+            $this->assertMatchesRegularExpression('/<form method="POST" action="'.$action.'"[^>]*data-confirm="Kembalikan [^"]+"/', $html);
+        }
+        $this->assertDoesNotMatchRegularExpression('/<button[^>]*data-confirm/', $html);
+    }
+
     public function test_return_requires_a_reason_and_stale_versions_are_reported(): void
     {
         $item = $this->propose('Perkara A');

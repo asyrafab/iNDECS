@@ -6,7 +6,7 @@
 <form method="POST" action="{{ route('osc.meetings.store') }}" class="application-form">
     @csrf
     <section class="form-card">
-        <div class="form-section-heading"><div><h2>Butiran mesyuarat</h2><p>Semua waktu mengikut waktu tempatan.</p></div></div>
+        <div class="form-section-heading"><div><h2>Butiran mesyuarat</h2><p>Semua waktu mengikut waktu Malaysia (UTC+8).</p></div></div>
         <div class="form-grid">
             <label class="field"><span>Bil. mesyuarat <b>*</b></span><input type="text" name="number" value="{{ old('number') }}" maxlength="30" required placeholder="Bil. 22/2026"></label>
             <label class="field"><span>Tarikh dan masa <b>*</b></span><input type="datetime-local" name="scheduled_at" value="{{ old('scheduled_at') }}" required></label>

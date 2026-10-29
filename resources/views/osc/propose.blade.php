@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Bentang ke mesyuarat')
 @section('content')
-<div class="record-heading"><div><a href="{{ route('osc.meetings.index', $application ? ['application' => $application->id] : []) }}" class="back-link"><x-icon name="arrow-left" /> Kembali</a><h1>Bentang ke mesyuarat {{ $meeting->number }}</h1><p>{{ $meeting->scheduled_at->format('d/m/Y H:i') }} · {{ $meeting->venue }} · tutup cadangan {{ $meeting->proposal_cutoff_at->format('d/m/Y H:i') }}</p></div></div>
+<div class="record-heading"><div><a href="{{ route('osc.meetings.index', $application ? ['application' => $application->id] : []) }}" class="back-link"><x-icon name="arrow-left" /> Kembali</a><h1>Bentang ke mesyuarat {{ $meeting->number }}</h1><p>{{ \App\Services\Osc\OscTime::format($meeting->scheduled_at) }} · {{ $meeting->venue }} · tutup cadangan {{ \App\Services\Osc\OscTime::format($meeting->proposal_cutoff_at) }}</p></div></div>
 @if ($errors->any())<div class="alert alert-error" role="alert"><x-icon name="circle-alert" /><div>@foreach ($errors->all() as $error)<p>{{ $error }}</p>@endforeach</div></div>@endif
 <form method="POST" action="{{ route('osc.items.store', $meeting) }}" class="application-form">
     @csrf

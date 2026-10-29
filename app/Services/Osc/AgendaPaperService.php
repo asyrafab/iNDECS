@@ -11,6 +11,7 @@ use App\Models\Osc\AgendaItemPaper;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -36,8 +37,9 @@ final class AgendaPaperService
         }
 
         $path = null;
+        $scanError = null;
         try {
-            return DB::transaction(function () use ($item, $file, $actor, $realPath, &$path): AgendaItemPaper {
+            return DB::transaction(function () use ($item, $file, $actor, $realPath, &$path, &$scanError): AgendaItemPaper {
                 $record = AgendaItem::query()->lockForUpdate()->findOrFail($item->id);
                 $version = ((int) $record->papers()->reorder()->max('version')) + 1;
                 $path = 'osc/papers/'.$record->meeting_id.'/'.$record->id.'/v'.$version.'.pdf';
@@ -46,7 +48,8 @@ final class AgendaPaperService
                 }
                 try {
                     $this->scanner->assertClean(Storage::disk('local')->path($path));
-                } catch (Throwable) {
+                } catch (Throwable $rejection) {
+                    $scanError = $rejection;
                     throw ValidationException::withMessages(['paper' => 'Dokumen gagal imbasan keselamatan dan tidak diterima.']);
                 }
                 $sha256 = hash_file('sha256', $realPath);
@@ -64,6 +67,12 @@ final class AgendaPaperService
             if ($path !== null) {
                 Storage::disk('local')->delete($path);
             }
+            if ($scanError !== null) {
+                // Logged after the rollback so the record survives; the upload is still refused.
+                Log::warning('eOSC+ agenda paper rejected by security scan.', [
+                    'item_id' => $item->id, 'actor_id' => $actor->id, 'error' => $scanError->getMessage(),
+                ]);
+            }
             throw $error;
         }
     }
@@ -74,12 +83,19 @@ final class AgendaPaperService
         abort_unless(OscAccess::canViewItem($actor, $item), 403);
 
         $disk = Storage::disk('local');
-        abort_unless($disk->exists($paper->path), 409, 'Fail kertas kerja tidak sah.');
-        $stream = $disk->readStream($paper->path);
-        $context = hash_init('sha256');
-        hash_update_stream($context, $stream);
+        $context = ['paper_id' => $paper->id, 'item_id' => $item->id, 'actor_id' => $actor->id];
+        $stream = $disk->exists($paper->path) ? $disk->readStream($paper->path) : null;
+        if (! is_resource($stream)) {
+            Log::critical('eOSC+ agenda paper file is missing.', $context);
+            abort(409, 'Fail kertas kerja tidak sah.');
+        }
+        $hash = hash_init('sha256');
+        hash_update_stream($hash, $stream);
         fclose($stream);
-        abort_unless(hash_equals($paper->sha256, hash_final($context)), 409, 'Fail kertas kerja tidak sah.');
+        if (! hash_equals($paper->sha256, hash_final($hash))) {
+            Log::critical('eOSC+ agenda paper failed its SHA-256 check.', $context);
+            abort(409, 'Fail kertas kerja tidak sah.');
+        }
 
         $this->audit($item, 'osc_paper_viewed', $actor, null, ['paper_id' => $paper->id, 'version' => $paper->version]);
 

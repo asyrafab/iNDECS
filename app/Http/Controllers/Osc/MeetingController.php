@@ -38,14 +38,26 @@ final class MeetingController extends Controller
             abort_unless(OscAccess::canManage($user) || $user->canPerformOsc('osc.agenda.propose', (string) $application->responsible_department_id), 403);
             $pickable = Meeting::query()
                 ->whereIn('status', [MeetingStatus::Draft->value, MeetingStatus::AgendaPublished->value])
-                ->where('scheduled_at', '>', now())->orderBy('scheduled_at')->get();
+                ->where('scheduled_at', '>', now()->toIso8601String())->orderBy('scheduled_at')->get();
         }
 
+        // Same rule as OscAccess::canViewMeeting: member of a non-draft meeting, presenter or proposer of an item,
+        // or holder of osc.agenda.endorse for an item's department.
+        $endorsing = OscAccess::canManage($user) ? [] : OscAccess::endorsingDepartments($user);
+        $awaiting = array_values(array_intersect($endorsing,
+            DepartmentSetting::query()->where('requires_endorsement', true)->pluck('department_id')->all()));
         $meetings = Meeting::query()
             ->when(! OscAccess::canManage($user), fn (Builder $query) => $query->where(fn (Builder $visible) => $visible
-                ->whereHas('members', fn (Builder $members) => $members->where('user_id', $user->id))
-                ->where('status', '!=', MeetingStatus::Draft->value)
-                ->orWhereHas('items', fn (Builder $items) => $items->where('presenter_id', $user->id))))
+                ->where(fn (Builder $member) => $member
+                    ->whereHas('members', fn (Builder $members) => $members->where('user_id', $user->id))
+                    ->where('status', '!=', MeetingStatus::Draft->value))
+                ->orWhereHas('items', fn (Builder $items) => $items->where(fn (Builder $own) => $own
+                    ->where('presenter_id', $user->id)
+                    ->orWhere('proposed_by', $user->id)
+                    ->when($endorsing !== [], fn (Builder $endorse) => $endorse->orWhereIn('department_id', $endorsing))))))
+            ->withCount(['items as awaiting_endorsement_count' => fn (Builder $items) => $awaiting === []
+                ? $items->whereRaw('1 = 0')
+                : $items->where('status', AgendaItemStatus::Proposed->value)->whereIn('department_id', $awaiting)])
             ->orderByDesc('scheduled_at')->orderByDesc('id')->get();
 
         return view('osc.index', [
@@ -65,7 +77,7 @@ final class MeetingController extends Controller
 
     public function store(StoreMeetingRequest $request, MeetingService $meetings): RedirectResponse
     {
-        $meeting = $meetings->create($request->validated(), $request->user());
+        $meeting = $meetings->create($request->meetingData(), $request->user());
 
         return to_route('osc.meetings.show', $meeting)->with('status', 'Mesyuarat '.$meeting->number.' telah dicipta.');
     }

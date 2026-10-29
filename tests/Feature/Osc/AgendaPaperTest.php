@@ -16,6 +16,7 @@ use App\Services\Osc\AgendaService;
 use App\Services\Osc\MeetingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -121,6 +122,48 @@ final class AgendaPaperTest extends TestCase
         $this->assertDatabaseCount('core.osc_agenda_item_papers', 0);
         Storage::disk('local')->assertDirectoryEmpty('osc/papers');
         $this->assertDatabaseMissing('audit_logs', ['event' => 'osc_paper_uploaded']);
+    }
+
+    public function test_scan_rejection_is_logged_with_the_scanner_message(): void
+    {
+        $this->scanner('Win.Test.EICAR_HDB-1 FOUND');
+        Log::spy();
+
+        $this->assertSame('Dokumen gagal imbasan keselamatan dan tidak diterima.', $this->message(fn () => $this->upload()));
+
+        Log::shouldHaveReceived('warning')->once()->withArgs(fn (string $message, array $context): bool => $message === 'eOSC+ agenda paper rejected by security scan.'
+            && $context['item_id'] === $this->item->id && $context['actor_id'] === $this->planner->id
+            && $context['error'] === 'Win.Test.EICAR_HDB-1 FOUND');
+        $this->assertDatabaseCount('core.osc_agenda_item_papers', 0);
+        Storage::disk('local')->assertDirectoryEmpty('osc/papers');
+    }
+
+    public function test_integrity_failures_at_download_are_logged_as_critical(): void
+    {
+        $paper = $this->upload();
+        $service = app(AgendaPaperService::class);
+        Log::spy();
+
+        Storage::disk('local')->put($paper->path, 'tampered');
+        $this->assertDownloadStatus(409, fn () => $service->download($paper, $this->secretary));
+        Log::shouldHaveReceived('critical')->once()->withArgs(fn (string $message, array $context): bool => $message === 'eOSC+ agenda paper failed its SHA-256 check.'
+            && $context['paper_id'] === $paper->id && $context['item_id'] === $this->item->id && $context['actor_id'] === $this->secretary->id);
+
+        Storage::disk('local')->delete($paper->path);
+        $this->assertDownloadStatus(409, fn () => $service->download($paper, $this->secretary));
+        Log::shouldHaveReceived('critical')->withArgs(fn (string $message, array $context): bool => $message === 'eOSC+ agenda paper file is missing.'
+            && $context['paper_id'] === $paper->id && $context['item_id'] === $this->item->id && $context['actor_id'] === $this->secretary->id);
+        $this->assertDatabaseMissing('audit_logs', ['event' => 'osc_paper_viewed']);
+    }
+
+    private function assertDownloadStatus(int $status, callable $action): void
+    {
+        try {
+            $action();
+            $this->fail('Expected an HTTP exception.');
+        } catch (HttpException $e) {
+            $this->assertSame($status, $e->getStatusCode());
+        }
     }
 
     public function test_non_pdf_is_refused(): void

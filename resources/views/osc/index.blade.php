@@ -22,7 +22,7 @@
             @foreach ($pickable as $option)
                 <li class="agenda-row">
                     <span class="agenda-row-number" aria-hidden="true"><x-icon name="file-plus-2" /></span>
-                    <div class="agenda-row-body"><strong>{{ $option->number }}</strong><p class="agenda-row-meta"><span>{{ $option->scheduled_at->format('d/m/Y H:i') }}</span><span>{{ $option->venue }}</span><span>Tutup cadangan {{ $option->proposal_cutoff_at->format('d/m/Y H:i') }}</span></p></div>
+                    <div class="agenda-row-body"><strong>{{ $option->number }}</strong><p class="agenda-row-meta"><span>{{ \App\Services\Osc\OscTime::format($option->scheduled_at) }}</span><span>{{ $option->venue }}</span><span>Tutup cadangan {{ \App\Services\Osc\OscTime::format($option->proposal_cutoff_at) }}</span></p></div>
                     <div class="agenda-row-actions"><a class="button button-primary button-small" href="{{ route('osc.items.create', [$option, 'application' => $application->id]) }}">Bentang ke mesyuarat ini</a></div>
                 </li>
             @endforeach
@@ -33,15 +33,15 @@
 <section class="content-card">
     <div class="card-heading"><h2>Senarai mesyuarat</h2><span class="muted">{{ number_format($meetings->count()) }} mesyuarat</span></div>
     @if ($meetings->isEmpty())
-        <div class="empty-state compact"><h3>Tiada mesyuarat</h3><p>Mesyuarat akan dipaparkan di sini apabila anda dilantik sebagai ahli atau penyampai.</p></div>
+        <div class="empty-state compact"><h3>Tiada mesyuarat</h3><p>Mesyuarat akan dipaparkan di sini apabila anda dilantik sebagai ahli atau penyampai, mencadangkan perkara, atau perlu menyokong cadangan jabatan anda.</p></div>
     @else
         <div class="table-wrap"><table class="data-table"><thead><tr><th>Bil.</th><th>Tarikh</th><th>Tempat</th><th>Status</th></tr></thead><tbody>
             @foreach ($meetings as $meeting)
                 <tr>
                     <td><a class="reference-link" href="{{ route('osc.meetings.show', $meeting) }}">{{ $meeting->number }}</a></td>
-                    <td>{{ $meeting->scheduled_at->format('d/m/Y H:i') }}</td>
+                    <td>{{ \App\Services\Osc\OscTime::format($meeting->scheduled_at) }}</td>
                     <td>{{ $meeting->venue }}</td>
-                    <td><span class="status-badge {{ $badge[$meeting->status->value] }}">{{ $meeting->status->label() }}</span></td>
+                    <td><span class="status-badge {{ $badge[$meeting->status->value] }}">{{ $meeting->status->label() }}</span>@if ($meeting->awaiting_endorsement_count > 0 && ! in_array($meeting->status->value, ['closed', 'minutes_confirmed'], true)) <span class="status-badge status-pending">{{ number_format($meeting->awaiting_endorsement_count) }} menunggu sokongan anda</span>@endif</td>
                 </tr>
             @endforeach
         </tbody></table></div>

@@ -3,6 +3,8 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\Osc\AgendaItem;
+use App\Models\Osc\MeetingMember;
 use App\Services\CorePermissionService;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -82,14 +84,39 @@ class User extends Authenticatable
         return app(CorePermissionService::class)->userCan($this, $permission, $departmentId ?? $this->department_id, null);
     }
 
+    /**
+     * Opens the eOSC+ area: holders of osc.meeting.view, and active staff who are a member, presenter or
+     * proposer of any meeting. Which meetings and items they see is still decided per record by OscAccess.
+     */
     public function canAccessOsc(): bool
     {
-        return $this->canPerformOsc('osc.meeting.view');
+        if (! $this->is_active || $this->account_type !== 'staff') {
+            return false;
+        }
+
+        return $this->canPerformOsc('osc.meeting.view') || $this->isOscParticipant();
+    }
+
+    public function isOscParticipant(): bool
+    {
+        return MeetingMember::query()->where('user_id', $this->id)->exists()
+            || AgendaItem::query()->where(fn ($items) => $items->where('presenter_id', $this->id)->orWhere('proposed_by', $this->id))->exists();
     }
 
     public function canAccessStaffWorkspace(): bool
     {
-        return $this->canAccessPkm() || $this->canAccessBangunan() || $this->canAccessBangunanLegacy();
+        return $this->canAccessPkm() || $this->canAccessBangunan() || $this->canAccessBangunanLegacy() || $this->canAccessOsc();
+    }
+
+    /** Default landing route after sign-in or when opening `/`, in workspace priority order. */
+    public function staffHomeRoute(): string
+    {
+        return match (true) {
+            $this->canAccessBangunan() => route('bangunan.index'),
+            $this->canAccessPkm() => route('dashboard'),
+            $this->canAccessBangunanLegacy() => route('bangunan.legacy.index'),
+            default => route('osc.meetings.index'),
+        };
     }
 
     public function canAccessLegacyPermohonan(LegacyPermohonan $permohonan): bool

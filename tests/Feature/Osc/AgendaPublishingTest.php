@@ -208,6 +208,26 @@ final class AgendaPublishingTest extends TestCase
         $this->assertRefused('Rekod telah berubah. Muat semula sebelum meneruskan.', fn () => $this->service()->publish($this->meeting, 99, $this->secretary));
     }
 
+    public function test_accept_and_return_bump_meeting_version_so_stale_publish_is_refused(): void
+    {
+        $first = $this->accepted('A');
+        $seen = $this->version();
+
+        $second = $this->propose('B');
+        $this->service()->accept($second, $second->row_version, $this->secretary);
+        $this->assertSame($seen + 1, $this->version());
+        $this->assertRefused('Rekod telah berubah. Muat semula sebelum meneruskan.', fn () => $this->service()->publish($this->meeting, $seen, $this->secretary));
+
+        $seen = $this->version();
+        $this->service()->returnToDepartment($first->fresh(), $first->fresh()->row_version, 'Tidak lengkap', $this->secretary);
+        $this->assertSame($seen + 1, $this->version());
+        $this->assertRefused('Rekod telah berubah. Muat semula sebelum meneruskan.', fn () => $this->service()->publish($this->meeting, $seen, $this->secretary));
+        $this->assertDatabaseCount('core.osc_agenda_versions', 0);
+
+        $this->service()->publish($this->meeting, $this->version(), $this->secretary);
+        $this->assertDatabaseCount('core.osc_agenda_versions', 1);
+    }
+
     public function test_return_requires_reason_and_removes_position(): void
     {
         $item = $this->accepted('A');

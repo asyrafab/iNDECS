@@ -12,8 +12,8 @@
         <a href="{{ route('osc.meetings.index') }}" class="back-link"><x-icon name="arrow-left" /> Kembali ke senarai</a>
         <div class="record-reference-row"><span class="record-type">OSC</span><span class="record-reference">{{ $meeting->number }}</span><span class="status-badge {{ $meetingBadge[$meeting->status->value] }}">{{ $meeting->status->label() }}</span></div>
         <h1>Mesyuarat OSC {{ $meeting->number }}</h1>
-        <p>{{ $meeting->scheduled_at->format('d/m/Y H:i') }} · {{ $meeting->venue }}</p>
-        <p class="muted">Tutup cadangan {{ $meeting->proposal_cutoff_at->format('d/m/Y H:i') }} · tutup kertas kerja {{ $meeting->paper_cutoff_at->format('d/m/Y H:i') }}</p>
+        <p>{{ \App\Services\Osc\OscTime::format($meeting->scheduled_at) }} · {{ $meeting->venue }}</p>
+        <p class="muted">Tutup cadangan {{ \App\Services\Osc\OscTime::format($meeting->proposal_cutoff_at) }} · tutup kertas kerja {{ \App\Services\Osc\OscTime::format($meeting->paper_cutoff_at) }}</p>
     </div>
     @if ($canPropose && $acceptsProposals)
         <a href="{{ route('osc.items.create', $meeting) }}" class="button button-secondary"><x-icon name="plus" />Cadang perkara</a>
@@ -41,11 +41,11 @@
                             <p class="agenda-row-meta"><span class="status-badge {{ $itemBadge[$item->status->value] }}">{{ $item->status->label() }}</span><span>{{ $item->reference ?: $item->standalone_type }}</span><span>{{ $item->purpose->label() }}</span><span>{{ $departments[$item->department_id] ?? $item->department_id }}</span><span>Penyampai: {{ $item->presenter?->name }}</span></p>
                             @include('osc._paper', ['item' => $item, 'upload' => ! $locked])
                             @if (! $locked)
-                                <form method="POST" action="{{ route('osc.items.return', $item) }}" class="inline-form">
+                                <form method="POST" action="{{ route('osc.items.return', $item) }}" class="inline-form" data-confirm="Kembalikan cadangan ini kepada jabatan?">
                                     @csrf
                                     <input type="hidden" name="expected_version" value="{{ $item->row_version }}">
                                     <label class="field"><span class="sr-only">Sebab pengembalian untuk {{ $item->title }}</span><input type="text" name="reason" maxlength="2000" placeholder="Sebab pengembalian" required></label>
-                                    <button type="submit" class="button button-danger button-small" data-confirm="Kembalikan cadangan ini kepada jabatan?">Kembalikan</button>
+                                    <button type="submit" class="button button-danger button-small">Kembalikan</button>
                                 </form>
                             @endif
                         </div>
@@ -101,11 +101,11 @@
                             <p class="agenda-row-meta"><span>{{ $item->reference ?: $item->standalone_type }}</span><span>{{ $item->purpose->label() }}</span><span>{{ $departments[$item->department_id] ?? $item->department_id }}</span><span>Penyampai: {{ $item->presenter?->name }}</span>@if ($item->isMissingPaper())<span class="status-badge status-attention">Kertas belum diterima</span>@endif</p>
                             @include('osc._paper', ['item' => $item, 'upload' => ! $locked])
                             @if (! $locked)
-                                <form method="POST" action="{{ route('osc.items.return', $item) }}" class="inline-form">
+                                <form method="POST" action="{{ route('osc.items.return', $item) }}" class="inline-form" data-confirm="Kembalikan perkara ini kepada jabatan?">
                                     @csrf
                                     <input type="hidden" name="expected_version" value="{{ $item->row_version }}">
                                     <label class="field"><span class="sr-only">Sebab pengembalian untuk {{ $item->title }}</span><input type="text" name="reason" maxlength="2000" placeholder="Sebab pengembalian" required></label>
-                                    <button type="submit" class="button button-danger button-small" data-confirm="Kembalikan perkara ini kepada jabatan?">Kembalikan</button>
+                                    <button type="submit" class="button button-danger button-small">Kembalikan</button>
                                 </form>
                             @endif
                         </div>
@@ -136,7 +136,7 @@
                 @foreach ($versions as $version)
                     <li class="agenda-row">
                         <span class="agenda-row-number">{{ $version->version }}</span>
-                        <div class="agenda-row-body"><strong>Versi {{ $version->version }} · diterbitkan {{ $version->published_at->format('d/m/Y H:i') }}</strong>
+                        <div class="agenda-row-body"><strong>Versi {{ $version->version }} · diterbitkan {{ \App\Services\Osc\OscTime::format($version->published_at) }}</strong>
                             <p class="agenda-row-meta"><span>{{ count($version->items) }} perkara</span><span>{{ count($version->changes['added'] ?? []) }} ditambah</span><span>{{ count($version->changes['removed'] ?? []) }} dibuang</span><span>{{ ($version->changes['reordered'] ?? false) ? 'Susunan diubah' : 'Susunan tidak berubah' }}</span></p></div>
                     </li>
                 @endforeach
@@ -167,7 +167,7 @@
     @endif
     @if ($published)
     <section class="content-card" id="agenda">
-        <div class="card-heading"><h2>Agenda</h2><span class="muted">Versi {{ $published->version }} · diterbitkan {{ $published->published_at->format('d/m/Y H:i') }}</span></div>
+        <div class="card-heading"><h2>Agenda</h2><span class="muted">Versi {{ $published->version }} · diterbitkan {{ \App\Services\Osc\OscTime::format($published->published_at) }}</span></div>
         <ol class="agenda-list">
             @foreach ($agenda as $item)
                 @php($paper = $item->papers->first())

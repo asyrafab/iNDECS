@@ -10,6 +10,7 @@ use App\Models\Osc\AgendaItem;
 use App\Models\Osc\AgendaVersion;
 use App\Models\Osc\Meeting;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 final class OscAccess
 {
@@ -45,6 +46,14 @@ final class OscAccess
         return $meeting->items()->reorder()->distinct()->pluck('department_id')
             ->filter(fn ($department) => $user->canPerformOsc('osc.agenda.endorse', (string) $department))
             ->values()->all();
+    }
+
+    /** @return array<int, string> Every department for which the user holds osc.agenda.endorse. */
+    public static function endorsingDepartments(User $user): array
+    {
+        return DB::table('departments')->orderBy('id')->pluck('id')
+            ->filter(fn ($department) => $user->canPerformOsc('osc.agenda.endorse', (string) $department))
+            ->map(fn ($department): string => (string) $department)->values()->all();
     }
 
     public static function canViewItem(User $user, AgendaItem $item): bool

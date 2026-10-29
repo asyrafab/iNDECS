@@ -15,6 +15,9 @@ class Meeting extends Model
 
     protected $guarded = [];
 
+    /** Written with an explicit offset so timestamptz columns never depend on the database session timezone. */
+    protected $dateFormat = 'Y-m-d H:i:sP';
+
     protected function casts(): array
     {
         return [
