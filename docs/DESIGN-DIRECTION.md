@@ -12,6 +12,7 @@ direction shared with AIRS and to the programme in `docs/bangunan/`. Department 
 | Bangunan | iNDECS Bangunan | Bangunan | `/bangunan` | `APP_PB_` | PB, PBK, PBS, PMT, TEL | `PB/2026/00310`, `PBK/2026/00042`, `TEL/2026/00007` |
 | Kejuruteraan | iNDECS Kejuruteraan | Kejuruteraan | `/kejuruteraan` | `APP_PKT_`, `APP_PKP_` | PKT, PKP | `PKT/2026/00054` |
 | Landskap | iNDECS Landskap | Landskap | `/landskap` | `APP_PL_` | PL | `PL/2026/00021` |
+| eOSC+ | eOSC+ (Mesyuarat OSC) | eOSC+ | /osc | core.osc_ | — | Bil. 21/2026 |
 
 Bangunan type codes: PB pelan bangunan penuh; PBK Pelan Tambahan / Ubahsuai Kecil; PBS
 Pelan Bangunan Sementara and Permit Sementara Seksyen 19; PMT permits (meletak bahan

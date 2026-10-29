@@ -138,6 +138,8 @@ class DatabaseSeeder extends Seeder
                 ],
             );
         }
+
+        $this->call(OscSeeder::class);
     }
 
     private function seedCorePermissions(): void

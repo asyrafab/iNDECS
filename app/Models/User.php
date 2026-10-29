@@ -73,6 +73,20 @@ class User extends Authenticatable
         return app(CorePermissionService::class)->userCan($this, 'bangunan.legacy.view', $this->department_id, null);
     }
 
+    public function canPerformOsc(string $permission, ?string $departmentId = null): bool
+    {
+        if (! $this->is_active || $this->account_type !== 'staff') {
+            return false;
+        }
+
+        return app(CorePermissionService::class)->userCan($this, $permission, $departmentId ?? $this->department_id, null);
+    }
+
+    public function canAccessOsc(): bool
+    {
+        return $this->canPerformOsc('osc.meeting.view');
+    }
+
     public function canAccessStaffWorkspace(): bool
     {
         return $this->canAccessPkm() || $this->canAccessBangunan() || $this->canAccessBangunanLegacy();

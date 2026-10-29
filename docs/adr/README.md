@@ -7,6 +7,7 @@ Programme-level decisions (ADR-201 to ADR-213) are in `../bangunan/16-decision-l
 - [ADR-311: Calm Intelligence across the iNDECS workspace](ADR-311-calm-intelligence-workspace.md)
 - [ADR-312: Public landing page at the existing entry URL](ADR-312-public-landing-page.md)
 - [ADR-313: Adopt the existing iNDECS landing concept](ADR-313-existing-landing-concept.md)
+- [ADR-314: eOSC+ naming and the C10 schema](ADR-314-eosc-naming-and-c10-schema.md)
 
 Template:
 
