@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Osc\ReorderAgendaRequest;
 use App\Http\Requests\Osc\StoreMeetingRequest;
 use App\Models\Application;
+use App\Models\Gis\GisLayer;
 use App\Models\Osc\AgendaItem;
 use App\Models\Osc\DepartmentSetting;
 use App\Models\Osc\Meeting;
@@ -60,7 +61,14 @@ final class MeetingController extends Controller
                 : $items->where('status', AgendaItemStatus::Proposed->value)->whereIn('department_id', $awaiting)])
             ->orderByDesc('scheduled_at')->orderByDesc('id')->get();
 
+        $layers = OscAccess::canManage($user)
+            ? GisLayer::query()->where('is_active', true)->orderBy('sort_order')->orderBy('id')->get()
+                ->each(fn (GisLayer $layer) => $layer->setRelation('lastSnapshot',
+                    $layer->snapshots()->orderByDesc('id')->first()))
+            : collect();
+
         return view('osc.index', [
+            'layers' => $layers,
             'meetings' => $meetings,
             'application' => $application,
             'pickable' => $pickable,

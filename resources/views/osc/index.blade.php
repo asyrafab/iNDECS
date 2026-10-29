@@ -47,5 +47,22 @@
         </tbody></table></div>
     @endif
 </section>
+@if ($canManage)
+<section class="content-card" id="lapisan-gis">
+    <div class="card-heading"><h2>Lapisan peta</h2>
+        <form method="POST" action="{{ route('osc.gis.refresh') }}">@csrf<button type="submit" class="button button-secondary button-small"><x-icon name="map" />Kemas kini lapisan</button></form>
+    </div>
+    <div class="table-wrap"><table class="data-table"><thead><tr><th>Lapisan</th><th>Kemas kini terakhir</th><th>Status</th></tr></thead><tbody>
+        @foreach ($layers as $layer)
+            @php($snapshot = $layer->lastSnapshot)
+            <tr>
+                <td>{{ $layer->label }}</td>
+                <td>{{ $snapshot?->finished_at ? \App\Services\Osc\OscTime::format($snapshot->finished_at) : 'Belum dikemas kini' }}</td>
+                <td>@if ($snapshot)<span class="status-badge {{ ['ready' => 'status-compliant', 'importing' => 'status-attention', 'failed' => 'status-pending'][$snapshot->status] ?? 'status-info' }}">{{ ['ready' => 'Siap', 'importing' => 'Sedang berjalan', 'failed' => 'Gagal', 'superseded' => 'Diganti'][$snapshot->status] ?? $snapshot->status }}</span>@else<span class="muted">-</span>@endif</td>
+            </tr>
+        @endforeach
+    </tbody></table></div>
+</section>
+@endif
 </div>
 @endsection

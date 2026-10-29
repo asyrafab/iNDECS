@@ -13,6 +13,9 @@ class GisLayerSnapshot extends Model
 
     public $timestamps = false;
 
+    // Keep the UTC offset so timestamptz values are not reinterpreted in the database session zone.
+    protected $dateFormat = 'Y-m-d H:i:sP';
+
     protected $guarded = [];
 
     protected function casts(): array

@@ -2,6 +2,19 @@
 
 Last updated: 2026-10-29.
 
+## eOSC+ Plan 2: meeting map (ADR-315)
+
+Implemented 2026-10-29 on branch `feat/eosc-map` (built on `feat/eosc-foundation`, not yet merged), inside iNDECS as core capabilities C13 (GIS) and C10.
+
+- PostGIS foundation (SRID 4326 plus 3857 tile geometry, MBSP SRIDs 990001 and 990002), boundary drawing at registration, ArcGIS layer replication into dated snapshots (`gis:replicate`, ogr2ogr PGDUMP loaded by psql, two superseded snapshots kept), vector tiles with staff-only access, vendored OpenLayers, and the meeting map with imagery fallback and optional MBSP orthophoto (`ORTHOPHOTO_TILE_URL`).
+- Layout plans placed by three reference points or imported from MJKP world files (`osc:import-legacy`, default SRID 990001, 100 m containment guard, shared-file rule). Real dev results: lots 265,731 features in about 159 s (anonymous); 5,407 legacy points; 2,800 layout images placed (no file 107, no world file 1,140, TIFF 409, mismatch 10, shared 529); 1,389 world-file stems not referenced by any paper. Alignment check: 17 of 20 (85 %) under both SRIDs, same misses.
+- Manager-only "Kemas kini lapisan" button (`osc.gis.refresh`) queues `ReplicateLayers`; `/osc` shows each layer's last snapshot time and status. Snapshot timestamps now keep their UTC offset (they were stored 8 hours early before).
+- Added `docs/runbooks/gis-layers.md`, a map section in `docs/runbooks/eosc-agenda.md` and ADR-315. Design, plans and runbooks mirrored to the eOSC+ folder.
+
+Verification: **288 tests, 1801 assertions passed** on a full `php artisan test` run (PostgreSQL); Pint and `view:cache` passed.
+
+Remaining: review and merge both eOSC+ branches; Plan 3 (decision panel) is next. TIFF layout plans are not supported; no attendee access or decision recording is claimed.
+
 ## eOSC+ Plan 1: foundation and agenda (ADR-314)
 
 Implemented 2026-10-29 on branch `feat/eosc-foundation` (not yet merged), inside the iNDECS Laravel application as the first part of core capability C10.

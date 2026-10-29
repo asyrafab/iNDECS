@@ -10,6 +10,7 @@ use App\Http\Controllers\Gis\BoundaryController;
 use App\Http\Controllers\Gis\TileController;
 use App\Http\Controllers\Osc\AgendaItemController;
 use App\Http\Controllers\Osc\AgendaPaperController;
+use App\Http\Controllers\Osc\GisRefreshController;
 use App\Http\Controllers\Osc\LayoutImageController;
 use App\Http\Controllers\Osc\MeetingController;
 use App\Http\Controllers\Osc\MeetingMapController;
@@ -121,6 +122,7 @@ Route::middleware(['auth', 'osc.access'])->prefix('osc')->name('osc.')->group(fu
     Route::get('/papers/{paper}', [AgendaPaperController::class, 'show'])->name('papers.show');
     Route::get('/items/{item}/layout', [LayoutImageController::class, 'edit'])->name('layout.edit');
     Route::post('/items/{item}/layout', [LayoutImageController::class, 'store'])->name('layout.store');
+    Route::post('/gis/refresh', [GisRefreshController::class, 'store'])->name('gis.refresh');
     Route::get('/layouts/{layoutImage}', [LayoutImageController::class, 'show'])->name('layout.show');
 });
 

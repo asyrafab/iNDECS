@@ -30,7 +30,7 @@ class LayerReplicationService
             $running = GisLayerSnapshot::query()
                 ->where('layer_id', $layer->id)
                 ->where('status', 'importing')
-                ->where('started_at', '>', now()->subHours(2))
+                ->where('started_at', '>', now()->subHours(2)->toIso8601String())
                 ->exists();
             if ($running) {
                 throw new RuntimeException("Kemas kini lapisan {$layer->id} sedang berjalan.");
