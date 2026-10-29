@@ -161,6 +161,13 @@ application, two = linked pair, three = development case.
   `.agenda-row-body`, `.agenda-row-meta`, `.agenda-row-actions`, `.inline-form` and `.panel-stack`
   in `indecs.css`; rows collapse to one column on phones.
 
+- The eOSC+ meeting map (`resources/views/osc/map.blade.php`, `public/js/gis-map.js`, `public/js/osc-map.js`, OpenLayers
+  vendored in `public/vendor/openlayers/`, version in `VERSION`) uses `.map-page`, `.map-layout`, `.map-stage`, `.map-canvas`,
+  `.map-panel` / `.map-sheet` (side panel from 768px, bottom sheet below), `.map-sheet-toggle`, `.map-tools`,
+  `.map-measure-output`, `.map-layer-list`, `.map-layer-row`, `.map-item-list`, `.map-item-button`, `.map-notice`,
+  `.map-swipe` and `.map-popup` in `indecs.css`. Map colours are read from CSS custom properties at runtime in JS, never
+  hex; the page config JSON (`#osc-map-config`) carries no item data, which comes only from `osc.meetings.map-data`.
+
 - Bahasa Melayu is the interface language (`lang/ms`). Application type codes stay as-is.
 - Reuse the existing class names in `public/css/indecs.css` before inventing new ones. If you
   need a new component, add it to that file in the same idiom and document it here.

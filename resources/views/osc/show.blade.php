@@ -15,9 +15,12 @@
         <p>{{ \App\Services\Osc\OscTime::format($meeting->scheduled_at) }} · {{ $meeting->venue }}</p>
         <p class="muted">Tutup cadangan {{ \App\Services\Osc\OscTime::format($meeting->proposal_cutoff_at) }} · tutup kertas kerja {{ \App\Services\Osc\OscTime::format($meeting->paper_cutoff_at) }}</p>
     </div>
-    @if ($canPropose && $acceptsProposals)
-        <a href="{{ route('osc.items.create', $meeting) }}" class="button button-secondary"><x-icon name="plus" />Cadang perkara</a>
-    @endif
+    <div class="agenda-row-actions">
+        <a href="{{ route('osc.meetings.map', $meeting) }}" class="button button-secondary"><x-icon name="map" />Peta</a>
+        @if ($canPropose && $acceptsProposals)
+            <a href="{{ route('osc.items.create', $meeting) }}" class="button button-secondary"><x-icon name="plus" />Cadang perkara</a>
+        @endif
+    </div>
 </div>
 @if ($errors->any())<div class="alert alert-error" role="alert"><x-icon name="circle-alert" /><div>@foreach ($errors->all() as $error)<p>{{ $error }}</p>@endforeach</div></div>@endif
 @if ($locked)<div class="alert alert-info" role="status"><x-icon name="circle-alert" /><div>Agenda mesyuarat ini tidak lagi boleh diubah.</div></div>@endif

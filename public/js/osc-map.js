@@ -1,0 +1,245 @@
+/* eOSC+ meeting map: items, earlier tablings, past decisions and positioned layout plans on top of GisMap.
+   All item data comes from the map-data endpoint; the page config carries none. */
+(function () {
+    'use strict';
+
+    const configEl = document.getElementById('osc-map-config');
+    const element = document.getElementById('osc-map');
+    if (!configEl || !element || !window.GisMap || !window.ol) return;
+
+    const config = JSON.parse(configEl.textContent);
+    const labels = config.labels;
+    const gis = window.GisMap.create(element, config);
+    const map = gis.map;
+    const palette = gis.palette;
+    const geojson = new ol.format.GeoJSON();
+
+    const panel = document.getElementById('osc-map-panel');
+    const toggle = document.querySelector('[data-map-sheet-toggle]');
+    if (toggle && panel) {
+        toggle.addEventListener('click', () => {
+            const open = panel.dataset.open !== 'true';
+            panel.dataset.open = String(open);
+            toggle.setAttribute('aria-expanded', String(open));
+        });
+    }
+    const setSheet = open => {
+        if (!panel || !toggle) return;
+        panel.dataset.open = String(open);
+        toggle.setAttribute('aria-expanded', String(open));
+    };
+
+    /* Styles, cached per palette refresh. */
+    let styleCache = {};
+    gis.refreshers.push(() => { styleCache = {}; });
+    function style(feature) {
+        const kind = feature.get('kind');
+        const selected = feature.get('selected') === true;
+        const type = feature.getGeometry().getType();
+        const key = kind + type + selected;
+        if (styleCache[key]) return styleCache[key];
+        let s;
+        if (kind === 'legacy') {
+            s = new ol.style.Style({ image: new ol.style.Circle({ radius: 4, fill: new ol.style.Fill({ color: palette.legacy }), stroke: new ol.style.Stroke({ color: palette.surface, width: 1 }) }) });
+        } else if (kind === 'earlier') {
+            s = new ol.style.Style({ stroke: new ol.style.Stroke({ color: palette.muted, width: 2, lineDash: [6, 4] }), fill: new ol.style.Fill({ color: palette.mutedFill }), image: new ol.style.Circle({ radius: 5, stroke: new ol.style.Stroke({ color: palette.muted, width: 2 }), fill: new ol.style.Fill({ color: palette.mutedFill }) }) });
+        } else {
+            const width = selected ? 4 : 2.5;
+            s = new ol.style.Style({ stroke: new ol.style.Stroke({ color: palette.accent, width: width }), fill: new ol.style.Fill({ color: palette.accentFill }), image: new ol.style.Circle({ radius: 6, stroke: new ol.style.Stroke({ color: palette.accent, width: width }), fill: new ol.style.Fill({ color: palette.accentFill }) }) });
+        }
+        styleCache[key] = s;
+        return s;
+    }
+
+    const itemSource = new ol.source.Vector();
+    const pastSource = new ol.source.Vector();
+    const itemLayer = new ol.layer.Vector({ source: itemSource, style: style });
+    const pastLayer = new ol.layer.Vector({ source: pastSource, style: style });
+    gis.addLayer({ id: 'items', label: labels.application, layer: itemLayer, zIndex: 60 });
+    gis.addLayer({ id: 'past', label: labels.earlier, layer: pastLayer, zIndex: 50 });
+
+    /* Layout plans: one image layer per positioned plan, shown together as "Pelan susun atur". */
+    const layoutGroup = new ol.layer.Group({ layers: [] });
+    gis.addLayer({ id: 'layout', label: labels.layout, layer: layoutGroup, zIndex: 40 });
+
+    function layoutLayer(url, corners) {
+        const image = new Image();
+        image.crossOrigin = 'anonymous';
+        let source;
+        const points = corners.map(c => ol.proj.fromLonLat(c)); // top-left, top-right, bottom-right, bottom-left
+        const extent = ol.extent.boundingExtent(points);
+        source = new ol.source.ImageCanvas({
+            canvasFunction: function (canvasExtent, resolution, pixelRatio, size) {
+                const canvas = document.createElement('canvas');
+                canvas.width = size[0];
+                canvas.height = size[1];
+                if (!image.complete || !image.naturalWidth) return canvas;
+                const ctx = canvas.getContext('2d');
+                const scale = resolution / pixelRatio;
+                const px = p => [(p[0] - canvasExtent[0]) / scale, (canvasExtent[3] - p[1]) / scale];
+                const tl = px(points[0]);
+                const tr = px(points[1]);
+                const bl = px(points[3]);
+                const w = image.naturalWidth;
+                const h = image.naturalHeight;
+                ctx.setTransform((tr[0] - tl[0]) / w, (tr[1] - tl[1]) / w, (bl[0] - tl[0]) / h, (bl[1] - tl[1]) / h, tl[0], tl[1]);
+                ctx.drawImage(image, 0, 0);
+                return canvas;
+            },
+            ratio: 1,
+        });
+        image.addEventListener('load', () => source.changed());
+        image.src = url;
+        const layer = new ol.layer.Image({ source: source, extent: extent });
+        gis.addSwipeLayer(layer);
+        return layer;
+    }
+
+    /* Popup, built with textContent only: titles are user-entered. */
+    const popupEl = document.getElementById('osc-map-popup');
+    popupEl.hidden = false;
+    const popupBody = popupEl.querySelector('[data-map-popup-body]');
+    const overlay = new ol.Overlay({ element: popupEl, positioning: 'bottom-left', offset: [0, -12], autoPan: { animation: { duration: 0 } } });
+    map.addOverlay(overlay);
+    popupEl.style.display = 'none';
+    function closePopup() { overlay.setPosition(undefined); popupEl.style.display = 'none'; }
+    popupEl.querySelector('[data-map-popup-close]').addEventListener('click', closePopup);
+
+    function line(text, tag) {
+        const el = document.createElement(tag || 'p');
+        el.textContent = text;
+        return el;
+    }
+    function link(href, text, newTab) {
+        const a = document.createElement('a');
+        a.className = 'text-link';
+        a.href = href;
+        a.textContent = text;
+        if (newTab) { a.target = '_blank'; a.rel = 'noopener'; }
+        return a;
+    }
+    function showPopup(coordinate, feature, lotProps) {
+        popupBody.replaceChildren();
+        if (feature) {
+            const p = feature.getProperties();
+            popupBody.append(line(p.title || '', 'strong'));
+            if (p.reference || p.rujukan) popupBody.append(line(p.reference || p.rujukan));
+            if (p.purpose) popupBody.append(line(p.purpose));
+            if (p.kind === 'legacy') {
+                if (p.decision) popupBody.append(line(p.decision));
+                if (p.year) popupBody.append(line(String(p.year)));
+            }
+        } else if (lotProps) {
+            popupBody.append(line('Lot ' + (lotProps.lot || ''), 'strong'));
+            if (lotProps.mukim) popupBody.append(line(lotProps.mukim));
+        }
+        const links = document.createElement('div');
+        links.className = 'map-popup-links';
+        if (feature && feature.get('paper_url')) links.append(link(feature.get('paper_url'), 'Kertas kerja', true));
+        const [lon, lat] = ol.proj.toLonLat(coordinate);
+        links.append(link('https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=' + lat.toFixed(6) + ',' + lon.toFixed(6), labels.streetView, true));
+        popupBody.append(links);
+        popupEl.style.display = '';
+        overlay.setPosition(coordinate);
+    }
+
+    /* Item list in the panel. */
+    const listEl = document.querySelector('[data-map-items]');
+    const unmappedEl = document.querySelector('[data-map-unmapped]');
+    const byId = {};
+    let selectedId = null;
+    function select(id, zoom) {
+        selectedId = id;
+        itemSource.getFeatures().forEach(f => { f.set('selected', f.get('id') === id); });
+        listEl.querySelectorAll('.map-item-button').forEach(b => {
+            if (b.dataset.id === id) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current');
+        });
+        const feature = byId[id];
+        if (feature && zoom) {
+            gis.fit(feature.getGeometry());
+            const extent = feature.getGeometry().getExtent();
+            showPopup(ol.extent.getCenter(extent), feature);
+            setSheet(false);
+        }
+    }
+    function renderList(features, unmapped) {
+        listEl.replaceChildren();
+        features.forEach(f => {
+            const li = document.createElement('li');
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'map-item-button';
+            button.dataset.id = f.get('id');
+            button.append(line(f.get('title') || '', 'strong'), line([f.get('reference'), f.get('purpose')].filter(Boolean).join(' · '), 'span'));
+            button.addEventListener('click', () => select(f.get('id'), true));
+            li.append(button);
+            listEl.append(li);
+        });
+        if (!features.length) listEl.append(Object.assign(document.createElement('li'), { className: 'muted', textContent: '—' }));
+        if (unmapped.length) {
+            unmappedEl.hidden = false;
+            unmappedEl.replaceChildren(line('Belum ada lokasi pada peta', 'strong'));
+            const ul = document.createElement('ul');
+            ul.className = 'map-item-list';
+            unmapped.forEach(u => ul.append(Object.assign(document.createElement('li'), { className: 'muted', textContent: u.title })));
+            unmappedEl.append(ul);
+        }
+    }
+
+    function zoomToSite() {
+        const feature = selectedId ? byId[selectedId] : null;
+        if (feature) { gis.fit(feature.getGeometry()); return; }
+        const extent = ol.extent.createEmpty();
+        itemSource.getFeatures().forEach(f => ol.extent.extend(extent, f.getGeometry().getExtent()));
+        gis.fit(ol.extent.isEmpty(extent) ? gis.regionExtent : extent);
+    }
+    const zoomButton = document.querySelector('[data-map-tool="zoom"]');
+    if (zoomButton) zoomButton.addEventListener('click', zoomToSite);
+
+    /* Click: an item, an earlier or legacy feature, or a cadastral lot; always offers Street View for the point. */
+    map.on('singleclick', event => {
+        if (map.getInteractions().getArray().some(i => i instanceof ol.interaction.Draw)) return;
+        let feature = null;
+        let lotProps = null;
+        map.forEachFeatureAtPixel(event.pixel, (f, layer) => {
+            if (layer === itemLayer || layer === pastLayer) { if (!feature) feature = f; return false; }
+            if (!lotProps && layer && layer.get('referenceId') === 'lots') lotProps = f.getProperties();
+            return undefined;
+        }, { hitTolerance: 4 });
+        if (feature && feature.get('kind') === 'item') select(feature.get('id'), false);
+        showPopup(event.coordinate, feature, lotProps);
+    });
+    map.on('pointermove', event => {
+        if (event.dragging) return;
+        const hit = map.hasFeatureAtPixel(event.pixel, { layerFilter: l => l === itemLayer || l === pastLayer, hitTolerance: 4 });
+        element.style.cursor = hit ? 'pointer' : '';
+    });
+
+    /* Load map-data. */
+    fetch(config.mapDataUrl, { headers: { Accept: 'application/json' }, credentials: 'same-origin' })
+        .then(response => { if (!response.ok) throw new Error(String(response.status)); return response.json(); })
+        .then(collection => {
+            const read = geojson.readFeatures(collection, { dataProjection: 'EPSG:4326', featureProjection: 'EPSG:3857' });
+            const items = [];
+            read.forEach(f => {
+                const kind = f.get('kind');
+                if (kind === 'item') {
+                    itemSource.addFeature(f);
+                    items.push(f);
+                    byId[f.get('id')] = f;
+                    const corners = f.get('layout_corners');
+                    if (f.get('layout_url') && Array.isArray(corners) && corners.length === 4) {
+                        layoutGroup.getLayers().push(layoutLayer(f.get('layout_url'), corners));
+                    }
+                } else {
+                    pastSource.addFeature(f);
+                }
+            });
+            renderList(items, (collection.properties && collection.properties.unmapped) || []);
+            if (config.focusItemId && byId[config.focusItemId]) select(config.focusItemId, true);
+            else zoomToSite();
+        })
+        .catch(() => {
+            listEl.replaceChildren(Object.assign(document.createElement('li'), { className: 'muted', textContent: 'Data peta tidak dapat dimuatkan.' }));
+        });
+})();

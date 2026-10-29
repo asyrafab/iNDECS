@@ -821,3 +821,56 @@ html[data-motion='reduced'] *, html[data-motion='reduced'] *::before, html[data-
   .agenda-row-actions { justify-content: flex-start; }
   .agenda-row-number { font-size: var(--font-size-lg); }
 }
+
+/* — eOSC+ meeting map: OpenLayers canvas, side panel (bottom sheet on phones), popup, swipe and notice — */
+.map-page { display: grid; gap: var(--space-4); }
+.page-content > .map-page { animation: none; } /* a lingering transform would trap the fixed bottom sheet */
+.map-heading h1 { margin: 0; font-size: var(--font-size-heading); }
+.map-heading-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.map-layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: var(--space-4); height: calc(100dvh - 220px); min-height: 480px; }
+.map-stage { position: relative; min-width: 0; overflow: hidden; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-bg-soft); }
+.map-canvas { position: absolute; inset: 0; }
+.map-panel { display: grid; align-content: start; min-width: 0; overflow-y: auto; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); }
+.map-panel-section { display: grid; gap: var(--space-3); padding: var(--space-4); border-top: 1px solid var(--color-border-soft); }
+.map-panel-section:first-child { border-top: 0; }
+.map-panel-title { margin: 0; font-size: var(--font-size-base); }
+.map-tools { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.map-tools .button[aria-pressed="true"] { border-color: var(--color-accent-700); background: var(--color-accent-100); color: var(--color-accent-800); }
+.map-measure-output { margin: 0; min-height: var(--space-5); color: var(--color-text-muted); font-size: var(--font-size-sm); font-variant-numeric: tabular-nums; }
+.map-layer-list, .map-item-list { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.map-layer-row { display: grid; grid-template-columns: minmax(0, 1fr) 96px; align-items: center; gap: var(--space-3); font-size: var(--font-size-sm); }
+.map-layer-row label { display: flex; align-items: center; gap: var(--space-2); min-width: 0; overflow-wrap: anywhere; }
+.map-layer-row input[type="range"] { width: 100%; min-height: var(--space-6); padding: 0; border: 0; background: transparent; accent-color: var(--color-accent-600); }
+.map-layer-row input[type="checkbox"] { flex: 0 0 auto; width: var(--space-4); min-height: 0; height: var(--space-4); padding: 0; accent-color: var(--color-accent-600); }
+.map-layer-row input:focus-visible, .map-swipe:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+.map-item-button { display: grid; width: 100%; gap: var(--space-1); padding: var(--space-2) var(--space-3); border: 1px solid var(--color-border-soft); border-radius: var(--radius-md); background: var(--color-surface); color: var(--color-text); cursor: pointer; font: inherit; text-align: left; }
+.map-item-button:hover { background: var(--color-neutral-100); }
+.map-item-button[aria-current="true"] { border-color: var(--color-accent-700); background: var(--color-accent-100); }
+.map-item-button strong { overflow-wrap: anywhere; font-size: var(--font-size-sm); }
+.map-item-button span { color: var(--color-text-muted); font-size: var(--font-size-xs); }
+.map-notice { position: absolute; z-index: 3; top: var(--space-3); left: var(--space-3); right: var(--space-12); display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-3); border-left: 4px solid var(--status-attention); border-radius: var(--radius-sm); background: var(--status-attention-bg); color: var(--status-attention-text); font-size: var(--font-size-sm); font-weight: 500; }
+.map-notice[hidden], .map-swipe[hidden] { display: none; }
+.map-notice span { flex: 1 1 auto; }
+.map-swipe { position: absolute; z-index: 2; top: 0; bottom: 0; left: 50%; width: var(--space-6); margin-left: calc(var(--space-3) * -1); cursor: ew-resize; touch-action: none; }
+.map-swipe span { position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; background: var(--color-accent-600); transform: translateX(-50%); }
+.map-swipe::after { position: absolute; top: 50%; left: 50%; width: var(--space-4); height: var(--space-8); border: 2px solid var(--color-accent-600); border-radius: var(--radius-full); background: var(--color-surface); content: ''; transform: translate(-50%, -50%); }
+.map-popup { position: absolute; z-index: 4; display: grid; width: 280px; max-width: calc(100vw - var(--space-8)); padding: var(--space-3) var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); box-shadow: var(--shadow-raised); }
+.map-popup-close { position: absolute; top: var(--space-1); right: var(--space-1); }
+.map-popup-body { display: grid; gap: var(--space-2); padding-right: var(--space-6); font-size: var(--font-size-sm); }
+.map-popup-body strong { overflow-wrap: anywhere; }
+.map-popup-body p { margin: 0; color: var(--color-text-muted); }
+.map-popup-links { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); }
+.map-sheet-toggle { display: none; }
+.map-canvas .ol-control { background: transparent; }
+.map-canvas .ol-control button { background: var(--color-surface); color: var(--color-text); border-radius: var(--radius-sm); }
+.map-canvas .ol-control button:hover { background: var(--color-neutral-100); }
+.map-canvas .ol-attribution { max-width: calc(100% - var(--space-4)); }
+.map-canvas .ol-attribution ul { margin: 0; padding: var(--space-1) var(--space-2); background: var(--color-surface); color: var(--color-text-muted); font-size: var(--font-size-xs); }
+.map-canvas .ol-attribution button { background: var(--color-surface); }
+@media (max-width: 767px) {
+  .map-layout { display: block; height: calc(100dvh - 160px); min-height: 360px; }
+  .map-stage { height: 100%; }
+  .map-sheet-toggle { display: inline-flex; }
+  .map-sheet { position: fixed; z-index: 30; right: 0; bottom: 0; left: 0; max-height: 60dvh; border-radius: var(--radius-lg) var(--radius-lg) 0 0; box-shadow: var(--shadow-raised); transform: translateY(100%); visibility: hidden; transition: transform var(--duration-normal) var(--ease-standard), visibility var(--duration-normal); }
+  .map-sheet[data-open="true"] { transform: translateY(0); visibility: visible; }
+}

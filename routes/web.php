@@ -106,6 +106,7 @@ Route::middleware(['auth', 'osc.access'])->prefix('osc')->name('osc.')->group(fu
     Route::get('/meetings/create', [MeetingController::class, 'create'])->name('meetings.create');
     Route::post('/meetings', [MeetingController::class, 'store'])->name('meetings.store');
     Route::get('/meetings/{meeting}', [MeetingController::class, 'show'])->name('meetings.show');
+    Route::get('/meetings/{meeting}/map', [MeetingMapController::class, 'show'])->name('meetings.map');
     Route::get('/meetings/{meeting}/map-data', [MeetingMapController::class, 'data'])->name('meetings.map-data');
     Route::post('/meetings/{meeting}/reorder', [MeetingController::class, 'reorder'])->name('meetings.reorder');
     Route::post('/meetings/{meeting}/publish', [MeetingController::class, 'publish'])->name('meetings.publish');
