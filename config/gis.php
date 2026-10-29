@@ -32,8 +32,37 @@ return [
     ],
 
     // Initial layer definitions, seeded into core.gis_layers by GisLayerSeeder (Task 2).
-    // Task 2 adds the lots, zoning and utilities layers after discovering their service URLs.
     'layers' => [
+        [
+            'id' => 'lots',
+            'label' => 'Lot kadaster',
+            'kind' => 'reference',
+            'source_url' => 'https://spgis.mbsp.gov.my/geoportal/rest/services/Kadaster/KADASTER/FeatureServer/3',
+            'where_clause' => '1=1',
+            'is_active' => true,
+            'sort_order' => 10,
+            'match_attributes' => null,
+        ],
+        [
+            'id' => 'zoning',
+            'label' => 'Zon guna tanah',
+            'kind' => 'reference',
+            'source_url' => 'https://spgis.mbsp.gov.my/geoportal/rest/services/Gunatanah/Gunatanah/FeatureServer/3',
+            'where_clause' => '1=1',
+            'is_active' => true,
+            'sort_order' => 20,
+            'match_attributes' => null,
+        ],
+        [
+            'id' => 'utilities',
+            'label' => 'Utiliti',
+            'kind' => 'reference',
+            'source_url' => 'https://spgis.mbsp.gov.my/geoportal/rest/services/Utiliti/Utiliti/FeatureServer/0',
+            'where_clause' => '1=1',
+            'is_active' => true,
+            'sort_order' => 30,
+            'match_attributes' => null,
+        ],
         [
             'id' => 'legacy_mjkp',
             'label' => 'Keputusan terdahulu',

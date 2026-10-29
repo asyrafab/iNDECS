@@ -1,0 +1,5 @@
+{"objectIdFieldName":"OBJECTID","geometryType":"esriGeometryPolygon","spatialReference":{"wkid":4326},"fields":[{"name":"OBJECTID","type":"esriFieldTypeOID"},{"name":"LOT","type":"esriFieldTypeString"},{"name":"MUKIM","type":"esriFieldTypeString"}],"features":[
+{"attributes":{"OBJECTID":1,"LOT":"101","MUKIM":"Mukim 1"},"geometry":{"rings":[[[100.40,5.30],[100.40,5.31],[100.41,5.31],[100.41,5.30],[100.40,5.30]]]}},
+{"attributes":{"OBJECTID":2,"LOT":"102","MUKIM":"Mukim 1"},"geometry":{"rings":[[[100.42,5.30],[100.42,5.31],[100.43,5.31],[100.43,5.30],[100.42,5.30]]]}},
+{"attributes":{"OBJECTID":3,"LOT":"103","MUKIM":"Mukim 2"},"geometry":{"rings":[[[100.44,5.30],[100.44,5.31],[100.45,5.31],[100.45,5.30],[100.44,5.30]]]}}
+]}

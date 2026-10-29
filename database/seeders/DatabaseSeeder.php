@@ -140,6 +140,7 @@ class DatabaseSeeder extends Seeder
         }
 
         $this->call(OscSeeder::class);
+        $this->call(GisLayerSeeder::class);
     }
 
     private function seedCorePermissions(): void
