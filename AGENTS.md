@@ -41,8 +41,16 @@ not used anywhere. Route prefixes, table prefixes and reference formats are in
   MBSP staff API or Active Directory behind one interface; public users via email and phone
   OTP, shadow accounts and magic links. Applications authorise from token claims.
 - **Core before module:** workflow engine, RBAC, fees, payments, notifications, SLA, letters,
-  units registry and domain events are built in `core`, generically, in the order Bangunan
-  needs them. Department modules are extension tables plus configuration.
+  meetings, units registry and domain events are built in `core`, generically, when the first
+  module needs them. Department modules are extension tables plus configuration.
+- **Concurrent modules (ADR-212):** Perancang, Bangunan, Kejuruteraan, Landskap and eOSC+
+  are built at the same time. Each project's documentation lives in its own `docs/` folder
+  (`docs/bangunan/`, `docs/eosc/`, `docs/perancang/` …). A core change made for one module
+  must keep every other module's tests green.
+- **eOSC+ (ADR-213):** the OSC meeting room (agenda, map, chairperson's decisions, attendee
+  mobile view, PSP video call) is core capability C10 inside this codebase, not a separate
+  system. Its meeting map reads only replicated PostGIS layers, never live ArcGIS. Design in
+  `docs/eosc/README.md`.
 - **AI:** cloud-hosted models behind the provider-neutral `AiProvider` contract shared with
   AIRS; provider identifiers confined to audit tables; self-hosted later. AI suggests, the
   officer decides. No AI output changes state.

@@ -1,6 +1,14 @@
 # iNDECS Progress
 
-Last updated: 2026-10-28.
+Last updated: 2026-10-29.
+
+## Concurrent modules and eOSC+ design (ADR-212, ADR-213)
+
+Documentation only, 2026-10-29. No code changed.
+
+- ADR-212: Perancang, Bangunan, Kejuruteraan, Landskap and eOSC+ are built concurrently, each with its own `docs/` folder; supersedes ADR-211's Bangunan-then-PKM order. Roadmap, README, DESIGN-DIRECTION, AGENTS, runbooks and the Bangunan programme index updated.
+- ADR-213: eOSC+ (OSC meeting room) is core capability C10 inside iNDECS, with a meeting map on replicated PostGIS layers. Draft design in `docs/eosc/README.md`, still in brainstorming and not approved for build.
+- The same programme documents are mirrored in the eBangunan documentation set.
 
 ## Shared document verification for Bangunan (ADR-310)
 

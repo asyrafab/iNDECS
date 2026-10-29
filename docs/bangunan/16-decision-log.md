@@ -94,11 +94,33 @@ Date: 2026-09-18. Status: Accepted. Supersedes version 1 phase plan.
 
 ## ADR-211: Bangunan first, PKM second
 
-Date: 2026-10-27. Status: Accepted. Supersedes the PKM migration timing in ADR-209.
+Date: 2026-10-27. Status: Superseded by ADR-212 (2026-10-29). Supersedes the PKM migration timing in ADR-209.
 
 **Decision.** Module rollout Phase 1 delivers Bangunan through technical milestones A to D. Module rollout Phase 2 delivers PKM (Perancang), starting in milestone E only after Bangunan acceptance and operational handover. PKM is the next module before Kejuruteraan and Landskap. Milestones A to E remain technical milestones, distinct from module rollout numbering.
 
 **Consequences.** Remove PKM workflow migration as a Phase B dependency. Validate the shared engine against Bangunan's five families first. Maintain existing PKM functionality and shared-platform regression checks during Bangunan delivery. In Phase 2, configure and migrate PKM, reconcile records and history, verify permissions and obtain end-to-end acceptance. Estimate PKM scope and dates separately; the indicative 21-month Bangunan plan is not a PKM completion commitment.
+
+---
+
+## ADR-212: Department modules are built concurrently
+
+Date: 2026-10-29. Status: Accepted. Supersedes ADR-211 and the Bangunan-led ordering in ADR-209.
+
+**Context.** The programme owner cannot wait for each module rollout phase to finish before the next starts; the time constraint does not allow Bangunan, then PKM, then the others in sequence.
+
+**Decision.** iNDECS Perancang, iNDECS Bangunan, iNDECS Kejuruteraan, iNDECS Landskap and eOSC+ (core C10, ADR-213) are built **concurrently** on the shared core. Each department project keeps its own documentation folder under `docs/` (`docs/bangunan/`, `docs/eosc/`, and `docs/perancang/`, `docs/kejuruteraan/`, `docs/landskap/` when they start), with its own specification, backlog and acceptance. Technical milestones A to E remain as platform milestones; they no longer imply a department order.
+
+**Consequences.** Core capabilities (document 11, section 3) are built when the first module needs them, whichever module that is; the "core before module" and module-boundary rules in `AGENTS.md` still apply. Because several modules may need the same capability at once, core changes need one owner and one backlog, and each module's acceptance runs the other modules' regression checks. PKM workflow migration to the engine is no longer gated by Bangunan acceptance. The PKM backlog in document 11 section 6 stays valid as work packages, without its Bangunan entry condition. Effort and staffing must be re-estimated: concurrency shortens calendar time only if developers are added (PD-206).
+
+---
+
+## ADR-213: eOSC+ is the OSC meeting room inside iNDECS
+
+Date: 2026-10-29. Status: Accepted. New.
+
+**Context.** The legacy eOSC / MJKP system (PHP, Access, MapGuide 6.5) used in Jawatankuasa OSC meetings cannot take new application types, gives attendees no access to papers, and shows an out-of-date map. ArcGIS Enterprise at `spgis.mbsp.gov.my` is the master GIS but disconnects often.
+
+**Decision.** eOSC+ is built inside the iNDECS codebase as the meeting-room screens of core capability C10: agenda builder, map, chairperson's decision panel, attendee mobile view and video call to PSP or Owner. Reference GIS layers are replicated into iNDECS PostGIS, refreshed yearly and on demand, so a meeting never depends on the ArcGIS portal. Design: `docs/eosc/README.md`.
 
 ---
 

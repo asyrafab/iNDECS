@@ -9,7 +9,7 @@ Version 2.0, 2026-09-18. Replaces the version 1 Phase 0 and Phase 1 specificatio
 | Name | iNDECS Bangunan |
 | Menu | Bangunan |
 | Route prefix | `/bangunan` |
-| Table prefix | `APP_PB_` per the iNDECS design direction. The existing PKM slice uses lowercase `pkm_`; the Bangunan module follows the design direction and the PKM tables are renamed during the workflow-engine migration so the platform is consistent |
+| Table prefix | `APP_PB_` per the iNDECS design direction. The existing PKM slice uses lowercase `pkm_`; the Bangunan module follows the design direction and any remaining PKM table-name alignment is handled during its workflow-engine migration, which now runs concurrently with Bangunan (ADR-212) |
 | Reference format | `PB/2026/00310`, allocated by the core reference generator. Legacy `MBSP/40/50-47/19` and OSC references kept as searchable aliases in `external_reference` and an alias table |
 | Department | `JBANG`, already seeded |
 | Workspace | The standard 17-tab shell: Ringkasan, Butiran, Pemohon & Perunding, Tapak & Lot, Peta, Borang Jabatan, Dokumen, Fi & Bayaran, Pergerakan Fail, Ulasan Teknikal, Tugasan, Mesyuarat, Keputusan, Kelulusan, Permohonan Berkaitan, Garis Masa, Sejarah Audit. Only Borang Jabatan is Bangunan-specific |

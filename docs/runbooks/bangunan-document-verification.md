@@ -43,4 +43,4 @@ Tests use the guarded disposable `indecs_test` database, fake private storage an
 
 The new migration is additive. Rollback refuses to remove structures when checklist or scanned-document evidence exists. Without such evidence, rollback also removes the added guarded actions before dropping the guard column, preventing an older application binary from inheriting an unguarded completion action. Once documents exist, use a reviewed forward fix or a restore/reconciliation plan. Preserve private blobs, document metadata, catalogue attribution, audit and stage history together.
 
-Next development increment: fee-rule configuration and fee assessment through the same core records and workflow engine, with department-confirmed rates. PKM workflow migration remains Phase 2.
+Next development increment: fee-rule configuration and fee assessment through the same core records and workflow engine, with department-confirmed rates. PKM workflow migration runs concurrently with Bangunan (ADR-212).

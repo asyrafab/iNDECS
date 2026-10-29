@@ -2,7 +2,7 @@
 
 Companion to AGENTS.md. This file is the specification a coding agent follows for
 naming, structure, components and screens. Updated 2026-09-18 to the Calm Intelligence
-direction shared with AIRS and to the Bangunan-led programme in `docs/bangunan/`.
+direction shared with AIRS and to the programme in `docs/bangunan/`. Department modules are built concurrently (ADR-212, 2026-10-29); each project has its own folder under `docs/`.
 
 ## 1. Naming (System A)
 
@@ -95,10 +95,12 @@ Bangunan-led, per `docs/bangunan/11-indecs-core-roadmap.md`: Phase A foundation 
 PostgreSQL, identity, RBAC) months 0 to 3; Phase B Bangunan operational with the core
 engine, fees, letters, meetings and units, legacy retired, months 3 to 10; Phase C public
 portal, AIRS Building Plan review, E-Submission and OSC3Plus links, months 10 to 15;
-Phase D intelligence and linkage, months 15 to 21. Module rollout Phase 1 is Bangunan
-through A–D. Module rollout Phase 2 is PKM, beginning in E after Bangunan acceptance
-and operational handover (ADR-211). Existing PKM remains supported; its workflow
-migration does not gate Bangunan Phase B. PKM scope and dates are estimated separately.
+Phase D intelligence and linkage, months 15 to 21. Since 2026-10-29 (ADR-212,
+superseding ADR-211) the department modules — Perancang, Bangunan, Kejuruteraan,
+Landskap — and eOSC+ are built concurrently, each documented in its own `docs/` folder
+(`docs/bangunan/`, `docs/eosc/`, and `docs/perancang/`, `docs/kejuruteraan/`,
+`docs/landskap/` as they start). PKM workflow migration runs alongside Bangunan;
+neither gates the other. Each module's scope and dates are estimated separately.
 
 ## 6. Print and documents
 
