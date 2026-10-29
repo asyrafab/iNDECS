@@ -14,6 +14,7 @@ final class TileController extends Controller
 {
     public function show(Request $request, GisLayer $layer, int $z, int $x, int $y, VectorTileService $tiles): Response
     {
+        abort_unless($request->user()?->canUseGisTiles(), 403);
         abort_unless(
             $layer->is_active && $layer->kind === 'reference' && $layer->active_snapshot_id !== null && $z <= 22 && $x < 2 ** $z && $y < 2 ** $z,
             404,

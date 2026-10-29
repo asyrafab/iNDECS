@@ -30,6 +30,7 @@ final class StoreAgendaItemRequest extends FormRequest
             'standalone_type' => [$linked ? 'nullable' : 'required', 'string', 'max:100'],
             'title' => [$linked ? 'nullable' : 'required', 'string', 'max:1000'],
             'reference' => ['nullable', 'string', 'max:255'],
+            'boundary' => ['nullable', 'string'],
             'department_id' => ['nullable', 'string', 'max:20', Rule::exists('departments', 'id')],
         ];
     }
@@ -44,7 +45,7 @@ final class StoreAgendaItemRequest extends FormRequest
     {
         return [
             'purpose' => 'tujuan pembentangan', 'standalone_type' => 'jenis perkara', 'title' => 'tajuk', 'reference' => 'rujukan',
-            'presenter_id' => 'penyampai', 'department_id' => 'jabatan',
+            'presenter_id' => 'penyampai', 'department_id' => 'jabatan', 'boundary' => 'sempadan',
         ];
     }
 }

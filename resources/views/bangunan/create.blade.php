@@ -34,6 +34,8 @@
 <div data-repeater="lots"><div data-repeater-items>
     @foreach (old('lots', [['lot_number' => '']]) as $index => $lot)<div class="form-grid" data-repeater-item><label class="field field-span-2"><span>No. lot *</span><input name="lots[{{ $index }}][lot_number]" value="{{ $lot['lot_number'] ?? '' }}" maxlength="100" required></label><button type="button" class="button button-ghost" data-repeater-remove aria-label="Buang lot">Buang lot</button></div>@endforeach
 </div><template data-repeater-template><div class="form-grid" data-repeater-item><label class="field field-span-2"><span>No. lot *</span><input name="lots[__INDEX__][lot_number]" maxlength="100" required></label><button type="button" class="button button-ghost" data-repeater-remove aria-label="Buang lot">Buang lot</button></div></template></div>
+<div class="form-divider"></div>
+@include('partials.gis-boundary-field', ['name' => 'site[boundary]', 'value' => old('site.boundary')])
 </section>
 <section class="form-card"><div class="form-section-heading"><div><h2>Borang Jabatan Bangunan</h2><p>Butiran teknikal asas bangunan atau struktur yang dimohon.</p></div></div><div class="form-grid">
     <label class="field"><span>Kategori bangunan / struktur *</span><input name="bangunan[building_category]" value="{{ old('bangunan.building_category') }}" maxlength="100" required></label>

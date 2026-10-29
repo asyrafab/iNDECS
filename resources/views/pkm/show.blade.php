@@ -247,6 +247,8 @@
                         </div>
                     @endforeach
                 </div>
+                <div class="form-divider"></div>
+                @include('partials.gis-boundary-field', ['application' => $application])
             </section>
         </div>
 

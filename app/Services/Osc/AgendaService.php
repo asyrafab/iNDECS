@@ -15,6 +15,7 @@ use App\Models\Osc\DepartmentSetting;
 use App\Models\Osc\Meeting;
 use App\Models\User;
 use App\Notifications\Osc\AgendaPublished;
+use App\Services\Gis\BoundaryService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -57,8 +58,9 @@ final class AgendaService
             $record = $this->lockOpenMeeting($meeting, $actor);
             $this->assertPresenter((int) ($data['presenter_id'] ?? 0));
             $purpose = $data['purpose'] instanceof TablingPurpose ? $data['purpose'] : TablingPurpose::from($data['purpose']);
+            $boundary = filled($data['boundary'] ?? null) ? app(BoundaryService::class)->normalise($data['boundary'], 'boundary') : null;
 
-            return $this->create($record, $actor, [
+            $item = $this->create($record, $actor, [
                 'department_id' => $department,
                 'standalone_type' => $data['standalone_type'],
                 'title' => $data['title'],
@@ -66,6 +68,11 @@ final class AgendaService
                 'purpose' => $purpose,
                 'presenter_id' => (int) $data['presenter_id'],
             ]);
+            if ($boundary !== null) {
+                DB::update('UPDATE core.osc_agenda_items SET boundary = ?::geometry WHERE id = ?', [$boundary, $item->id]);
+            }
+
+            return $item;
         });
     }
 

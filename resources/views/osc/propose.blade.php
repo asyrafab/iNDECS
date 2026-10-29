@@ -20,6 +20,9 @@
                     <label class="field"><span>Jabatan <b>*</b></span><select name="department_id" required><option value="">Pilih jabatan</option>@foreach ($departments as $id => $name)<option value="{{ $id }}" @selected(old('department_id') === $id)>{{ $name }}</option>@endforeach</select></label>
                 @endif
             @endif
+            @unless ($application)
+                <div class="field-span-2">@include('partials.gis-boundary-field', ['name' => 'boundary', 'value' => old('boundary')])</div>
+            @endunless
             <label class="field"><span>Tujuan pembentangan <b>*</b></span><select name="purpose" required>@foreach ($purposes as $purpose)<option value="{{ $purpose->value }}" @selected(old('purpose') === $purpose->value)>{{ $purpose->label() }}</option>@endforeach</select></label>
             <label class="field"><span>Penyampai <b>*</b></span><select name="presenter_id" required>@foreach ($presenters as $person)<option value="{{ $person->id }}" @selected((string) old('presenter_id', auth()->id()) === (string) $person->id)>{{ $person->name }}</option>@endforeach</select></label>
         </div>

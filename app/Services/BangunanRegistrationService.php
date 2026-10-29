@@ -14,6 +14,7 @@ use App\Models\Lot;
 use App\Models\Party;
 use App\Models\Site;
 use App\Models\User;
+use App\Services\Gis\BoundaryService;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -21,7 +22,7 @@ use Illuminate\Support\Facades\Validator;
 
 final class BangunanRegistrationService
 {
-    public function __construct(private readonly ApplicationReferenceGenerator $references) {}
+    public function __construct(private readonly ApplicationReferenceGenerator $references, private readonly BoundaryService $boundaries) {}
 
     public function register(array $data, User $actor): Application
     {
@@ -29,6 +30,7 @@ final class BangunanRegistrationService
         $data = Validator::make($data, StoreBangunanApplicationRequest::registrationRules($actor))->validate();
 
         return DB::transaction(function () use ($data, $actor): Application {
+            $boundary = filled($data['site']['boundary'] ?? null) ? $this->boundaries->normalise($data['site']['boundary'], 'site.boundary') : null;
             $type = ApplicationType::query()->whereKey($data['application_type_id'])
                 ->where('primary_department_id', 'JBANG')->where('is_active', true)->firstOrFail();
             $template = DB::table('core.workflow_templates')->where('application_type_id', $type->id)
@@ -61,7 +63,10 @@ final class BangunanRegistrationService
                     'party_id' => $party->id, 'role' => $role, 'is_primary' => $role === 'applicant', 'submitted_snapshot' => $snapshot,
                 ]);
             }
-            $site = Site::query()->create($data['site'] + ['state' => 'Pulau Pinang']);
+            $site = Site::query()->create(Arr::except($data['site'], 'boundary') + ['state' => 'Pulau Pinang']);
+            if ($boundary !== null) {
+                DB::update('UPDATE sites SET boundary = ?::geometry WHERE id = ?', [$boundary, $site->id]);
+            }
             $application->sites()->attach($site->id, ['is_primary' => true]);
             foreach ($data['lots'] as $lot) {
                 $record = Lot::query()->create($lot + ['district' => $site->district, 'mukim' => $site->mukim, 'state' => $site->state]);

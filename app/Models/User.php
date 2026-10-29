@@ -103,6 +103,24 @@ class User extends Authenticatable
             || AgendaItem::query()->where(fn ($items) => $items->where('presenter_id', $this->id)->orWhere('proposed_by', $this->id))->exists();
     }
 
+    /** Vector tiles serve the meeting map and the boundary field on registration forms. */
+    public function canUseGisTiles(): bool
+    {
+        if (! $this->is_active || $this->account_type !== 'staff') {
+            return false;
+        }
+        if ($this->canAccessOsc() || $this->canPerformPkm('perancang.pkm.register')) {
+            return true;
+        }
+        foreach (BangunanApplication::TYPES as $type) {
+            if ($this->canPerformBangunan('register', $type)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function canAccessStaffWorkspace(): bool
     {
         return $this->canAccessPkm() || $this->canAccessBangunan() || $this->canAccessBangunanLegacy() || $this->canAccessOsc();

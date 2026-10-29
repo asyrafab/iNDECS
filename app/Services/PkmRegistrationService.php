@@ -10,17 +10,20 @@ use App\Models\Lot;
 use App\Models\Party;
 use App\Models\Site;
 use App\Models\User;
+use App\Services\Gis\BoundaryService;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 
 class PkmRegistrationService
 {
-    public function __construct(private readonly PkmReferenceGenerator $referenceGenerator) {}
+    public function __construct(private readonly PkmReferenceGenerator $referenceGenerator, private readonly BoundaryService $boundaries) {}
 
     public function register(array $data, User $actor): Application
     {
         return DB::transaction(function () use ($data, $actor): Application {
+            $boundary = filled($data['site']['boundary'] ?? null) ? $this->boundaries->normalise($data['site']['boundary'], 'site.boundary') : null;
+
             $submissionDate = CarbonImmutable::parse($data['submission_date']);
 
             $application = Application::query()->create([
@@ -69,6 +72,10 @@ class PkmRegistrationService
                 'site_area',
                 'site_area_unit',
             ]));
+
+            if ($boundary !== null) {
+                DB::update('UPDATE sites SET boundary = ?::geometry WHERE id = ?', [$boundary, $site->id]);
+            }
 
             $application->sites()->attach($site->id, ['is_primary' => true]);
 

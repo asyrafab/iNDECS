@@ -6,6 +6,7 @@ use App\Http\Controllers\BangunanDocumentCatalogueController;
 use App\Http\Controllers\BangunanDocumentController;
 use App\Http\Controllers\BangunanLegacyController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Gis\BoundaryController;
 use App\Http\Controllers\Gis\TileController;
 use App\Http\Controllers\Osc\AgendaItemController;
 use App\Http\Controllers\Osc\AgendaPaperController;
@@ -119,6 +120,9 @@ Route::middleware(['auth', 'osc.access'])->prefix('osc')->name('osc.')->group(fu
     Route::get('/papers/{paper}', [AgendaPaperController::class, 'show'])->name('papers.show');
 });
 
-Route::middleware(['auth', 'osc.access'])->get('/gis/tiles/{layer}/{z}/{x}/{y}.pbf', [TileController::class, 'show'])
+Route::middleware('auth')->post('/gis/applications/{application}/boundary', [BoundaryController::class, 'store'])
+    ->name('gis.applications.boundary');
+
+Route::middleware('auth')->get('/gis/tiles/{layer}/{z}/{x}/{y}.pbf', [TileController::class, 'show'])
     ->whereIn('z', array_map('strval', range(0, 22)))->whereNumber(['x', 'y'])->where('layer', '[a-z0-9_]+')
     ->name('gis.tiles');

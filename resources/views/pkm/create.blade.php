@@ -226,6 +226,8 @@
                     </div>
                 </template>
             </div>
+            <div class="form-divider"></div>
+            @include('partials.gis-boundary-field', ['name' => 'site[boundary]', 'value' => old('site.boundary')])
         </section>
 
         <section class="form-card">

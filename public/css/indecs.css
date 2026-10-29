@@ -876,3 +876,13 @@ html[data-motion='reduced'] *, html[data-motion='reduced'] *::before, html[data-
   .map-sheet { position: fixed; z-index: 30; right: 0; bottom: 0; left: 0; max-height: 60dvh; border-radius: var(--radius-lg) var(--radius-lg) 0 0; box-shadow: var(--shadow-raised); transform: translateY(100%); visibility: hidden; transition: transform var(--duration-normal) var(--ease-standard), visibility var(--duration-normal); }
   .map-sheet[data-open="true"] { transform: translateY(0); visibility: visible; transition: transform var(--duration-normal) var(--ease-standard), visibility 0s; }
 }
+
+/* — Boundary drawing field on registration forms and application pages — */
+.boundary-field { display: grid; gap: var(--space-3); }
+.boundary-field-head .subsection-title { margin-bottom: var(--space-1); }
+.boundary-field-head p { margin: 0; }
+.boundary-field-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.boundary-field-toolbar[hidden], .boundary-field-stage[hidden] { display: none; }
+.boundary-field-area { margin-left: var(--space-2); color: var(--color-text-muted); font-size: var(--font-size-sm); font-variant-numeric: tabular-nums; }
+.boundary-field-stage { position: relative; height: 420px; overflow: hidden; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-bg-soft); }
+@media (max-width: 660px) { .boundary-field-stage { height: 320px; } }

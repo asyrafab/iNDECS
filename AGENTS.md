@@ -167,6 +167,10 @@ application, two = linked pair, three = development case.
   `.map-measure-output`, `.map-layer-list`, `.map-layer-row`, `.map-item-list`, `.map-item-button`, `.map-notice`,
   `.map-swipe` and `.map-popup` in `indecs.css`. Map colours are read from CSS custom properties at runtime in JS, never
   hex; the page config JSON (`#osc-map-config`) carries no item data, which comes only from `osc.meetings.map-data`.
+- Boundary drawing (`resources/views/partials/gis-boundary-field.blade.php`, `public/js/gis-draw.js`) uses
+  `.boundary-field`, `.boundary-field-head`, `.boundary-field-toolbar`, `.boundary-field-area` and `.boundary-field-stage`
+  in `indecs.css`. It is optional: the hidden input stays empty without JavaScript. Boundaries are validated and
+  repaired by `App\Services\Gis\BoundaryService` (PostGIS) and stored as MultiPolygon 4326; never interpolate GeoJSON into SQL.
 
 - Bahasa Melayu is the interface language (`lang/ms`). Application type codes stay as-is.
 - Reuse the existing class names in `public/css/indecs.css` before inventing new ones. If you
