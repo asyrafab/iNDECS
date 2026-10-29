@@ -259,4 +259,31 @@ final class LayerReplicationTest extends TestCase
         $this->assertSame('superseded', $first->fresh()->status);
         $this->assertSame($second->id, GisLayer::query()->find('lots')->active_snapshot_id);
     }
+
+    public function test_missing_count_gives_distinct_error(): void
+    {
+        Http::fake(fn () => Http::response(['error' => null]));
+        $layer = $this->layer('lots', 'lots.esrijson');
+        $layer->update(['source_url' => 'https://example.test/arcgis/rest/services/X/FeatureServer/0']);
+
+        try {
+            $this->service()->replicate($layer->fresh());
+            $this->fail('RuntimeException was expected.');
+        } catch (RuntimeException $e) {
+            $this->assertSame('Bilangan rekod sumber ArcGIS tidak dapat ditentukan.', $e->getMessage());
+        }
+        $this->assertSame('failed', GisLayerSnapshot::query()->firstOrFail()->status);
+    }
+
+    public function test_command_reports_busy_layer_as_failure_and_continues(): void
+    {
+        $this->layer('a_busy', 'lots.esrijson');
+        $this->layer('b_good', 'lots.esrijson');
+        GisLayerSnapshot::query()->create(['layer_id' => 'a_busy', 'status' => 'importing', 'started_at' => now()]);
+
+        $this->artisan('gis:replicate', ['--all' => true])
+            ->expectsOutputToContain('Kemas kini lapisan a_busy sedang berjalan.')
+            ->expectsOutputToContain('Lapisan b_good: 3 rekod')
+            ->assertExitCode(1);
+    }
 }

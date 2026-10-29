@@ -23,22 +23,27 @@ class LayerReplicationService
 
     public function replicate(GisLayer $layer, ?User $actor = null): GisLayerSnapshot
     {
-        $running = GisLayerSnapshot::query()
-            ->where('layer_id', $layer->id)
-            ->where('status', 'importing')
-            ->where('started_at', '>', now()->subHours(2))
-            ->exists();
-        if ($running) {
-            throw new RuntimeException("Kemas kini lapisan {$layer->id} sedang berjalan.");
-        }
+        // Check and create under one row lock so two concurrent starts cannot both pass.
+        $snapshot = DB::transaction(function () use ($layer, $actor): GisLayerSnapshot {
+            GisLayer::query()->whereKey($layer->id)->lockForUpdate()->firstOrFail();
 
-        $snapshot = GisLayerSnapshot::query()->create([
-            'layer_id' => $layer->id,
-            'status' => 'importing',
-            'feature_count' => 0,
-            'started_at' => now(),
-            'triggered_by' => $actor?->id,
-        ]);
+            $running = GisLayerSnapshot::query()
+                ->where('layer_id', $layer->id)
+                ->where('status', 'importing')
+                ->where('started_at', '>', now()->subHours(2))
+                ->exists();
+            if ($running) {
+                throw new RuntimeException("Kemas kini lapisan {$layer->id} sedang berjalan.");
+            }
+
+            return GisLayerSnapshot::query()->create([
+                'layer_id' => $layer->id,
+                'status' => 'importing',
+                'feature_count' => 0,
+                'started_at' => now(),
+                'triggered_by' => $actor?->id,
+            ]);
+        });
         $staging = 'core.gis_import_'.$snapshot->id;
         $token = null;
 
@@ -205,7 +210,11 @@ class LayerReplicationService
         $auth = $token !== null ? ['token' => $token] : [];
         $get = fn (string $path, array $query): array => $this->getJson($url.$path, $query + $auth);
 
-        $expected = (int) ($get('/query', ['where' => $where, 'returnCountOnly' => 'true', 'f' => 'json'])['count'] ?? 0);
+        $countResponse = $get('/query', ['where' => $where, 'returnCountOnly' => 'true', 'f' => 'json']);
+        if (! isset($countResponse['count']) || ! is_numeric($countResponse['count'])) {
+            throw new RuntimeException('Bilangan rekod sumber ArcGIS tidak dapat ditentukan.');
+        }
+        $expected = (int) $countResponse['count'];
         $meta = $get('', ['f' => 'json']);
         $oid = collect($meta['fields'] ?? [])->firstWhere('type', 'esriFieldTypeOID')['name'] ?? 'OBJECTID';
 
