@@ -61,4 +61,19 @@ final class AffinePlacementTest extends TestCase
 
         AffinePlacement::fromControlPoints([[0, 0], [10, 10], [20, 20]], [[0, 0], [1, 1], [2, 2]], 100, 100);
     }
+
+    public function test_nearly_collinear_points_rejected_relative_to_image_area(): void
+    {
+        $map = [[0, 0], [400, 0], [200, 20]];
+        // Triangle area 40 000 px² on a 4000 x 3000 image is 0.33 % (< 0.5 %): rejected.
+        try {
+            AffinePlacement::fromControlPoints([[0, 0], [4000, 0], [2000, 20]], $map, 4000, 3000);
+            $this->fail('Nearly collinear control points were accepted.');
+        } catch (InvalidArgumentException $e) {
+            $this->assertSame('Titik kawalan tidak sah.', $e->getMessage());
+        }
+
+        // Area 80 000 px² is 0.67 %: accepted.
+        $this->assertCount(4, AffinePlacement::fromControlPoints([[0, 0], [4000, 0], [2000, 40]], $map, 4000, 3000));
+    }
 }

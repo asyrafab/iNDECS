@@ -114,6 +114,8 @@ final class BoundaryTest extends TestCase
             'garbage' => 'not json',
             'twopoints' => json_encode(['type' => 'Polygon', 'coordinates' => [[[100.4, 5.4], [100.401, 5.4]]]]),
             'strings' => json_encode(['type' => 'Polygon', 'coordinates' => [[['a', 'b'], ['c', 'd'], ['e', 'f'], ['a', 'b']]]]),
+            // Z values would reach the 2D boundary column and fail at UPDATE.
+            '3d' => json_encode(['type' => 'Polygon', 'coordinates' => [[[100.4, 5.4, 10], [100.401, 5.4, 10], [100.401, 5.401, 10], [100.4, 5.401, 10], [100.4, 5.4, 10]]]]),
         ];
         foreach ($bad as $name => $geojson) {
             try {

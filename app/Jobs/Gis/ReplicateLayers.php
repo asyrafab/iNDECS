@@ -18,12 +18,17 @@ class ReplicateLayers implements ShouldQueue
 
     public int $tries = 1;
 
-    public function __construct(public readonly ?User $actor = null) {}
+    /** Runs on the dedicated 'gis' connection, whose retry_after outlasts the one-hour timeout (config/queue.php). */
+    public function __construct(public readonly ?User $actor = null)
+    {
+        $this->onConnection('gis');
+    }
 
     public function handle(LayerReplicationService $service): void
     {
         $failed = [];
-        foreach (GisLayer::query()->where('is_active', true)->orderBy('sort_order')->orderBy('id')->get() as $layer) {
+        // Legacy-paper layers refresh only through osc:import-legacy --points, which also rebuilds core.osc_legacy_papers.
+        foreach (GisLayer::query()->where('is_active', true)->where('kind', '!=', 'legacy_papers')->orderBy('sort_order')->orderBy('id')->get() as $layer) {
             try {
                 $service->replicate($layer, $this->actor);
             } catch (Throwable) {

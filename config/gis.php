@@ -55,6 +55,9 @@ return [
             'is_active' => true,
             'sort_order' => 20,
             'match_attributes' => null,
+            // Zone class: gunatanah1 is the main class (12 values, e.g. Perumahan, Komersial), gunatanah3 the detailed
+            // class (about 250 values, e.g. Kampung Tradisi) and kod_gtn its code (e.g. TRM304). Checked 2026-10-29.
+            'properties' => ['gunatanah1', 'gunatanah3', 'kod_gtn'],
         ],
         'utilities' => [
             'id' => 'utilities',

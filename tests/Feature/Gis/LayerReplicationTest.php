@@ -275,6 +275,53 @@ final class LayerReplicationTest extends TestCase
         $this->assertSame('failed', GisLayerSnapshot::query()->firstOrFail()->status);
     }
 
+    public function test_token_requests_send_the_app_url_as_referer(): void
+    {
+        config(['app.url' => 'https://indecs.example.test']);
+        Http::fake(fn () => Http::response(['error' => null]));
+        $layer = $this->layer('lots', 'lots.esrijson');
+        $layer->update(['source_url' => 'https://example.test/arcgis/rest/services/X/FeatureServer/0']);
+
+        try {
+            $this->service()->replicate($layer->fresh());
+        } catch (RuntimeException) {
+        }
+        Http::assertSent(fn ($request) => ! $request->hasHeader('Referer'));
+
+        $this->app->instance(ArcGisToken::class, new class extends ArcGisToken
+        {
+            public function get(): ?string
+            {
+                return 'SECRETTOKEN';
+            }
+        });
+        Http::fake(fn () => Http::response(['error' => null]));
+        try {
+            $this->service()->replicate($layer->fresh());
+        } catch (RuntimeException) {
+        }
+        Http::assertSent(fn ($request) => str_contains($request->url(), 'token=SECRETTOKEN')
+            && $request->header('Referer') === ['https://indecs.example.test']);
+    }
+
+    public function test_legacy_paper_layers_are_left_to_the_legacy_import(): void
+    {
+        $this->layer('b_good', 'lots.esrijson');
+        $legacy = $this->layer('legacy_mjkp', 'lots.esrijson');
+        $legacy->update(['kind' => 'legacy_papers']);
+
+        $this->artisan('gis:replicate', ['--all' => true])
+            ->expectsOutputToContain('Lapisan b_good: 3 rekod')
+            ->doesntExpectOutputToContain('legacy_mjkp')
+            ->assertExitCode(0);
+        $this->assertNull($legacy->fresh()->active_snapshot_id);
+
+        $this->artisan('gis:replicate', ['layer' => 'legacy_mjkp'])
+            ->expectsOutputToContain('Lapisan legacy_mjkp dikemas kini melalui osc:import-legacy --points sahaja.')
+            ->assertExitCode(1);
+        $this->assertSame(0, GisLayerSnapshot::query()->where('layer_id', 'legacy_mjkp')->count());
+    }
+
     public function test_command_reports_busy_layer_as_failure_and_continues(): void
     {
         $this->layer('a_busy', 'lots.esrijson');

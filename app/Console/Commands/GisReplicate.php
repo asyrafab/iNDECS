@@ -20,7 +20,8 @@ class GisReplicate extends Command
         if ($this->argument('layer')) {
             $query->whereKey($this->argument('layer'));
         } elseif ($this->option('all')) {
-            $query->where('is_active', true);
+            // Legacy-paper layers refresh only through osc:import-legacy --points (it also rebuilds core.osc_legacy_papers).
+            $query->where('is_active', true)->where('kind', '!=', 'legacy_papers');
         } else {
             $this->error('Nyatakan ID lapisan atau gunakan --all.');
 
@@ -36,6 +37,12 @@ class GisReplicate extends Command
 
         $failed = false;
         foreach ($layers as $layer) {
+            if ($layer->kind === 'legacy_papers') {
+                $failed = true;
+                $this->error("Lapisan {$layer->id} dikemas kini melalui osc:import-legacy --points sahaja.");
+
+                continue;
+            }
             try {
                 $snapshot = $service->replicate($layer);
                 $this->line("Lapisan {$layer->id}: {$snapshot->feature_count} rekod");

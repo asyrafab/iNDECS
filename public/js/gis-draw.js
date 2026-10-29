@@ -197,12 +197,13 @@
 
         function say(text) { if (statusEl) statusEl.textContent = text; }
 
-        /* Affine fit through three pairs by Cramer's rule; null when the pixel points are collinear. */
+        /* Affine fit through three pairs by Cramer's rule; null when the pixel triangle is under 0.5 % of the image area
+           (nearly collinear), matching AffinePlacement on the server. */
         function corners() {
             const p = pairs.map(pair => pair.pixel);
             const m = pairs.map(pair => ol.proj.fromLonLat(pair.map));
             const det = p[0][0] * (p[1][1] - p[2][1]) - p[0][1] * (p[1][0] - p[2][0]) + (p[1][0] * p[2][1] - p[2][0] * p[1][1]);
-            if (Math.abs(det) < 1e-9) return null;
+            if (Math.abs(det) / 2 < 0.005 * Math.max(1, img.naturalWidth) * Math.max(1, img.naturalHeight)) return null;
             const solve = (v0, v1, v2) => [
                 (v0 * (p[1][1] - p[2][1]) - p[0][1] * (v1 - v2) + (v1 * p[2][1] - v2 * p[1][1])) / det,
                 (p[0][0] * (v1 - v2) - v0 * (p[1][0] - p[2][0]) + (p[1][0] * v2 - p[2][0] * v1)) / det,

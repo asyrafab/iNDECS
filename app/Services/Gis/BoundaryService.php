@@ -129,7 +129,8 @@ final class BoundaryService
         if ($depth === 0) {
             $vertices++;
 
-            return count($node) >= 2 && count($node) <= 3
+            // Two-dimensional positions only: the boundary columns are 2D and a Z value would fail at UPDATE.
+            return count($node) === 2
                 && (is_int($node[0] ?? null) || is_float($node[0] ?? null))
                 && (is_int($node[1] ?? null) || is_float($node[1] ?? null));
         }

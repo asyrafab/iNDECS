@@ -62,6 +62,9 @@
             </tr>
         @endforeach
     </tbody></table></div>
+    @if ($layers->contains('kind', 'legacy_papers'))
+        <p class="muted">Lapisan keputusan terdahulu tidak dikemas kini oleh butang ini; ia dikemas kini semasa import kertas kerja lama oleh pentadbir sistem.</p>
+    @endif
 </section>
 @endif
 </div>

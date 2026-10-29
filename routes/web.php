@@ -129,6 +129,8 @@ Route::middleware(['auth', 'osc.access'])->prefix('osc')->name('osc.')->group(fu
 Route::middleware('auth')->post('/gis/applications/{application}/boundary', [BoundaryController::class, 'store'])
     ->name('gis.applications.boundary');
 
-Route::middleware('auth')->get('/gis/tiles/{layer}/{z}/{x}/{y}.pbf', [TileController::class, 'show'])
-    ->whereIn('z', array_map('strval', range(0, 22)))->whereNumber(['x', 'y'])->where('layer', '[a-z0-9_]+')
+// Tiles exist only from the client minimum zoom (12): a low-zoom tile would aggregate the whole cadastre in one query.
+Route::middleware(['auth', 'throttle:600,1'])->get('/gis/tiles/{layer}/{z}/{x}/{y}.pbf', [TileController::class, 'show'])
+    ->whereIn('z', array_map('strval', range(TileController::MIN_ZOOM, TileController::MAX_ZOOM)))
+    ->where(['x' => '[0-9]{1,7}', 'y' => '[0-9]{1,7}', 'layer' => '[a-z0-9_]+'])
     ->name('gis.tiles');

@@ -10,6 +10,9 @@ use InvalidArgumentException;
  */
 final class AffinePlacement
 {
+    /** Minimum control-point triangle area, as a fraction of the image area. */
+    public const MIN_TRIANGLE_FRACTION = 0.005;
+
     /**
      * @param  array<int, float|int|string>  $w  [A, D, B, E, C, F] in world-file line order
      * @return array<int, array{0: float, 1: float}>
@@ -43,7 +46,9 @@ final class AffinePlacement
         [[$c0, $r0], [$c1, $r1], [$c2, $r2]] = array_values($pixel);
 
         $det = $c0 * ($r1 - $r2) - $r0 * ($c1 - $c2) + ($c1 * $r2 - $c2 * $r1);
-        if (abs($det) < 1e-9) {
+        // |det| is twice the pixel triangle's area. A triangle under 0.5 % of the image is nearly collinear (or tiny),
+        // and small clicking errors would then swing the placement wildly.
+        if (abs($det) / 2 < self::MIN_TRIANGLE_FRACTION * max(1, $width) * max(1, $height)) {
             throw new InvalidArgumentException('Titik kawalan tidak sah.');
         }
 

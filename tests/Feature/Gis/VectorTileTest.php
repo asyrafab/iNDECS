@@ -99,6 +99,26 @@ final class VectorTileTest extends TestCase
         $this->assertStringNotContainsString('Secret Name', $body);
     }
 
+    public function test_zoning_tiles_carry_the_zone_class_only(): void
+    {
+        $this->assertSame(['gunatanah1', 'gunatanah3', 'kod_gtn'], config('gis.layers.zoning.properties'));
+        $layer = $this->layer('zoning');
+        $active = $this->snapshot($layer);
+        $this->feature($active, 100.40, 5.40, [
+            'gunatanah1' => 'Perumahan', 'gunatanah3' => 'Kampung Tradisi', 'kod_gtn' => 'TRM304',
+            'nama' => 'Nama Pemilik', 'upi' => '07011500055',
+        ]);
+        $layer->update(['active_snapshot_id' => $active->id]);
+
+        [$x, $y] = $this->tileFor(100.4002, 5.4002, 16);
+        $body = $this->actingAs($this->secretary)->get("/gis/tiles/zoning/16/$x/$y.pbf")->baseResponse->getContent();
+        foreach (['gunatanah1', 'Perumahan', 'Kampung Tradisi', 'TRM304'] as $expected) {
+            $this->assertStringContainsString($expected, $body);
+        }
+        $this->assertStringNotContainsString('Nama Pemilik', $body);
+        $this->assertStringNotContainsString('07011500055', $body);
+    }
+
     public function test_matching_etag_returns_304(): void
     {
         $layer = $this->layer('zoning');
@@ -131,6 +151,30 @@ final class VectorTileTest extends TestCase
 
         $this->actingAs($this->secretary)->get('/gis/tiles/lots/23/1/1.pbf')->assertNotFound();
         $this->actingAs($this->secretary)->get('/gis/tiles/lots/2/9/1.pbf')->assertNotFound();
+    }
+
+    public function test_low_zoom_and_oversized_coordinates_are_404(): void
+    {
+        $layer = $this->layer('lots');
+        $active = $this->snapshot($layer);
+        $this->feature($active, 100.40, 5.40);
+        $layer->update(['active_snapshot_id' => $active->id]);
+
+        [$x, $y] = $this->tileFor(100.4002, 5.4002, 11);
+        $this->actingAs($this->secretary)->get("/gis/tiles/lots/11/$x/$y.pbf")->assertNotFound();
+        $this->actingAs($this->secretary)->get('/gis/tiles/lots/0/0/0.pbf')->assertNotFound();
+        [$x, $y] = $this->tileFor(100.4002, 5.4002, 12);
+        $this->actingAs($this->secretary)->get("/gis/tiles/lots/12/$x/$y.pbf")->assertOk();
+
+        $this->actingAs($this->secretary)->get('/gis/tiles/lots/16/12345678/1.pbf')->assertNotFound();
+        $this->actingAs($this->secretary)->get('/gis/tiles/lots/16/1/12345678.pbf')->assertNotFound();
+        $this->actingAs($this->secretary)->get('/gis/tiles/lots/16/'.str_repeat('9', 40).'/1.pbf')->assertNotFound();
+    }
+
+    public function test_tiles_are_throttled_per_user(): void
+    {
+        $route = app('router')->getRoutes()->getByName('gis.tiles');
+        $this->assertContains('throttle:600,1', $route->gatherMiddleware());
     }
 
     public function test_tiles_require_osc_access(): void

@@ -8,6 +8,7 @@ use App\Jobs\Gis\ReplicateLayers;
 use App\Models\Gis\GisLayer;
 use App\Models\Gis\GisLayerSnapshot;
 use App\Models\User;
+use App\Services\Gis\LayerReplicationService;
 use App\Services\Osc\OscTime;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -33,6 +34,46 @@ final class RefreshButtonTest extends TestCase
             ->assertRedirect()->assertSessionHas('status', 'Kemas kini lapisan dimulakan.');
 
         Queue::assertPushed(ReplicateLayers::class, fn (ReplicateLayers $job) => $job->actor?->is($secretary) === true);
+    }
+
+    public function test_job_runs_on_the_gis_connection_whose_retry_after_outlasts_its_timeout(): void
+    {
+        $job = new ReplicateLayers;
+        $this->assertSame('gis', $job->connection);
+        $this->assertSame('database', config('queue.connections.gis.driver'));
+        $this->assertGreaterThan($job->timeout, config('queue.connections.gis.retry_after'));
+    }
+
+    public function test_job_skips_legacy_paper_layers(): void
+    {
+        $service = new class extends LayerReplicationService
+        {
+            /** @var array<int, string> */
+            public array $replicated = [];
+
+            public function __construct() {}
+
+            public function replicate(GisLayer $layer, ?User $actor = null): GisLayerSnapshot
+            {
+                $this->replicated[] = $layer->id;
+
+                return new GisLayerSnapshot;
+            }
+        };
+
+        (new ReplicateLayers)->handle($service);
+
+        $this->assertNotEmpty($service->replicated);
+        $this->assertNotContains('legacy_mjkp', $service->replicated);
+        $this->assertSame('legacy_papers', GisLayer::query()->findOrFail('legacy_mjkp')->kind);
+    }
+
+    public function test_index_explains_how_legacy_decisions_refresh(): void
+    {
+        $secretary = User::factory()->create(['role' => 'osc_secretary', 'department_id' => 'JPBD']);
+
+        $this->actingAs($secretary)->get(route('osc.meetings.index'))->assertOk()
+            ->assertSee('Lapisan keputusan terdahulu tidak dikemas kini oleh butang ini');
     }
 
     public function test_non_manager_is_refused(): void

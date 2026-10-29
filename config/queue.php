@@ -44,6 +44,17 @@ return [
             'after_commit' => false,
         ],
 
+        // GIS layer replication (App\Jobs\Gis\ReplicateLayers) runs up to an hour; retry_after must exceed that timeout,
+        // or the job would be released and run twice. Worker: php artisan queue:work gis --queue=gis --timeout=3600
+        'gis' => [
+            'driver' => 'database',
+            'connection' => env('DB_QUEUE_CONNECTION'),
+            'table' => env('DB_QUEUE_TABLE', 'jobs'),
+            'queue' => 'gis',
+            'retry_after' => (int) env('GIS_QUEUE_RETRY_AFTER', 3900),
+            'after_commit' => false,
+        ],
+
         'beanstalkd' => [
             'driver' => 'beanstalkd',
             'host' => env('BEANSTALKD_QUEUE_HOST', 'localhost'),

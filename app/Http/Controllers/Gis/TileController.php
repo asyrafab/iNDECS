@@ -12,11 +12,17 @@ use Illuminate\Http\Response;
 
 final class TileController extends Controller
 {
+    /** The map client requests vector tiles from zoom 12 only; lower zooms would aggregate a whole layer per tile. */
+    public const MIN_ZOOM = 12;
+
+    public const MAX_ZOOM = 22;
+
     public function show(Request $request, GisLayer $layer, int $z, int $x, int $y, VectorTileService $tiles): Response
     {
         abort_unless($request->user()?->canUseGisTiles(), 403);
         abort_unless(
-            $layer->is_active && $layer->kind === 'reference' && $layer->active_snapshot_id !== null && $z <= 22 && $x < 2 ** $z && $y < 2 ** $z,
+            $layer->is_active && $layer->kind === 'reference' && $layer->active_snapshot_id !== null
+                && $z >= self::MIN_ZOOM && $z <= self::MAX_ZOOM && $x < 2 ** $z && $y < 2 ** $z,
             404,
         );
 

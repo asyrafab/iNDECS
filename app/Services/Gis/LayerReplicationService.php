@@ -277,7 +277,9 @@ class LayerReplicationService
 
     private function getJson(string $url, array $query): array
     {
-        $response = Http::retry(3, 1500, throw: false)->timeout(180)->get($url, $query);
+        // Portal tokens are generated with client=referer (ArcGisToken), so requests carrying one must send that referer.
+        $headers = isset($query['token']) ? ['Referer' => (string) config('app.url')] : [];
+        $response = Http::retry(3, 1500, throw: false)->timeout(180)->withHeaders($headers)->get($url, $query);
         if (! $response->successful()) {
             throw new RuntimeException('ArcGIS HTTP '.$response->status().' untuk '.$url);
         }
