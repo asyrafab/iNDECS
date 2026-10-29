@@ -2,6 +2,18 @@
 
 Last updated: 2026-10-29.
 
+## eOSC+ Plan 1: foundation and agenda (ADR-314)
+
+Implemented 2026-10-29 on branch `feat/eosc-foundation` (not yet merged), inside the iNDECS Laravel application as the first part of core capability C10.
+
+- Added additive migration `2026_10_29_000000_create_osc_meetings_and_agenda.php` (meetings, members with one chair per meeting, agenda items linked or standalone, versioned papers, published agenda versions, department endorsement settings) and `OscSeeder` (roles `osc_secretary`, `osc_steno`; permissions `osc.meeting.view/manage`, `osc.agenda.propose/endorse` and grants). No accounts or meetings seeded.
+- Added `app/Services/Osc` (MeetingService, AgendaService, AgendaPaperService, OscAccess) and `/osc` screens: meeting creation with per-meeting chair and cut-offs, linked proposals from Bangunan/PKM pages, standalone items, optional head-of-department endorsement, secretary accept/return/reorder/publish, versioned agenda with change list, link-only email notification, ClamAV-scanned PDF papers (50 MB, versioned, views audited). Agenda changes refused on closed meetings; visibility limited by role. Staff accounts only until Plan 4.
+- Added `docs/runbooks/eosc-agenda.md` and ADR-314. Design, plan and runbook mirrored to the eOSC+ folder.
+
+Verification: **184 tests, 1215 assertions passed** on a full `php artisan test` run.
+
+Remaining: review and merge; Plan 2 (map) is next. No map, decision panel, attendee access or legacy migration is claimed.
+
 ## Concurrent modules and eOSC+ design (ADR-212, ADR-213)
 
 Documentation only, 2026-10-29. No code changed.

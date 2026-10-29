@@ -1,6 +1,6 @@
 # eOSC+ — OSC meeting room for iNDECS
 
-> **Status:** Design v1.1 **approved by the owner 2026-10-29** (builder check done). Next: build plan.
+> **Status:** Design v1.1 **approved by the owner 2026-10-29** (builder check done). Plan 1 (foundation and agenda) built on branch `feat/eosc-foundation`, not yet merged. Next: Plan 2 (map).
 > Owner: JTIK (builds). Operated by OSC, Jabatan Perancang Bandar and Jabatan Bangunan.
 > Decision records: ADR-212 (concurrent modules), ADR-213 (eOSC+ inside iNDECS) in `docs/bangunan/16-decision-log.md`.
 > Mirror copy: `C:\Users\Asyra\Documents\eOSC+\docs\eosc-plus-design.md`. Both are updated together.
