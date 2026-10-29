@@ -117,31 +117,59 @@ class LegacyImportService
             ->orderBy('id')
             ->get(['id', 'plan_file', 'pelan_tapak_scan', DB::raw('geom IS NOT NULL AS has_point')]);
 
-        // Pass 1: resolve each paper to one image file and its corners.
+        // Pass 1: resolve each paper to one image file and its corners. Papers without a point still claim
+        // their file (they block sharing) but are never placed.
         $resolved = [];
         $claims = [];
+        $noPoint = [];
         $unplaced = [];
         foreach ($papers as $paper) {
-            $result = $this->resolve([$paper->pelan_tapak_scan, $paper->plan_file], (bool) $paper->has_point, $index, $srid);
-            if (is_string($result)) {
-                $unplaced[(int) $paper->id] = $result;
-
-                continue;
+            $id = (int) $paper->id;
+            $result = $this->resolve([$paper->pelan_tapak_scan, $paper->plan_file], true, $index, $srid);
+            if (! (bool) $paper->has_point) {
+                $unplaced[$id] = self::SKIP_NO_XY;
+                $noPoint[$id] = true;
+            } elseif (is_string($result)) {
+                $unplaced[$id] = $result;
             }
-            $resolved[(int) $paper->id] = $result;
-            $claims[strtolower($result['file'])][] = (int) $paper->id;
+            if (is_array($result)) {
+                $resolved[$id] = $result;
+                $claims[strtolower($result['file'])][] = $id;
+            }
         }
 
-        // Pass 2: ambiguity and containment guards, then placement.
-        foreach ($resolved as $id => $info) {
-            if (count($claims[strtolower($info['file'])]) > 1) {
-                $unplaced[$id] = self::SKIP_SHARED;
+        // Pass 2: containment guard per claimant. A file shared by several papers is placed for all of them only
+        // when every claimant has a point and passes the guard; otherwise for none.
+        foreach ($claims as $ids) {
+            $checked = [];
+            $reason = null;
+            foreach ($ids as $id) {
+                if (isset($noPoint[$id])) {
+                    $reason = count($ids) > 1 ? self::SKIP_SHARED : self::SKIP_NO_XY;
 
-                continue;
+                    continue;
+                }
+                $row = $this->check($id, $resolved[$id], $srid);
+                if (is_string($row)) {
+                    $unplaced[$id] = $row;
+                    $reason = count($ids) > 1 ? self::SKIP_SHARED : $row;
+                } else {
+                    $checked[$id] = $row;
+                }
             }
-            $outcome = $this->place($id, $info, $srid);
-            if ($outcome !== self::PLACED) {
-                $unplaced[$id] = $outcome;
+            foreach ($checked as $id => $row) {
+                if ($reason === null) {
+                    $this->store($id, $resolved[$id], $srid, $row);
+                } else {
+                    $unplaced[$id] = self::SKIP_SHARED;
+                }
+            }
+            if ($reason === self::SKIP_SHARED) {
+                foreach ($ids as $id) {
+                    if (! isset($noPoint[$id])) {
+                        $unplaced[$id] = self::SKIP_SHARED;
+                    }
+                }
             }
         }
 
@@ -228,7 +256,8 @@ class LegacyImportService
         return ['file' => $file] + $result;
     }
 
-    private function place(int $id, array $info, int $srid): string
+    /** @return object|string the corner row to store, or a skip reason */
+    private function check(int $id, array $info, int $srid): object|string
     {
         $row = DB::selectOne(
             'SELECT ST_AsText(c) AS wkt,
@@ -244,6 +273,11 @@ class LegacyImportService
             return self::SKIP_MISMATCH;
         }
 
+        return $row;
+    }
+
+    private function store(int $id, array $info, int $srid, object $row): void
+    {
         $file = $info['file'];
         $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
         $sha = hash_file('sha256', $file);
@@ -279,7 +313,6 @@ class LegacyImportService
             );
         }
 
-        return self::PLACED;
     }
 
     /**

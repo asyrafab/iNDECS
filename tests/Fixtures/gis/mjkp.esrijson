@@ -3,5 +3,5 @@
 {"attributes":{"OBJECTID":2,"id":102,"tajuk":"Cadangan B","status":"T","status_kini":"T","tahun":"2016","bulan":"4","mukim":"Mukim 1","seksyen":"1","kategori":"PKM","rujukan":"R/2","no_fail":"F/2","plan_":"nojgw.jpg"},"geometry":{"x":100.41,"y":5.31}},
 {"attributes":{"OBJECTID":3,"id":103,"tajuk":"Cadangan C","status":"L","status_kini":"L","tahun":"2017","bulan":"5","mukim":"Mukim 2","seksyen":"2","kategori":"PKM","rujukan":"R/3","no_fail":"F/3","plan_":"t3.tif"},"geometry":{"x":100.42,"y":5.32}},
 {"attributes":{"OBJECTID":4,"id":104,"tajuk":"Cadangan D","status":"L","status_kini":"L","tahun":"2018","bulan":"6","mukim":"Mukim 2","seksyen":"2","kategori":"PKM","rujukan":"R/4","no_fail":"F/4","plan_":"hilang.jpg"},"geometry":{"x":100.43,"y":5.33}},
-{"attributes":{"OBJECTID":5,"id":105,"tajuk":"Cadangan E","status":"L","status_kini":"L","tahun":"2019","bulan":"7","mukim":"Mukim 3","seksyen":"3","kategori":"PKM","rujukan":"R/5","no_fail":"F/5","plan_":"t1.jpg"},"geometry":{"x":0,"y":0}}
+{"attributes":{"OBJECTID":5,"id":105,"tajuk":"Cadangan E","status":"L","status_kini":"L","tahun":"2019","bulan":"7","mukim":"Mukim 3","seksyen":"3","kategori":"PKM","rujukan":"R/5","no_fail":"F/5","plan_":"e.jpg"},"geometry":{"x":0,"y":0}}
 ]}

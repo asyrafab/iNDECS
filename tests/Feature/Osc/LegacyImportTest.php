@@ -203,6 +203,45 @@ final class LegacyImportTest extends TestCase
         $this->assertSame(0, LayoutImage::query()->count());
     }
 
+    public function test_shared_file_is_placed_for_all_claimants_when_every_point_is_inside(): void
+    {
+        $dir = $this->plans(['gen.jpg' => 't1.jpg', 'gen.jgw' => 't1.jgw']);
+        $this->artisan('osc:import-legacy', ['--points' => true])->assertSuccessful();
+        DB::table('core.osc_legacy_papers')->update(['plan_file' => null]);
+        DB::table('core.osc_legacy_papers')->whereIn('id', [101, 102])->update(['plan_file' => 'gen.jpg']);
+        DB::statement('UPDATE core.osc_legacy_papers SET geom = (SELECT geom FROM core.osc_legacy_papers WHERE id = 101) WHERE id = 102');
+
+        $counts = app(LegacyImportService::class)->importImages($dir, 990001);
+
+        $this->assertSame(2, $counts['Diletakkan']);
+        $this->assertSame(0, $counts['Dilangkau: fail dikongsi']);
+        $this->assertSame(2, LayoutImage::query()->count());
+        $this->assertSame(1, LayoutImage::query()->distinct()->count('sha256'));
+        $this->assertSame(1, LayoutImage::query()->distinct()->count('path'));
+
+        // A rerun after one point moves 2 km away removes both placements.
+        DB::statement('UPDATE core.osc_legacy_papers SET geom = ST_SetSRID(ST_MakePoint(100.46021 + 0.02, 5.33736), 4326) WHERE id = 102');
+        $counts = app(LegacyImportService::class)->importImages($dir, 990001);
+        $this->assertSame(2, $counts['Dilangkau: fail dikongsi']);
+        $this->assertSame(0, LayoutImage::query()->count());
+    }
+
+    public function test_shared_file_with_a_claimant_without_a_point_is_placed_for_none(): void
+    {
+        $dir = $this->plans(['gen.jpg' => 't1.jpg', 'gen.jgw' => 't1.jgw']);
+        $this->artisan('osc:import-legacy', ['--points' => true])->assertSuccessful();
+        DB::table('core.osc_legacy_papers')->update(['plan_file' => null]);
+        DB::table('core.osc_legacy_papers')->whereIn('id', [101, 102])->update(['plan_file' => 'gen.jpg']);
+        DB::statement('UPDATE core.osc_legacy_papers SET geom = NULL WHERE id = 102');
+
+        $counts = app(LegacyImportService::class)->importImages($dir, 990001);
+
+        $this->assertSame(0, $counts['Diletakkan']);
+        $this->assertSame(1, $counts['Dilangkau: fail dikongsi']);
+        $this->assertSame(1, $counts['Dilangkau: tiada XY']);
+        $this->assertSame(0, LayoutImage::query()->count());
+    }
+
     public function test_placement_far_from_the_papers_point_is_skipped(): void
     {
         $dir = $this->plans(['t1.jpg' => 't1.jpg', 't1.jgw' => 't1.jgw']);
