@@ -157,6 +157,11 @@ application, two = linked pair, three = development case.
   introduction. Public tracking is explicitly unavailable; service cards link
   to guidance rather than unimplemented submission routes.
 
+- eOSC+ screens (`resources/views/osc/`) use `.agenda-list`, `.agenda-row`, `.agenda-row-number`,
+  `.agenda-row-body`, `.agenda-row-meta`, `.agenda-row-actions`, `.inline-form` and `.panel-stack`
+  in `indecs.css`; rows collapse to one column on phones. The Lucide sprite gained `gavel`,
+  `calendar-plus` and `arrow-down`.
+
 - Bahasa Melayu is the interface language (`lang/ms`). Application type codes stay as-is.
 - Reuse the existing class names in `public/css/indecs.css` before inventing new ones. If you
   need a new component, add it to that file in the same idiom and document it here.

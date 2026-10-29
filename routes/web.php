@@ -6,6 +6,9 @@ use App\Http\Controllers\BangunanDocumentCatalogueController;
 use App\Http\Controllers\BangunanDocumentController;
 use App\Http\Controllers\BangunanLegacyController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Osc\AgendaItemController;
+use App\Http\Controllers\Osc\AgendaPaperController;
+use App\Http\Controllers\Osc\MeetingController;
 use App\Http\Controllers\PkmApplicationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -91,4 +94,20 @@ Route::middleware(['auth', 'bangunan.access'])->prefix('bangunan')->name('bangun
 Route::middleware(['auth', 'bangunan.legacy'])->prefix('bangunan')->name('bangunan.')->group(function (): void {
     Route::get('/legacy', [BangunanLegacyController::class, 'index'])->name('legacy.index');
     Route::get('/legacy/{legacyPermohonan}', [BangunanLegacyController::class, 'show'])->name('legacy.show');
+});
+
+Route::middleware(['auth', 'osc.access'])->prefix('osc')->name('osc.')->group(function (): void {
+    Route::get('/', [MeetingController::class, 'index'])->name('meetings.index');
+    Route::get('/meetings/create', [MeetingController::class, 'create'])->name('meetings.create');
+    Route::post('/meetings', [MeetingController::class, 'store'])->name('meetings.store');
+    Route::get('/meetings/{meeting}', [MeetingController::class, 'show'])->name('meetings.show');
+    Route::post('/meetings/{meeting}/reorder', [MeetingController::class, 'reorder'])->name('meetings.reorder');
+    Route::post('/meetings/{meeting}/publish', [MeetingController::class, 'publish'])->name('meetings.publish');
+    Route::get('/meetings/{meeting}/items/create', [AgendaItemController::class, 'create'])->name('items.create');
+    Route::post('/meetings/{meeting}/items', [AgendaItemController::class, 'store'])->name('items.store');
+    Route::post('/items/{item}/endorse', [AgendaItemController::class, 'endorse'])->name('items.endorse');
+    Route::post('/items/{item}/accept', [AgendaItemController::class, 'accept'])->name('items.accept');
+    Route::post('/items/{item}/return', [AgendaItemController::class, 'return'])->name('items.return');
+    Route::post('/items/{item}/papers', [AgendaPaperController::class, 'store'])->name('papers.store');
+    Route::get('/papers/{paper}', [AgendaPaperController::class, 'show'])->name('papers.show');
 });

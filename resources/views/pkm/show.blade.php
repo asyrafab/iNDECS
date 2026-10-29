@@ -14,6 +14,7 @@
             <h1>{{ $application->title }}</h1>
             <p>{{ $application->description ?: 'Tiada keterangan tambahan direkodkan.' }}</p>
         </div>
+        @include('partials.osc-propose-button')
         @if ($application->current_stage === \App\Enums\ApplicationStage::Registration && $application->current_status === \App\Enums\ApplicationStatus::Submitted)
             <form method="POST" action="{{ route('perancang.start-review', $application) }}" data-confirm="Mulakan semakan kelengkapan untuk permohonan ini?">
                 @csrf

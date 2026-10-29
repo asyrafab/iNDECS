@@ -3,11 +3,14 @@
     $canBangunan = $staff->canAccessBangunan();
     $canPerancang = $staff->canAccessPkm();
     $canLegacy = $staff->canAccessBangunanLegacy();
-    $isBangunan = request()->routeIs('bangunan.*');
-    $workspaceName = $isBangunan ? 'iNDECS Bangunan' : 'iNDECS Perancang';
-    $workspaceDepartment = $isBangunan ? 'Jabatan Bangunan' : 'Jabatan Perancang Bandar';
-    $workspaceIcon = $isBangunan ? 'building-2' : 'map';
-    $homeUrl = $isBangunan ? ($canBangunan ? route('bangunan.index') : route('bangunan.legacy.index')) : ($canBangunan ? route('perancang.index') : route('dashboard'));
+    $canOsc = $staff->canAccessOsc();
+    $isOsc = request()->routeIs('osc.*');
+    $isBangunan = ! $isOsc && request()->routeIs('bangunan.*');
+    $workspaceName = $isOsc ? 'eOSC+' : ($isBangunan ? 'iNDECS Bangunan' : 'iNDECS Perancang');
+    $workspaceShort = $isOsc ? 'eOSC+' : ($isBangunan ? 'Bangunan' : 'Perancang');
+    $workspaceDepartment = $isOsc ? 'Mesyuarat OSC' : ($isBangunan ? 'Jabatan Bangunan' : 'Jabatan Perancang Bandar');
+    $workspaceIcon = $isOsc ? 'gavel' : ($isBangunan ? 'building-2' : 'map');
+    $homeUrl = $isOsc ? route('osc.meetings.index') : ($isBangunan ? ($canBangunan ? route('bangunan.index') : route('bangunan.legacy.index')) : ($canBangunan ? route('perancang.index') : route('dashboard')));
     $canRegisterBangunan = $canBangunan && collect(\App\Models\BangunanApplication::TYPES)->contains(fn ($family) => $staff->canPerformBangunan('access', $family) && $staff->canPerformBangunan('register', $family));
 @endphp
 <!DOCTYPE html>
@@ -36,10 +39,11 @@
                 <span><strong>iNDECS</strong><small>Kawalan Pembangunan</small></span>
             </a>
             <details class="workspace-switcher">
-                <summary><span><small>Ruang jabatan</small><strong><x-icon :name="$workspaceIcon" />{{ $isBangunan ? 'Bangunan' : 'Perancang' }}</strong></span><x-icon name="chevron-down" /></summary>
+                <summary><span><small>Ruang jabatan</small><strong><x-icon :name="$workspaceIcon" />{{ $workspaceShort }}</strong></span><x-icon name="chevron-down" /></summary>
                 <nav aria-label="Pilih ruang jabatan">
-                    @if ($canPerancang)<a href="{{ $canBangunan ? route('perancang.index') : route('dashboard') }}" @if (! $isBangunan) aria-current="page" @endif><x-icon name="map" />iNDECS Perancang</a>@endif
+                    @if ($canPerancang)<a href="{{ $canBangunan ? route('perancang.index') : route('dashboard') }}" @if (! $isBangunan && ! $isOsc) aria-current="page" @endif><x-icon name="map" />iNDECS Perancang</a>@endif
                     @if ($canBangunan)<a href="{{ route('bangunan.index') }}" @if ($isBangunan && ! request()->routeIs('bangunan.legacy.*')) aria-current="page" @endif><x-icon name="building-2" />iNDECS Bangunan</a>@elseif ($canLegacy)<a href="{{ route('bangunan.legacy.index') }}" aria-current="page"><x-icon name="archive" />Bangunan · Rekod warisan</a>@endif
+                    @if ($canOsc)<a href="{{ route('osc.meetings.index') }}" @if ($isOsc) aria-current="page" @endif><x-icon name="gavel" />eOSC+</a>@endif
                 </nav>
             </details>
             <nav class="primary-nav" aria-label="Navigasi utama">
@@ -50,11 +54,14 @@
                         @if ($canRegisterBangunan)<a href="{{ route('bangunan.create') }}" class="nav-link {{ request()->routeIs('bangunan.create') ? 'active' : '' }}" @if (request()->routeIs('bangunan.create')) aria-current="page" @endif><x-icon name="file-plus-2" />Daftar permohonan</a>@endif
                     @endif
                     @if ($canLegacy)<a href="{{ route('bangunan.legacy.index') }}" class="nav-link {{ request()->routeIs('bangunan.legacy.*') ? 'active' : '' }}" @if (request()->routeIs('bangunan.legacy.*')) aria-current="page" @endif><x-icon name="archive" />Carian Rekod Warisan</a>@endif
+                @elseif ($isOsc)
+                    <a href="{{ route('osc.meetings.index') }}" class="nav-link active" aria-current="page"><x-icon name="gavel" />Mesyuarat OSC</a>
                 @else
                     @if (! $canBangunan)<a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" @if (request()->routeIs('dashboard')) aria-current="page" @endif><x-icon name="layout-dashboard" />Ringkasan</a>@endif
                     <a href="{{ route('perancang.index') }}" class="nav-link {{ request()->routeIs('perancang.index', 'perancang.show') ? 'active' : '' }}" @if (request()->routeIs('perancang.index', 'perancang.show')) aria-current="page" @endif><x-icon name="files" />Permohonan PKM</a>
                     @if ($staff->canPerformPkm('perancang.pkm.register'))<a href="{{ route('perancang.create') }}" class="nav-link {{ request()->routeIs('perancang.create') ? 'active' : '' }}" @if (request()->routeIs('perancang.create')) aria-current="page" @endif><x-icon name="file-plus-2" />Daftar PKM</a>@endif
                 @endif
+                @if ($canOsc && ! $isOsc)<a href="{{ route('osc.meetings.index') }}" class="nav-link"><x-icon name="gavel" />eOSC+</a>@endif
                 <span class="nav-label nav-label-spaced">Bantuan</span>
                 <button class="nav-link" type="button" data-amira-open aria-controls="amira-panel" aria-expanded="false"><x-icon name="messages-square" />Panduan AMIRA</button>
             </nav>
@@ -73,6 +80,7 @@
             <div class="workspace-body">
                 <main class="page-content" id="main-content" tabindex="-1">
                     @if (session('success'))<div class="alert alert-success" role="status"><x-icon name="circle-check" /><div>{{ session('success') }}</div></div>@endif
+                    @if (session('status'))<div class="alert alert-success" role="status"><x-icon name="circle-check" /><div>{{ session('status') }}</div></div>@endif
                     @if (session('error'))<div class="alert alert-error" role="alert"><x-icon name="circle-alert" /><div>{{ session('error') }}</div></div>@endif
                     @yield('content')
                     <footer class="workspace-footer"><x-mark class="mark-small" /><span>Persekitaran iNDECS <span class="muted">· {{ $workspaceDepartment }}</span></span></footer>

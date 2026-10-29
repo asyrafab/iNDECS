@@ -24,6 +24,6 @@ final class AgendaPublished extends Notification
             ->subject("Agenda Mesyuarat OSC {$this->meeting->number} diterbitkan (versi {$this->version})")
             ->greeting('Salam sejahtera,')
             ->line("Agenda Mesyuarat OSC {$this->meeting->number} telah diterbitkan dengan {$this->itemCount} perkara.")
-            ->action('Buka agenda', url('/osc/meetings/'.$this->meeting->id));
+            ->action('Buka agenda', route('osc.meetings.show', $this->meeting));
     }
 }
