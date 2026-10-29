@@ -25,7 +25,7 @@ final class LayoutImageService
 {
     private const MAX_BYTES = 20 * 1024 * 1024;
 
-    private const MAX_PIXELS = 100_000_000;
+    private const MAX_PIXELS = 36_000_000;
 
     private const MIMES = ['image/jpeg' => 'jpg', 'image/png' => 'png'];
 
@@ -57,24 +57,25 @@ final class LayoutImageService
         $scanError = null;
 
         try {
-            return DB::transaction(function () use ($item, $actor, $realPath, $mime, $width, $height, $corners, $sha256, $path, $expectedVersion, $disk, &$created, &$scanError): LayoutImage {
+            // Store and scan before any lock is taken: a slow scan must not hold the item and layout rows.
+            if (! $disk->exists($path)) {
+                if (! $disk->put($path, (string) file_get_contents($realPath))) {
+                    throw ValidationException::withMessages(['layout' => 'Imej tidak dapat disimpan.']);
+                }
+                $created = true;
+            }
+            try {
+                $this->scanner->assertClean($disk->path($path));
+            } catch (Throwable $rejection) {
+                $scanError = $rejection;
+                throw ValidationException::withMessages(['layout' => 'Imej gagal imbasan keselamatan dan tidak diterima.']);
+            }
+
+            return DB::transaction(function () use ($item, $actor, $mime, $width, $height, $corners, $sha256, $path, $expectedVersion): LayoutImage {
                 AgendaItem::query()->lockForUpdate()->findOrFail($item->id); // serialises placements for this item
                 $existing = LayoutImage::query()->where('owner_type', 'agenda_item')->where('owner_id', $item->id)->lockForUpdate()->first();
                 if ($existing !== null && $existing->row_version !== $expectedVersion) {
                     throw ValidationException::withMessages(['layout' => self::STALE]);
-                }
-
-                if (! $disk->exists($path)) {
-                    if (! $disk->put($path, (string) file_get_contents($realPath))) {
-                        throw ValidationException::withMessages(['layout' => 'Imej tidak dapat disimpan.']);
-                    }
-                    $created = true;
-                }
-                try {
-                    $this->scanner->assertClean($disk->path($path));
-                } catch (Throwable $rejection) {
-                    $scanError = $rejection;
-                    throw ValidationException::withMessages(['layout' => 'Imej gagal imbasan keselamatan dan tidak diterima.']);
                 }
 
                 $before = $existing === null ? null : ['sha256' => $existing->sha256, 'corners' => $this->cornersOf($existing->id)];
@@ -152,9 +153,11 @@ final class LayoutImageService
         }
         $mime = (new \finfo(FILEINFO_MIME_TYPE))->file($realPath);
         $size = $mime !== false && isset(self::MIMES[$mime]) ? @getimagesize($realPath) : false;
-        if ($size === false || $size[2] !== ($mime === 'image/png' ? IMAGETYPE_PNG : IMAGETYPE_JPEG)
-            || $size[0] < 1 || $size[1] < 1 || $size[0] * $size[1] > self::MAX_PIXELS) {
+        if ($size === false || $size[2] !== ($mime === 'image/png' ? IMAGETYPE_PNG : IMAGETYPE_JPEG) || $size[0] < 1 || $size[1] < 1) {
             throw ValidationException::withMessages(['layout' => $message]);
+        }
+        if ($size[0] * $size[1] > self::MAX_PIXELS) {
+            throw ValidationException::withMessages(['layout' => 'Imej terlalu besar (maksimum 36 juta piksel).']);
         }
 
         return [$mime, $size[0], $size[1]];

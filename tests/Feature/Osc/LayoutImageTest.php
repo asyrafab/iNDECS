@@ -289,4 +289,79 @@ final class LayoutImageTest extends TestCase
         $this->assertSame(route('osc.layout.show', $legacy), $past['layout_url']);
         $this->assertCount(4, $past['layout_corners']);
     }
+
+    public function test_oversized_pixel_count_refused_and_nothing_stored(): void
+    {
+        $chunk = fn (string $type, string $data): string => pack('N', strlen($data)).$type.$data.pack('N', crc32($type.$data));
+        $bytes = chr(137).'PNG'.chr(13).chr(10).chr(26).chr(10).$chunk('IHDR', pack('NNCCCCC', 6001, 6001, 8, 2, 0, 0, 0)).$chunk('IDAT', gzcompress(chr(0))).$chunk('IEND', '');
+
+        $this->place(null, ['layout' => UploadedFile::fake()->createWithContent('big.png', $bytes)])
+            ->assertSessionHasErrors(['layout' => 'Imej terlalu besar (maksimum 36 juta piksel).']);
+        $this->assertDatabaseCount('core.osc_layout_images', 0);
+        Storage::disk('local')->assertDirectoryEmpty('osc/layouts');
+    }
+
+    public function test_scan_failure_on_replace_keeps_row_and_leaves_no_new_file(): void
+    {
+        $this->place();
+        $first = $this->itemLayout();
+        $before = Storage::disk('local')->allFiles('osc/layouts');
+        $this->scanner('infected');
+
+        $this->place($this->planner, ['layout' => $this->png(400, 300), 'expected_version' => 1])
+            ->assertSessionHasErrors(['layout' => 'Imej gagal imbasan keselamatan dan tidak diterima.']);
+
+        $this->assertSame($before, Storage::disk('local')->allFiles('osc/layouts'));
+        $this->assertSame([1, $first->sha256], [$this->itemLayout()->row_version, $this->itemLayout()->sha256]);
+        $this->assertSame(1, AuditLog::query()->where('event', 'osc_layout_placed')->count());
+    }
+
+    public function test_jpeg_upload_is_placed(): void
+    {
+        $jpeg = base64_decode('/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/yQALCAABAAEBAREA/8wABgAQEAX/2gAIAQEAAD8A0s8g/9k=');
+        $this->place(null, ['layout' => UploadedFile::fake()->createWithContent('p.jpg', $jpeg), 'control_points' => [
+            ['pixel' => [0, 0], 'map' => [100.4000, 5.4020]],
+            ['pixel' => [1, 0], 'map' => [100.4036, 5.4020]],
+            ['pixel' => [0, 1], 'map' => [100.4000, 5.4002]],
+        ]])->assertSessionHasNoErrors();
+
+        $layout = $this->itemLayout();
+        $this->assertSame([1, 1, 'image/jpeg'], [$layout->width, $layout->height, $layout->mime_type]);
+        $this->assertStringEndsWith('.jpg', $layout->path);
+    }
+
+    public function test_missing_stored_file_is_404(): void
+    {
+        $this->place();
+        $layout = $this->itemLayout();
+        Storage::disk('local')->delete($layout->path);
+
+        $this->actingAs($this->secretary)->get(route('osc.layout.show', $layout))->assertNotFound();
+    }
+
+    public function test_application_owner_layout_is_forbidden_for_everyone(): void
+    {
+        $this->legacyLayout();
+        DB::update("UPDATE core.osc_layout_images SET owner_type = 'application' WHERE owner_type = 'legacy'");
+        $layout = LayoutImage::query()->where('owner_type', 'application')->firstOrFail();
+
+        foreach ([$this->secretary, $this->chair, $this->planner, $this->member] as $user) {
+            $this->actingAs($user)->get(route('osc.layout.show', $layout))->assertForbidden();
+        }
+    }
+
+    public function test_map_data_without_view_grant_has_no_legacy_layout(): void
+    {
+        $this->legacyLayout();
+        $this->giveItemBoundary();
+        app(AgendaService::class)->accept($this->item->fresh(), $this->item->fresh()->row_version, $this->secretary);
+        app(AgendaService::class)->publish($this->meeting, $this->meeting->fresh()->row_version, $this->secretary);
+
+        $features = $this->actingAs($this->member)->getJson(route('osc.meetings.map-data', $this->meeting))->assertOk()->json('features');
+        $this->assertNotEmpty($features);
+        foreach ($features as $feature) {
+            $this->assertNotSame('legacy', $feature['properties']['kind']);
+            $this->assertArrayNotHasKey('layout_corners', $feature['properties']['kind'] === 'legacy' ? $feature['properties'] : []);
+        }
+    }
 }
