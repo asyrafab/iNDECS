@@ -8,6 +8,7 @@ use App\Models\Gis\GisLayerSnapshot;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use RuntimeException;
 use Symfony\Component\Process\Process;
 use Throwable;
@@ -22,6 +23,15 @@ class LayerReplicationService
 
     public function replicate(GisLayer $layer, ?User $actor = null): GisLayerSnapshot
     {
+        $running = GisLayerSnapshot::query()
+            ->where('layer_id', $layer->id)
+            ->where('status', 'importing')
+            ->where('started_at', '>', now()->subHours(2))
+            ->exists();
+        if ($running) {
+            throw new RuntimeException("Kemas kini lapisan {$layer->id} sedang berjalan.");
+        }
+
         $snapshot = GisLayerSnapshot::query()->create([
             'layer_id' => $layer->id,
             'status' => 'importing',
@@ -48,18 +58,23 @@ class LayerReplicationService
                 'error' => $message,
             ]);
 
-            throw $e instanceof RuntimeException && $e->getMessage() === $message
-                ? $e
-                : new RuntimeException($message, 0, $e);
+            // Never chain the original exception: its message and trace arguments may carry the token.
+            throw new RuntimeException($message);
         }
 
-        $this->pruneOldSnapshots($layer);
+        try {
+            $this->pruneOldSnapshots($layer);
+        } catch (Throwable $e) {
+            Log::warning('Pemangkasan snapshot GIS gagal.', ['layer' => $layer->id, 'error' => $this->redact($e->getMessage(), null)]);
+        }
 
         return $snapshot->refresh();
     }
 
     private function promote(GisLayer $layer, GisLayerSnapshot $snapshot, string $staging, ?User $actor): void
     {
+        // Serialise promotions per layer and read the previous active snapshot under the lock.
+        $locked = GisLayer::query()->whereKey($layer->id)->lockForUpdate()->firstOrFail();
         $exists = DB::selectOne('SELECT to_regclass(?) AS t', [$staging])->t !== null;
         if (! $exists) {
             throw new RuntimeException('Lapisan sumber tidak mengandungi rekod.');
@@ -83,9 +98,10 @@ class LayerReplicationService
             throw new RuntimeException('Lapisan sumber tidak mengandungi rekod.');
         }
 
-        $previousId = $layer->active_snapshot_id;
+        $previousId = $locked->active_snapshot_id;
         $snapshot->forceFill(['status' => 'ready', 'feature_count' => $count, 'finished_at' => now()])->save();
-        $layer->forceFill(['active_snapshot_id' => $snapshot->id])->save();
+        $locked->forceFill(['active_snapshot_id' => $snapshot->id])->save();
+        $layer->setRawAttributes($locked->getAttributes(), true);
         if ($previousId !== null && $previousId !== $snapshot->id) {
             GisLayerSnapshot::query()->whereKey($previousId)->where('status', 'ready')->update(['status' => 'superseded']);
         }
@@ -200,7 +216,11 @@ class LayerReplicationService
 
         $written = 0;
         try {
-            for ($offset = 0; ; $offset += self::PAGE_SIZE) {
+            $maxPages = (int) ceil($expected / self::PAGE_SIZE) + 2;
+            for ($offset = 0, $pages = 0; ; $offset += self::PAGE_SIZE) {
+                if (++$pages > $maxPages) {
+                    throw new RuntimeException('Sumber ArcGIS memulangkan lebih banyak rekod daripada dijangka.');
+                }
                 $page = $get('/query', [
                     'where' => $where, 'outFields' => '*', 'outSR' => 4326, 'f' => 'json',
                     'orderByFields' => $oid, 'resultOffset' => $offset, 'resultRecordCount' => self::PAGE_SIZE,
@@ -220,6 +240,9 @@ class LayerReplicationService
                 foreach ($page['features'] ?? [] as $feature) {
                     fwrite($handle, ($written > 0 ? ',' : '').json_encode($feature, JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE));
                     $written++;
+                }
+                if ($written > $expected) {
+                    throw new RuntimeException('Sumber ArcGIS memulangkan lebih banyak rekod daripada dijangka.');
                 }
                 if (empty($page['exceededTransferLimit']) || ($page['features'] ?? []) === []) {
                     break;

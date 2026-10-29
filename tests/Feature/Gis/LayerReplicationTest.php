@@ -11,6 +11,7 @@ use App\Services\Gis\ArcGisToken;
 use App\Services\Gis\LayerReplicationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use RuntimeException;
 use Tests\TestCase;
 
@@ -174,5 +175,88 @@ final class LayerReplicationTest extends TestCase
         $counts = collect($ids)->map(fn (int $id) => DB::table('core.gis_features')->where('snapshot_id', $id)->count())->all();
         $this->assertSame([0, 0, 3, 3, 3], $counts);
         $this->assertSame('ready', GisLayerSnapshot::query()->find($ids[4])->status);
+    }
+
+    private function fakeTokenService(): void
+    {
+        $this->app->instance(ArcGisToken::class, new class extends ArcGisToken
+        {
+            public function get(): ?string
+            {
+                return 'SECRETTOKEN';
+            }
+        });
+    }
+
+    public function test_exception_chain_never_contains_the_token(): void
+    {
+        $this->fakeTokenService();
+        $layer = $this->layer('lots', 'lots.esrijson');
+        $layer->update(['source_url' => 'http://127.0.0.1:9/arcgis/rest/services/X/FeatureServer/0']);
+
+        try {
+            $this->service()->replicate($layer->fresh());
+            $this->fail('RuntimeException was expected.');
+        } catch (RuntimeException $e) {
+            for ($x = $e; $x !== null; $x = $x->getPrevious()) {
+                $this->assertStringNotContainsString('SECRETTOKEN', $x->getMessage());
+            }
+            $this->assertNull($e->getPrevious());
+        }
+    }
+
+    public function test_runaway_paging_is_stopped(): void
+    {
+        $page = ['geometryType' => 'esriGeometryPoint', 'fields' => [['name' => 'OBJECTID', 'type' => 'esriFieldTypeOID']],
+            'exceededTransferLimit' => true,
+            'features' => [['attributes' => ['OBJECTID' => 1], 'geometry' => ['x' => 100.4, 'y' => 5.3]]]];
+        Http::fake(function ($request) use ($page) {
+            return Http::response(str_contains($request->url(), 'returnCountOnly') ? ['count' => 3] : $page);
+        });
+        $layer = $this->layer('lots', 'lots.esrijson');
+        $good = $this->service()->replicate($layer);
+        $layer->update(['source_url' => 'https://example.test/arcgis/rest/services/X/FeatureServer/0']);
+        $before = glob(sys_get_temp_dir().DIRECTORY_SEPARATOR.'gis_src_*') ?: [];
+
+        try {
+            $this->service()->replicate($layer->fresh());
+            $this->fail('RuntimeException was expected.');
+        } catch (RuntimeException $e) {
+            $this->assertSame('Sumber ArcGIS memulangkan lebih banyak rekod daripada dijangka.', $e->getMessage());
+        }
+
+        $this->assertSame('failed', GisLayerSnapshot::query()->orderByDesc('id')->firstOrFail()->status);
+        $this->assertSame($good->id, $layer->fresh()->active_snapshot_id);
+        $this->assertSame($before, glob(sys_get_temp_dir().DIRECTORY_SEPARATOR.'gis_src_*') ?: []);
+    }
+
+    public function test_concurrent_replication_of_same_layer_is_refused(): void
+    {
+        $layer = $this->layer('lots', 'lots.esrijson');
+        GisLayerSnapshot::query()->create(['layer_id' => 'lots', 'status' => 'importing', 'started_at' => now()->subMinutes(5)]);
+
+        try {
+            $this->service()->replicate($layer);
+            $this->fail('RuntimeException was expected.');
+        } catch (RuntimeException $e) {
+            $this->assertSame('Kemas kini lapisan lots sedang berjalan.', $e->getMessage());
+        }
+        $this->assertSame(1, GisLayerSnapshot::query()->count());
+
+        GisLayerSnapshot::query()->update(['started_at' => now()->subHours(3)]);
+        $this->assertSame('ready', $this->service()->replicate($layer)->status);
+    }
+
+    public function test_promote_reads_previous_snapshot_under_layer_lock(): void
+    {
+        $layer = $this->layer('lots', 'lots.esrijson');
+        $first = $this->service()->replicate($layer);
+        // A stale model instance (as a concurrent worker would hold) must not lose the real previous snapshot.
+        $stale = GisLayer::query()->find('lots');
+        $stale->active_snapshot_id = null;
+        $second = $this->service()->replicate($stale);
+
+        $this->assertSame('superseded', $first->fresh()->status);
+        $this->assertSame($second->id, GisLayer::query()->find('lots')->active_snapshot_id);
     }
 }
