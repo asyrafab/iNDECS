@@ -96,7 +96,7 @@ final class AgendaService
 
         return DB::transaction(function () use ($item, $expectedVersion, $actor): AgendaItem {
             // The meeting lock serialises position allocation between concurrent accepts.
-            Meeting::query()->lockForUpdate()->findOrFail($item->meeting_id);
+            $this->assertAgendaEditable(Meeting::query()->lockForUpdate()->findOrFail($item->meeting_id));
             $record = $this->lockItem($item, $expectedVersion);
             if ($record->status === AgendaItemStatus::Proposed && $this->requiresEndorsement($record->department_id)) {
                 throw ValidationException::withMessages(['item' => 'Cadangan ini perlu disokong ketua jabatan terlebih dahulu.']);
@@ -125,7 +125,7 @@ final class AgendaService
         }
 
         return DB::transaction(function () use ($item, $expectedVersion, $reason, $actor): AgendaItem {
-            Meeting::query()->lockForUpdate()->findOrFail($item->meeting_id);
+            $this->assertAgendaEditable(Meeting::query()->lockForUpdate()->findOrFail($item->meeting_id));
             $record = $this->lockItem($item, $expectedVersion);
             if ($record->status === AgendaItemStatus::Returned) {
                 throw ValidationException::withMessages(['item' => 'Cadangan ini telah dikembalikan.']);
@@ -290,8 +290,16 @@ final class AgendaService
         if ($record->row_version !== $expectedVersion) {
             throw ValidationException::withMessages(['meeting' => 'Rekod telah berubah. Muat semula sebelum meneruskan.']);
         }
+        $this->assertAgendaEditable($record);
 
         return $record;
+    }
+
+    private function assertAgendaEditable(Meeting $locked): void
+    {
+        if (in_array($locked->status, [MeetingStatus::Closed, MeetingStatus::MinutesConfirmed], true)) {
+            throw ValidationException::withMessages(['meeting' => 'Agenda mesyuarat ini tidak lagi boleh diubah.']);
+        }
     }
 
     /** @return Collection<int, AgendaItem> */

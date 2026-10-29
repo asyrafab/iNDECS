@@ -17,6 +17,7 @@ use App\Services\Osc\MeetingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
 
@@ -232,5 +233,42 @@ final class AgendaPublishingTest extends TestCase
         $this->assertSame([], $mail->rawAttachments);
         $this->assertSame(url('/osc/meetings/'.$this->meeting->id), $mail->actionUrl);
         $this->assertStringContainsString('2', implode(' ', $mail->introLines));
+    }
+
+    /** @return array<string, array{MeetingStatus}> */
+    public static function lockedStatuses(): array
+    {
+        return ['closed' => [MeetingStatus::Closed], 'minutes_confirmed' => [MeetingStatus::MinutesConfirmed]];
+    }
+
+    #[DataProvider('lockedStatuses')]
+    public function test_closed_meeting_refuses_all_agenda_changes(MeetingStatus $status): void
+    {
+        $a = $this->accepted('A');
+        $b = $this->accepted('B');
+        $p = $this->propose('P');
+        $this->meeting->update(['status' => $status]);
+        $version = $this->version();
+        $message = 'Agenda mesyuarat ini tidak lagi boleh diubah.';
+
+        $this->assertRefused($message, fn () => $this->service()->accept($p, $p->row_version, $this->secretary));
+        $this->assertRefused($message, fn () => $this->service()->returnToDepartment($a, $a->row_version, 'Sebab', $this->secretary));
+        $this->assertRefused($message, fn () => $this->service()->reorder($this->meeting, [$b->id, $a->id], $version, $this->secretary));
+        $this->assertRefused($message, fn () => $this->service()->publish($this->meeting, $version, $this->secretary));
+
+        $this->assertSame(AgendaItemStatus::Proposed, $p->fresh()->status);
+        $this->assertSame([1, 2], [$a->fresh()->position, $b->fresh()->position]);
+        $this->assertSame(AgendaItemStatus::Accepted, $a->fresh()->status);
+        $this->assertSame($version, $this->version());
+        $this->assertSame(0, $this->meeting->fresh()->agenda_version);
+        $this->assertDatabaseCount('core.osc_agenda_versions', 0);
+    }
+
+    public function test_in_progress_meeting_still_allows_accept(): void
+    {
+        $item = $this->propose('A');
+        $this->meeting->update(['status' => MeetingStatus::InProgress]);
+
+        $this->assertSame(AgendaItemStatus::Accepted, $this->service()->accept($item, $item->row_version, $this->secretary)->status);
     }
 }
