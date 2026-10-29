@@ -28,6 +28,10 @@ class LegacyImportService
 
     public const SKIP_OUTSIDE = 'Dilangkau: di luar kawasan';
 
+    public const SKIP_MISMATCH = 'Dilangkau: kedudukan tidak sepadan';
+
+    public const SKIP_SHARED = 'Dilangkau: fail dikongsi';
+
     public const SKIP_BROKEN = 'Dilangkau: fail rosak';
 
     public function __construct(private readonly LayerReplicationService $replication) {}
@@ -79,10 +83,12 @@ class LegacyImportService
         $withPoint = (int) DB::table('core.osc_legacy_papers')->whereNotNull('geom')->count();
 
         return ['total' => $total, 'with_point' => $withPoint, 'no_xy' => $total - $withPoint];
+
     }
 
     /**
-     * Places legacy layout plans from $dir using their world files.
+     * Places legacy layout plans from $dir using their world files. A rerun converges: papers whose plan no
+     * longer passes the guards lose their imported placement (the stored file is kept).
      *
      * @return array<string, int> counts per outcome (placed, then one per skip reason)
      */
@@ -99,76 +105,135 @@ class LegacyImportService
             self::SKIP_NO_WORLD => 0,
             self::SKIP_TIFF => 0,
             self::SKIP_OUTSIDE => 0,
+            self::SKIP_MISMATCH => 0,
+            self::SKIP_SHARED => 0,
             self::SKIP_BROKEN => 0,
         ];
 
+        $index = $this->directoryIndex($dir);
         $papers = DB::table('core.osc_legacy_papers')
             ->whereNotNull('plan_file')
             ->orderBy('id')
             ->get(['id', 'plan_file', DB::raw('geom IS NOT NULL AS has_point')]);
 
+        // Pass 1: resolve each paper to one image file and its corners.
+        $resolved = [];
+        $claims = [];
+        $unplaced = [];
         foreach ($papers as $paper) {
-            $counts[$this->placeOne((int) $paper->id, (string) $paper->plan_file, (bool) $paper->has_point, $dir, $srid)]++;
+            $result = $this->resolve((string) $paper->plan_file, (bool) $paper->has_point, $index, $srid);
+            if (is_string($result)) {
+                $unplaced[(int) $paper->id] = $result;
+
+                continue;
+            }
+            $resolved[(int) $paper->id] = $result;
+            $claims[strtolower($result['file'])][] = (int) $paper->id;
+        }
+
+        // Pass 2: ambiguity and containment guards, then placement.
+        foreach ($resolved as $id => $info) {
+            if (count($claims[strtolower($info['file'])]) > 1) {
+                $unplaced[$id] = self::SKIP_SHARED;
+
+                continue;
+            }
+            $outcome = $this->place($id, $info, $srid);
+            if ($outcome !== self::PLACED) {
+                $unplaced[$id] = $outcome;
+            }
+        }
+
+        foreach ($papers as $paper) {
+            $counts[$unplaced[(int) $paper->id] ?? self::PLACED]++;
+        }
+
+        if ($unplaced !== []) {
+            // Imported placements only; rows a user placed by hand (placed_by set) are never touched.
+            DB::table('core.osc_layout_images')
+                ->where('owner_type', 'legacy')
+                ->whereNull('placed_by')
+                ->whereIn('owner_id', array_map('strval', array_keys($unplaced)))
+                ->delete();
         }
 
         return $counts;
     }
 
-    private function placeOne(int $id, string $planFile, bool $hasPoint, string $dir, int $srid): string
+    /** @return array<string, string> lower-cased basename => actual filename; key "" holds the directory */
+    private function directoryIndex(string $dir): array
+    {
+        $index = [];
+        foreach (@scandir($dir) ?: [] as $entry) {
+            if ($entry !== '.' && $entry !== '..') {
+                $index[strtolower($entry)] ??= $entry;
+            }
+        }
+        $index[''] = $dir;
+
+        return $index;
+    }
+
+    private function path(array $index, string $actual): string
+    {
+        return rtrim($index[''], '\\/').DIRECTORY_SEPARATOR.$actual;
+    }
+
+    /**
+     * @param  array<string, string>  $index
+     * @return array{file: string, wkt: string, width: int, height: int, mime: string}|string a skip reason on failure
+     */
+    private function resolve(string $planFile, bool $hasPoint, array $index, int $srid): array|string
     {
         if (! $hasPoint) {
             return self::SKIP_NO_XY;
         }
 
         $name = basename(str_replace('\\', '/', $planFile));
-        $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
-        if (in_array($ext, ['tif', 'tiff'], true)) {
+        if (in_array(strtolower(pathinfo($name, PATHINFO_EXTENSION)), ['tif', 'tiff'], true)) {
             return self::SKIP_TIFF;
         }
 
-        // Most MJKP plan_ names are "<file ref>_<scan>.jpg" and only the scan part carries a world file, so the
-        // part after the last underscore is tried when the full name has none.
-        $candidates = [$name];
-        if (($pos = strrpos($name, '_')) !== false && $pos < strlen($name) - 1) {
-            $candidates[] = substr($name, $pos + 1);
+        // Most MJKP plan_ names are "<file ref>_<scan>.jpg" and only the scan part carries a world file. The
+        // part after the last underscore is used only when the full name does not exist.
+        $actual = $index[strtolower($name)] ?? null;
+        if ($actual === null && ($pos = strrpos($name, '_')) !== false && $pos < strlen($name) - 1) {
+            $actual = $index[strtolower(substr($name, $pos + 1))] ?? null;
         }
-
-        $found = false;
-        $file = null;
-        $corners = null;
-        foreach ($candidates as $candidate) {
-            $path = rtrim($dir, '\/').DIRECTORY_SEPARATOR.$candidate;
-            if (! is_file($path)) {
-                continue;
-            }
-            $found = true;
-            $result = $this->cornersFor($path, $srid);
-            if ($result === false) {
-                return self::SKIP_BROKEN;
-            }
-            if ($result !== null) {
-                $file = $path;
-                $corners = $result;
-                break;
-            }
-        }
-        if (! $found) {
+        if ($actual === null) {
             return self::SKIP_NO_FILE;
         }
-        if ($corners === null) {
+
+        $file = $this->path($index, $actual);
+        $result = $this->cornersFor($file, $srid, $index);
+        if ($result === null) {
             return self::SKIP_NO_WORLD;
         }
-        $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+        if ($result === false) {
+            return self::SKIP_BROKEN;
+        }
 
+        return ['file' => $file] + $result;
+    }
+
+    private function place(int $id, array $info, int $srid): string
+    {
         $row = DB::selectOne(
-            'SELECT ST_AsText(c) AS wkt, ST_Intersects(c, ST_MakeEnvelope(?, ?, ?, ?, 4326)) AS inside
+            'SELECT ST_AsText(c) AS wkt,
+                    ST_Intersects(c, ST_MakeEnvelope(?, ?, ?, ?, 4326)) AS inside,
+                    ST_DWithin(c::geography, (SELECT geom FROM core.osc_legacy_papers WHERE id = ?)::geography, 100) AS near
              FROM (SELECT ST_Transform(ST_GeomFromText(?, ?), 4326) AS c) t',
-            [...config('gis.region_bbox'), $corners['wkt'], $srid],
+            [...config('gis.region_bbox'), $id, $info['wkt'], $srid],
         );
         if (! $row->inside) {
             return self::SKIP_OUTSIDE;
         }
+        if (! $row->near) {
+            return self::SKIP_MISMATCH;
+        }
 
+        $file = $info['file'];
+        $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
         $sha = hash_file('sha256', $file);
         $path = 'osc/layouts/legacy/'.$sha.'.'.($ext === 'jpeg' ? 'jpg' : $ext);
         $disk = Storage::disk('local');
@@ -189,7 +254,7 @@ class LegacyImportService
             DB::insert(
                 "INSERT INTO core.osc_layout_images (id, owner_type, owner_id, path, mime_type, width, height, sha256, corners, source_srid, row_version, created_at, updated_at)
                  VALUES (?, 'legacy', ?, ?, ?, ?, ?, ?, ST_GeomFromText(?, 4326), ?, 1, now(), now())",
-                [(string) Str::ulid(), (string) $id, $path, $corners['mime'], $corners['width'], $corners['height'], $sha, $row->wkt, $srid],
+                [(string) Str::ulid(), (string) $id, $path, $info['mime'], $info['width'], $info['height'], $sha, $row->wkt, $srid],
             );
         } else {
             $changed = $existing->sha256 !== $sha || $existing->wkt !== $row->wkt;
@@ -198,7 +263,7 @@ class LegacyImportService
                  SET path = ?, mime_type = ?, width = ?, height = ?, sha256 = ?, corners = ST_GeomFromText(?, 4326), source_srid = ?,
                      row_version = row_version + ?, updated_at = now()
                  WHERE id = ?',
-                [$path, $corners['mime'], $corners['width'], $corners['height'], $sha, $row->wkt, $srid, $changed ? 1 : 0, $existing->id],
+                [$path, $info['mime'], $info['width'], $info['height'], $sha, $row->wkt, $srid, $changed ? 1 : 0, $existing->id],
             );
         }
 
@@ -207,11 +272,13 @@ class LegacyImportService
 
     /**
      * Reads the image header and world file and returns the corner polygon (WKT in $srid), or null when no
-     * world file exists, or false when the image or world file cannot be read.
+     * world file exists, or false when the image or world file cannot be read. With a directory $index the
+     * world file is found case-insensitively without touching the file system again.
      *
+     * @param  array<string, string>|null  $index
      * @return array{wkt: string, width: int, height: int, mime: string}|null|false
      */
-    public function cornersFor(string $imageFile, int $srid): array|null|false
+    public function cornersFor(string $imageFile, int $srid, ?array $index = null): array|null|false
     {
         $ext = strtolower(pathinfo($imageFile, PATHINFO_EXTENSION));
         $worldExt = match ($ext) {
@@ -224,7 +291,12 @@ class LegacyImportService
         }
 
         $base = substr($imageFile, 0, -strlen($ext));
-        $world = collect([$worldExt, strtoupper($worldExt)])->map(fn (string $e): string => $base.$e)->first(fn (string $p): bool => is_file($p));
+        if ($index !== null) {
+            $actual = $index[strtolower(basename($base).$worldExt)] ?? null;
+            $world = $actual === null ? null : $this->path($index, $actual);
+        } else {
+            $world = collect([$worldExt, strtoupper($worldExt)])->map(fn (string $e): string => $base.$e)->first(fn (string $p): bool => is_file($p));
+        }
         if ($world === null) {
             return null;
         }

@@ -7,6 +7,7 @@ namespace Tests\Feature\Osc;
 use App\Models\Gis\GisLayer;
 use App\Models\Osc\LayoutImage;
 use App\Models\Osc\LegacyPaper;
+use App\Services\Osc\LegacyImportService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -42,6 +43,10 @@ final class LegacyImportTest extends TestCase
     protected function tearDown(): void
     {
         parent::tearDown();
+        foreach ($this->tmpDirs as $d) {
+            array_map('unlink', glob($d.DIRECTORY_SEPARATOR.'*') ?: []);
+            @rmdir($d);
+        }
         $this->dropCommittedStagingTables();
     }
 
@@ -74,7 +79,7 @@ final class LegacyImportTest extends TestCase
         $this->assertSame('t1.jpg', $paper->plan_file);
         $point = DB::selectOne('SELECT ST_SRID(geom) AS s, ST_X(geom) AS x, ST_Y(geom) AS y FROM core.osc_legacy_papers WHERE id = 101');
         $this->assertSame(4326, $point->s);
-        $this->assertEqualsWithDelta(100.40, $point->x, 1e-6);
+        $this->assertEqualsWithDelta(100.46021, $point->x, 1e-6);
         // The point without usable XY keeps its record but has no geometry.
         $this->assertNull(DB::selectOne('SELECT geom FROM core.osc_legacy_papers WHERE id = 105')->geom);
 
@@ -97,6 +102,9 @@ final class LegacyImportTest extends TestCase
                 ['Dilangkau: tiada world file', 1],
                 ['Dilangkau: format TIFF belum disokong', 1],
                 ['Dilangkau: di luar kawasan', 0],
+                ['Dilangkau: kedudukan tidak sepadan', 0],
+                ['Dilangkau: fail dikongsi', 0],
+                ['Dilangkau: fail rosak', 0],
             ])
             ->assertSuccessful();
 
@@ -121,5 +129,97 @@ final class LegacyImportTest extends TestCase
 
         $this->artisan('osc:import-legacy', ['--images' => true, '--dir' => $this->dir()])->assertSuccessful();
         $this->assertSame(1, LayoutImage::query()->count());
+    }
+
+    /** Builds a temp plan folder: name => fixture file to copy, or raw content when not a fixture name. */
+    private function plans(array $files): string
+    {
+        $dir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'plans_'.bin2hex(random_bytes(4));
+        mkdir($dir);
+        foreach ($files as $name => $source) {
+            $fixture = $this->dir().DIRECTORY_SEPARATOR.$source;
+            file_put_contents($dir.DIRECTORY_SEPARATOR.$name, is_file($fixture) ? file_get_contents($fixture) : $source);
+        }
+        $this->tmpDirs[] = $dir;
+
+        return $dir;
+    }
+
+    private array $tmpDirs = [];
+
+    /** @return array<string, int> */
+    private function runImages(string $dir, array $plan): array
+    {
+        $this->artisan('osc:import-legacy', ['--points' => true])->assertSuccessful();
+        DB::table('core.osc_legacy_papers')->update(['plan_file' => null]);
+        foreach ($plan as $id => $file) {
+            DB::table('core.osc_legacy_papers')->where('id', $id)->update(['plan_file' => $file]);
+        }
+
+        return app(LegacyImportService::class)->importImages($dir, 990001);
+    }
+
+    public function test_suffix_fallback_places_image_only_when_full_name_is_absent(): void
+    {
+        $dir = $this->plans(['t1.jpg' => 't1.jpg', 't1.jgw' => 't1.jgw']);
+        $counts = $this->runImages($dir, [101 => 'REF@1_t1.jpg']);
+
+        $this->assertSame(1, $counts['Diletakkan']);
+        $this->assertSame(1, LayoutImage::query()->where('owner_id', '101')->count());
+
+        // The full-name file exists but has no world file: no substitution.
+        LayoutImage::query()->delete();
+        $dir = $this->plans(['t1.jpg' => 't1.jpg', 't1.jgw' => 't1.jgw', 'REF@1_t1.jpg' => 't1.jpg']);
+        $counts = app(LegacyImportService::class)->importImages($dir, 990001);
+        $this->assertSame(0, $counts['Diletakkan']);
+        $this->assertSame(1, $counts['Dilangkau: tiada world file']);
+        $this->assertSame(0, LayoutImage::query()->count());
+    }
+
+    public function test_file_claimed_by_two_papers_is_placed_for_neither(): void
+    {
+        $dir = $this->plans(['gen.jpg' => 't1.jpg', 'gen.jgw' => 't1.jgw']);
+        $counts = $this->runImages($dir, [101 => 'A_gen.jpg', 102 => 'B_gen.jpg']);
+
+        $this->assertSame(2, $counts['Dilangkau: fail dikongsi']);
+        $this->assertSame(0, LayoutImage::query()->count());
+    }
+
+    public function test_placement_far_from_the_papers_point_is_skipped(): void
+    {
+        $dir = $this->plans(['t1.jpg' => 't1.jpg', 't1.jgw' => 't1.jgw']);
+        $this->artisan('osc:import-legacy', ['--points' => true])->assertSuccessful();
+        DB::table('core.osc_legacy_papers')->update(['plan_file' => null]);
+        DB::table('core.osc_legacy_papers')->where('id', 101)->update(['plan_file' => 't1.jpg']);
+        $service = app(LegacyImportService::class);
+
+        $this->assertSame(1, $service->importImages($dir, 990001)['Diletakkan']);
+        $this->assertSame(1, LayoutImage::query()->count());
+        $path = LayoutImage::query()->first()->path;
+
+        // Point about 150 m away: a rerun converges by removing the row and keeping the stored file.
+        DB::statement('UPDATE core.osc_legacy_papers SET geom = ST_SetSRID(ST_MakePoint(100.46021 + 0.0014, 5.33736), 4326) WHERE id = 101');
+        $counts = $service->importImages($dir, 990001);
+
+        $this->assertSame(1, $counts['Dilangkau: kedudukan tidak sepadan']);
+        $this->assertSame(0, LayoutImage::query()->count());
+        Storage::disk('local')->assertExists($path);
+    }
+
+    public function test_upper_case_names_resolve(): void
+    {
+        $dir = $this->plans(['T1.JPG' => 't1.jpg', 'T1.JGW' => 't1.jgw']);
+        $counts = $this->runImages($dir, [101 => 't1.jpg']);
+
+        $this->assertSame(1, $counts['Diletakkan']);
+    }
+
+    public function test_unreadable_image_is_counted_as_broken(): void
+    {
+        $dir = $this->plans(['t1.jpg' => 'not an image', 't1.jgw' => 't1.jgw']);
+        $counts = $this->runImages($dir, [101 => 't1.jpg']);
+
+        $this->assertSame(1, $counts['Dilangkau: fail rosak']);
+        $this->assertSame(0, LayoutImage::query()->count());
     }
 }
