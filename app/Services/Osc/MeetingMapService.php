@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Osc;
 
+use App\Enums\Osc\AgendaItemStatus;
 use App\Models\Gis\GisLayer;
 use App\Models\Osc\AgendaItem;
 use App\Models\Osc\Meeting;
@@ -11,8 +12,9 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Builds the GeoJSON FeatureCollection shown on the meeting map: agenda items the user may see, their earlier
- * tablings, and (for users with the eOSC+ view grant) past decisions within 500 m.
+ * Builds the GeoJSON FeatureCollection shown on the meeting map: agenda items the user may see (never returned ones;
+ * items not yet accepted carry a BM status_label), their earlier tablings, and (for users with the eOSC+ view grant)
+ * past decisions within 500 m.
  */
 final class MeetingMapService
 {
@@ -39,13 +41,20 @@ final class MeetingMapService
         $layouts = $this->layouts('agenda_item', $items->pluck('id')->all());
         foreach ($items as $item) {
             $item->setRelation('meeting', $meeting);
-            if (! OscAccess::canViewItem($user, $item)) {
+            // Returned items have left the agenda; they are not shown at all.
+            if ($item->status === AgendaItemStatus::Returned || ! OscAccess::canViewItem($user, $item)) {
                 continue;
             }
 
             [$geometry, $source] = $this->resolveGeometry($item);
+            if ($geometry === null && isset($layouts[$item->id])) {
+                // Nothing else locates the item, but its placed layout plan does: use the plan's footprint.
+                $corners = $layouts[$item->id]['layout_corners'];
+                [$geometry, $source] = [['type' => 'Polygon', 'coordinates' => [[...$corners, $corners[0]]]], 'layout'];
+            }
             if ($geometry === null) {
-                $unmapped[] = ['id' => $item->id, 'title' => $item->title];
+                $unmapped[] = ['id' => $item->id, 'title' => $item->title]
+                    + ($item->status === AgendaItemStatus::Accepted ? [] : ['status_label' => $item->status->label()]);
             } else {
                 $geometries[] = $geometry;
                 $features[] = $this->feature($geometry, [
@@ -61,7 +70,7 @@ final class MeetingMapService
                     'layout_url' => $layouts[$item->id]['layout_url'] ?? null,
                     'layout_corners' => $layouts[$item->id]['layout_corners'] ?? null,
                     'geometry_source' => $source,
-                ]);
+                ] + ($item->status === AgendaItemStatus::Accepted ? [] : ['status_label' => $item->status->label()]));
             }
 
             foreach ($this->earlierTablings($item, $user) as $earlier) {

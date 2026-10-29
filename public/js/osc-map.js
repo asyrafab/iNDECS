@@ -48,8 +48,9 @@
     function style(feature) {
         const kind = feature.get('kind');
         const selected = feature.get('selected') === true;
+        const muted = kind === 'item' && Boolean(feature.get('status_label')); // not yet accepted into the agenda
         const type = feature.getGeometry().getType();
-        const key = kind + type + selected;
+        const key = kind + type + selected + muted;
         if (styleCache[key]) return styleCache[key];
         let s;
         if (kind === 'legacy') {
@@ -58,7 +59,9 @@
             s = new ol.style.Style({ stroke: new ol.style.Stroke({ color: palette.muted, width: 2, lineDash: [6, 4] }), fill: new ol.style.Fill({ color: palette.mutedFill }), image: new ol.style.Circle({ radius: 5, stroke: new ol.style.Stroke({ color: palette.muted, width: 2 }), fill: new ol.style.Fill({ color: palette.mutedFill }) }) });
         } else {
             const width = selected ? 4 : 2.5;
-            s = new ol.style.Style({ stroke: new ol.style.Stroke({ color: palette.accent, width: width }), fill: new ol.style.Fill({ color: palette.accentFill }), image: new ol.style.Circle({ radius: 6, stroke: new ol.style.Stroke({ color: palette.accent, width: width }), fill: new ol.style.Fill({ color: palette.accentFill }) }) });
+            const color = muted ? palette.muted : palette.accent;
+            const fill = muted ? palette.mutedFill : palette.accentFill;
+            s = new ol.style.Style({ stroke: new ol.style.Stroke({ color: color, width: width }), fill: new ol.style.Fill({ color: fill }), image: new ol.style.Circle({ radius: 6, stroke: new ol.style.Stroke({ color: color, width: width }), fill: new ol.style.Fill({ color: fill }) }) });
         }
         styleCache[key] = s;
         return s;
@@ -71,11 +74,14 @@
     gis.addLayer({ id: 'items', label: labels.application, layer: itemLayer, zIndex: 60 });
     gis.addLayer({ id: 'past', label: labels.earlier, layer: pastLayer, zIndex: 50 });
 
-    /* Layout plans: one image layer per positioned plan, shown together as "Pelan susun atur". */
+    /* Layout plans: one image layer per positioned plan, shown together as "Pelan susun atur". Past-decision (legacy)
+       plans can be many, so they render only from zoom 17, and every image is fetched the first time its layer renders
+       (in view, at a zoom where it is shown); agenda item plans render at every zoom. */
+    const LEGACY_LAYOUT_MIN_ZOOM = 17;
     const layoutGroup = new ol.layer.Group({ layers: [] });
     gis.addLayer({ id: 'layout', label: labels.layout, layer: layoutGroup, zIndex: 40 });
 
-    function layoutLayer(url, corners) {
+    function layoutLayer(url, corners, legacy) {
         const image = new Image();
         let source;
         const points = corners.map(c => ol.proj.fromLonLat(c)); // top-left, top-right, bottom-right, bottom-left
@@ -85,6 +91,7 @@
                 const canvas = document.createElement('canvas');
                 canvas.width = size[0];
                 canvas.height = size[1];
+                if (!image.getAttribute('src')) { image.src = url; return canvas; } // first render: start loading
                 if (!image.complete || !image.naturalWidth) return canvas;
                 const ctx = canvas.getContext('2d');
                 const scale = resolution / pixelRatio;
@@ -101,13 +108,13 @@
             ratio: 1,
         });
         image.addEventListener('load', () => source.changed());
-        const layer = new ol.layer.Image({ source: source, extent: extent });
+        // OpenLayers minZoom is exclusive; a hair below 17 shows legacy plans from zoom 17 inclusive.
+        const layer = new ol.layer.Image(Object.assign({ source: source, extent: extent }, legacy ? { minZoom: LEGACY_LAYOUT_MIN_ZOOM - 0.001 } : {}));
         image.addEventListener('error', () => {
             layer.setVisible(false);
             layoutGroup.getLayers().remove(layer);
             console.warn('Pelan susun atur tidak dapat dimuatkan.');
         });
-        image.src = url;
         gis.addSwipeLayer(layer);
         return layer;
     }
@@ -135,20 +142,38 @@
         if (newTab) { a.target = '_blank'; a.rel = 'noopener'; }
         return a;
     }
-    function showPopup(coordinate, feature, lotProps) {
+    function statusBadge(text) {
+        const badge = line(text, 'span');
+        badge.className = 'status-badge status-pending';
+        return badge;
+    }
+    /* Zone class from the whitelisted zoning attributes (config gis.layers.zoning.properties): main class, then the
+       detailed class with its code. */
+    function zoneLines(props) {
+        const lines = [];
+        if (props.gunatanah1) lines.push('Zon guna tanah: ' + props.gunatanah1);
+        const detail = [props.gunatanah3, props.kod_gtn ? '(' + props.kod_gtn + ')' : ''].filter(Boolean).join(' ');
+        if (detail) lines.push(detail);
+        return lines;
+    }
+    function showPopup(coordinate, feature, lotProps, zoneProps) {
         popupBody.replaceChildren();
         if (feature) {
             const p = feature.getProperties();
             popupBody.append(line(p.title || '', 'strong'));
+            if (p.kind === 'item' && p.status_label) popupBody.append(statusBadge(p.status_label));
             if (p.reference || p.rujukan) popupBody.append(line(p.reference || p.rujukan));
             if (p.purpose) popupBody.append(line(p.purpose));
             if (p.kind === 'legacy') {
                 if (p.decision) popupBody.append(line(p.decision));
                 if (p.year) popupBody.append(line(String(p.year)));
             }
-        } else if (lotProps) {
-            popupBody.append(line('Lot ' + (lotProps.lot || ''), 'strong'));
-            if (lotProps.mukim) popupBody.append(line(lotProps.mukim));
+        } else {
+            if (lotProps) {
+                popupBody.append(line('Lot ' + (lotProps.lot || ''), 'strong'));
+                if (lotProps.mukim) popupBody.append(line(lotProps.mukim));
+            }
+            if (zoneProps) zoneLines(zoneProps).forEach(text => popupBody.append(line(text)));
         }
         const links = document.createElement('div');
         links.className = 'map-popup-links';
@@ -188,6 +213,7 @@
             button.className = 'map-item-button';
             button.dataset.id = f.get('id');
             button.append(line(f.get('title') || '', 'strong'), line([f.get('reference'), f.get('purpose')].filter(Boolean).join(' · '), 'span'));
+            if (f.get('status_label')) { button.classList.add('map-item-muted'); button.append(statusBadge(f.get('status_label'))); }
             button.addEventListener('click', () => select(f.get('id'), true));
             li.append(button);
             listEl.append(li);
@@ -198,7 +224,7 @@
             unmappedEl.replaceChildren(line('Belum ada lokasi pada peta', 'strong'));
             const ul = document.createElement('ul');
             ul.className = 'map-item-list';
-            unmapped.forEach(u => ul.append(Object.assign(document.createElement('li'), { className: 'muted', textContent: u.title })));
+            unmapped.forEach(u => ul.append(Object.assign(document.createElement('li'), { className: 'muted', textContent: [u.title, u.status_label].filter(Boolean).join(' · ') })));
             unmappedEl.append(ul);
         }
     }
@@ -218,13 +244,15 @@
         if (map.getInteractions().getArray().some(i => i instanceof ol.interaction.Draw)) return;
         let feature = null;
         let lotProps = null;
+        let zoneProps = null;
         map.forEachFeatureAtPixel(event.pixel, (f, layer) => {
             if (layer === itemLayer || layer === pastLayer) { if (!feature) feature = f; return false; }
             if (!lotProps && layer && layer.get('referenceId') === 'lots') lotProps = f.getProperties();
+            if (!zoneProps && layer && layer.get('referenceId') === 'zoning') zoneProps = f.getProperties();
             return undefined;
         }, { hitTolerance: 4 });
         if (feature && feature.get('kind') === 'item') select(feature.get('id'), false);
-        showPopup(event.coordinate, feature, lotProps);
+        showPopup(event.coordinate, feature, lotProps, zoneProps);
     });
     map.on('pointermove', event => {
         if (event.dragging) return;
@@ -244,12 +272,12 @@
                     itemSource.addFeature(f);
                     items.push(f);
                     byId[f.get('id')] = f;
-                    const corners = f.get('layout_corners');
-                    if (f.get('layout_url') && Array.isArray(corners) && corners.length === 4) {
-                        layoutGroup.getLayers().push(layoutLayer(f.get('layout_url'), corners));
-                    }
                 } else {
                     pastSource.addFeature(f);
+                }
+                const corners = f.get('layout_corners');
+                if (f.get('layout_url') && Array.isArray(corners) && corners.length === 4) {
+                    layoutGroup.getLayers().push(layoutLayer(f.get('layout_url'), corners, kind === 'legacy'));
                 }
             });
             renderList(items, (collection.properties && collection.properties.unmapped) || []);

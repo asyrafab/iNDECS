@@ -159,6 +159,30 @@ final class MeetingMapTest extends TestCase
         $this->assertSame([$own->id], array_column(array_column($items, 'properties'), 'id'));
     }
 
+    public function test_returned_items_are_excluded_and_unaccepted_items_carry_a_status_label(): void
+    {
+        $accepted = $this->propose('Diterima');
+        $proposed = $this->propose('Dicadang');
+        $returned = $this->propose('Dipulang');
+        $unmappedProposed = $this->propose('TiadaLokasi');
+        $unmappedReturned = $this->propose('TiadaLokasiPulang');
+        foreach ([$accepted, $proposed, $returned] as $i => $item) {
+            $this->boundary($item, $this->square(100.40 + $i * 0.01, 5.40));
+        }
+        $this->accept($accepted);
+        foreach ([$returned, $unmappedReturned] as $item) {
+            app(AgendaService::class)->returnToDepartment($item->fresh(), $item->fresh()->row_version, 'Tidak lengkap', $this->secretary);
+        }
+
+        $json = $this->mapData($this->secretary)->assertOk()->json();
+        $byTitle = array_column(array_column($this->items($json), 'properties'), null, 'title');
+        $this->assertEqualsCanonicalizing(['Diterima', 'Dicadang'], array_keys($byTitle));
+        $this->assertArrayNotHasKey('status_label', $byTitle['Diterima']);
+        $this->assertSame('Dicadangkan', $byTitle['Dicadang']['status_label']);
+        $this->assertSame([['id' => $unmappedProposed->id, 'title' => 'TiadaLokasi', 'status_label' => 'Dicadangkan']], $json['properties']['unmapped']);
+        $this->assertNotContains($returned->id, array_column(array_column($json['features'], 'properties'), 'id'));
+    }
+
     public function test_geometry_falls_back_to_site_then_lots(): void
     {
         $layer = GisLayer::query()->updateOrCreate(['id' => 'lots'], [

@@ -10,6 +10,7 @@ use App\Models\Osc\AgendaItem;
 use App\Models\Osc\LayoutImage;
 use App\Models\User;
 use App\Services\Gis\AffinePlacement;
+use App\Services\Gis\JpegOrientation;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -162,6 +163,11 @@ final class LayoutImageService
         }
         if ($size[0] * $size[1] > self::MAX_PIXELS) {
             throw ValidationException::withMessages(['layout' => 'Imej terlalu besar (maksimum 36 juta piksel).']);
+        }
+        // Browsers rotate by EXIF orientation but the stored pixel size is raw; the placement would not match the preview.
+        $orientation = $mime === 'image/jpeg' ? JpegOrientation::read($realPath) : null;
+        if ($orientation !== null && $orientation !== 1) {
+            throw ValidationException::withMessages(['layout' => 'Imej mempunyai orientasi EXIF; simpan semula tanpa putaran.']);
         }
 
         return [$mime, $size[0], $size[1]];

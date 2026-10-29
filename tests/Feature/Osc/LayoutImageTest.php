@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Services\Osc\AgendaService;
 use App\Services\Osc\LayoutImageService;
 use App\Services\Osc\MeetingService;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -255,6 +256,28 @@ final class LayoutImageTest extends TestCase
         $this->assertEqualsWithDelta(5.4002, $props['layout_corners'][3][1], 0.0001);
     }
 
+    public function test_item_without_other_geometry_is_located_by_its_layout(): void
+    {
+        $this->place()->assertSessionHasNoErrors();
+
+        $json = $this->actingAs($this->secretary)->getJson(route('osc.meetings.map-data', $this->meeting))->assertOk()->json();
+        $feature = collect($json['features'])->firstWhere('properties.kind', 'item');
+        $this->assertNotNull($feature);
+        $this->assertSame('layout', $feature['properties']['geometry_source']);
+        $this->assertSame('Polygon', $feature['geometry']['type']);
+        $ring = $feature['geometry']['coordinates'][0];
+        $this->assertCount(5, $ring);
+        $this->assertSame($ring[0], $ring[4]);
+        $this->assertEqualsWithDelta(100.4, $ring[0][0], 0.0001);
+        $this->assertEqualsWithDelta(5.402, $ring[0][1], 0.0001);
+        $this->assertSame([], $json['properties']['unmapped']);
+
+        $this->giveItemBoundary(); // A drawn boundary still wins over the layout footprint.
+        $feature = collect($this->actingAs($this->secretary)->getJson(route('osc.meetings.map-data', $this->meeting))->json('features'))
+            ->firstWhere('properties.kind', 'item');
+        $this->assertSame('item', $feature['properties']['geometry_source']);
+    }
+
     private function legacyLayout(): LayoutImage
     {
         DB::insert(
@@ -291,6 +314,18 @@ final class LayoutImageTest extends TestCase
         $this->assertCount(4, $past['layout_corners']);
     }
 
+    public function test_an_owner_has_at_most_one_layout_row(): void
+    {
+        $this->legacyLayout();
+
+        $this->expectException(UniqueConstraintViolationException::class);
+        DB::insert(
+            "INSERT INTO core.osc_layout_images (id, owner_type, owner_id, path, mime_type, width, height, sha256, corners, row_version, created_at, updated_at)
+             VALUES (?, 'legacy', '77', 'osc/layouts/legacy/y.png', 'image/png', 400, 200, ?, ST_GeomFromText('POLYGON((100.4 5.402,100.4036 5.402,100.4036 5.4002,100.4 5.4002,100.4 5.402))', 4326), 1, now(), now())",
+            [(string) Str::ulid(), str_repeat('b', 64)],
+        );
+    }
+
     public function test_oversized_pixel_count_refused_and_nothing_stored(): void
     {
         $chunk = fn (string $type, string $data): string => pack('N', strlen($data)).$type.$data.pack('N', crc32($type.$data));
@@ -317,9 +352,46 @@ final class LayoutImageTest extends TestCase
         $this->assertSame(1, AuditLog::query()->where('event', 'osc_layout_placed')->count());
     }
 
+    private const JPEG_1X1 = '/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/yQALCAABAAEBAREA/8wABgAQEAX/2gAIAQEAAD8A0s8g/9k=';
+
+    /** The 1x1 JPEG with an APP1 Exif segment (IFD0 holding only Orientation) inserted after SOI. */
+    public static function jpegWithOrientation(int $orientation, bool $littleEndian = false): string
+    {
+        $s = fn (int $v): string => pack($littleEndian ? 'v' : 'n', $v);
+        $l = fn (int $v): string => pack($littleEndian ? 'V' : 'N', $v);
+        $tiff = ($littleEndian ? 'II' : 'MM').$s(42).$l(8).$s(1).$s(0x0112).$s(3).$l(1).$s($orientation).$s(0).$l(0);
+        $payload = "Exif\0\0".$tiff;
+        $jpeg = base64_decode(self::JPEG_1X1);
+
+        return substr($jpeg, 0, 2)."\xFF\xE1".pack('n', strlen($payload) + 2).$payload.substr($jpeg, 2);
+    }
+
+    private function placeJpeg(string $bytes)
+    {
+        return $this->place(null, ['layout' => UploadedFile::fake()->createWithContent('p.jpg', $bytes), 'control_points' => [
+            ['pixel' => [0, 0], 'map' => [100.4000, 5.4020]],
+            ['pixel' => [1, 0], 'map' => [100.4036, 5.4020]],
+            ['pixel' => [0, 1], 'map' => [100.4000, 5.4002]],
+        ]]);
+    }
+
+    public function test_jpeg_with_rotating_exif_orientation_is_refused(): void
+    {
+        $this->assertSame([1, 1], array_slice(getimagesizefromstring(self::jpegWithOrientation(6)), 0, 2)); // still a valid JPEG
+
+        $this->placeJpeg(self::jpegWithOrientation(6))
+            ->assertSessionHasErrors(['layout' => 'Imej mempunyai orientasi EXIF; simpan semula tanpa putaran.']);
+        $this->placeJpeg(self::jpegWithOrientation(3, true))
+            ->assertSessionHasErrors(['layout' => 'Imej mempunyai orientasi EXIF; simpan semula tanpa putaran.']);
+        $this->assertDatabaseCount('core.osc_layout_images', 0);
+
+        $this->placeJpeg(self::jpegWithOrientation(1))->assertSessionHasNoErrors();
+        $this->assertSame([1, 1], [$this->itemLayout()->width, $this->itemLayout()->height]);
+    }
+
     public function test_jpeg_upload_is_placed(): void
     {
-        $jpeg = base64_decode('/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/yQALCAABAAEBAREA/8wABgAQEAX/2gAIAQEAAD8A0s8g/9k=');
+        $jpeg = base64_decode(self::JPEG_1X1);
         $this->place(null, ['layout' => UploadedFile::fake()->createWithContent('p.jpg', $jpeg), 'control_points' => [
             ['pixel' => [0, 0], 'map' => [100.4000, 5.4020]],
             ['pixel' => [1, 0], 'map' => [100.4036, 5.4020]],
