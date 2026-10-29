@@ -7,10 +7,12 @@ namespace Tests\Feature\Osc;
 use App\Models\Gis\GisLayer;
 use App\Models\Osc\LayoutImage;
 use App\Models\Osc\LegacyPaper;
+use App\Models\User;
 use App\Services\Osc\LegacyImportService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 final class LegacyImportTest extends TestCase
@@ -105,6 +107,7 @@ final class LegacyImportTest extends TestCase
                 ['Dilangkau: kedudukan tidak sepadan', 0],
                 ['Dilangkau: fail dikongsi', 0],
                 ['Dilangkau: fail rosak', 0],
+                ['Dilangkau: diletak secara manual', 0],
             ])
             ->assertSuccessful();
 
@@ -278,5 +281,118 @@ final class LegacyImportTest extends TestCase
 
         $this->assertSame(1, $counts['Dilangkau: fail rosak']);
         $this->assertSame(0, LayoutImage::query()->count());
+    }
+
+    /** Inserts a layout row directly; corners are a small square around the fixture point. */
+    private function layoutRow(string $ownerType, string $ownerId, ?int $placedBy = null): string
+    {
+        $id = (string) Str::ulid();
+        DB::insert(
+            "INSERT INTO core.osc_layout_images (id, owner_type, owner_id, path, mime_type, width, height, sha256, corners, source_srid, placed_by, row_version, created_at, updated_at)
+             VALUES (?, ?, ?, 'osc/layouts/manual/x.jpg', 'image/jpeg', 10, 10, ?, ST_MakeEnvelope(100.46, 5.337, 100.461, 5.338, 4326), NULL, ?, 1, now(), now())",
+            [$id, $ownerType, $ownerId, str_repeat('a', 64), $placedBy],
+        );
+
+        return $id;
+    }
+
+    /** @return array<int, object> */
+    private function layoutSnapshot(): array
+    {
+        return DB::select('SELECT id, owner_type, owner_id, sha256, row_version, placed_by, ST_AsText(corners) AS wkt FROM core.osc_layout_images ORDER BY id');
+    }
+
+    private function placeT1(string $dir): void
+    {
+        $this->runImages($dir, [101 => 't1.jpg']);
+        $this->assertSame(1, LayoutImage::query()->where('owner_type', 'legacy')->count());
+    }
+
+    public function test_missing_directory_aborts_before_any_write(): void
+    {
+        $dir = $this->plans(['t1.jpg' => 't1.jpg', 't1.jgw' => 't1.jgw']);
+        $this->placeT1($dir);
+        $this->layoutRow('agenda_item', 'A1');
+        $before = $this->layoutSnapshot();
+        DB::table('core.osc_legacy_papers')->where('id', 101)->update(['title' => 'Lama']);
+        $missing = $dir.DIRECTORY_SEPARATOR.'tiada';
+
+        $this->artisan('osc:import-legacy', ['--points' => true, '--images' => true, '--dir' => $missing])
+            ->expectsOutputToContain('Direktori pelan tidak ditemui: '.$missing)
+            ->assertExitCode(1);
+
+        $this->assertEquals($before, $this->layoutSnapshot());
+        // Points were not imported either: the check runs before any write.
+        $this->assertSame('Lama', LegacyPaper::query()->find(101)->title);
+    }
+
+    public function test_empty_directory_aborts_before_any_write(): void
+    {
+        $dir = $this->plans(['t1.jpg' => 't1.jpg', 't1.jgw' => 't1.jgw']);
+        $this->placeT1($dir);
+        $before = $this->layoutSnapshot();
+        $empty = $this->plans([]);
+
+        $this->artisan('osc:import-legacy', ['--images' => true, '--dir' => $empty])
+            ->expectsOutputToContain('Direktori pelan kosong: '.$empty)
+            ->assertExitCode(1);
+
+        $this->assertEquals($before, $this->layoutSnapshot());
+    }
+
+    public function test_placement_survives_a_rerun_while_its_file_is_missing(): void
+    {
+        $dir = $this->plans(['t1.jpg' => 't1.jpg', 't1.jgw' => 't1.jgw', 'other.txt' => 'x']);
+        $this->placeT1($dir);
+        $before = $this->layoutSnapshot();
+        unlink($dir.DIRECTORY_SEPARATOR.'t1.jpg');
+
+        $counts = app(LegacyImportService::class)->importImages($dir, 990001);
+
+        $this->assertSame(1, $counts['Dilangkau: tiada fail']);
+        $this->assertEquals($before, $this->layoutSnapshot());
+
+        // A point that disappears is also not a reason to drop the placement.
+        DB::statement('UPDATE core.osc_legacy_papers SET geom = NULL WHERE id = 101');
+        $counts = app(LegacyImportService::class)->importImages($dir, 990001);
+        $this->assertSame(1, $counts['Dilangkau: tiada XY']);
+        $this->assertEquals($before, $this->layoutSnapshot());
+    }
+
+    public function test_hand_placed_row_is_never_overwritten_or_removed(): void
+    {
+        $user = User::factory()->create();
+        $dir = $this->plans(['t1.jpg' => 't1.jpg', 't1.jgw' => 't1.jgw']);
+        $this->artisan('osc:import-legacy', ['--points' => true])->assertSuccessful();
+        $this->layoutRow('legacy', '101', $user->id);
+        $before = $this->layoutSnapshot();
+
+        $counts = $this->runImages($dir, [101 => 't1.jpg']);
+
+        $this->assertSame(0, $counts['Diletakkan']);
+        $this->assertSame(1, $counts['Dilangkau: diletak secara manual']);
+        $this->assertEquals($before, $this->layoutSnapshot());
+
+        // A content failure (point 150 m away) and cleared names leave it alone too.
+        DB::statement('UPDATE core.osc_legacy_papers SET geom = ST_SetSRID(ST_MakePoint(100.46021 + 0.0014, 5.33736), 4326) WHERE id = 101');
+        $this->assertSame(1, app(LegacyImportService::class)->importImages($dir, 990001)['Dilangkau: diletak secara manual']);
+        DB::table('core.osc_legacy_papers')->where('id', 101)->update(['plan_file' => null]);
+        app(LegacyImportService::class)->importImages($dir, 990001);
+        $this->assertEquals($before, $this->layoutSnapshot());
+    }
+
+    public function test_paper_whose_names_were_cleared_loses_its_imported_row_only(): void
+    {
+        $dir = $this->plans(['t1.jpg' => 't1.jpg', 't1.jgw' => 't1.jgw']);
+        $this->placeT1($dir);
+        $this->layoutRow('agenda_item', '101');
+        $this->layoutRow('application', '101');
+        $others = DB::select("SELECT id, row_version FROM core.osc_layout_images WHERE owner_type <> 'legacy' ORDER BY id");
+
+        DB::table('core.osc_legacy_papers')->where('id', 101)->update(['plan_file' => null, 'pelan_tapak_scan' => null]);
+        app(LegacyImportService::class)->importImages($dir, 990001);
+
+        $this->assertSame(0, LayoutImage::query()->where('owner_type', 'legacy')->count());
+        $this->assertEquals($others, DB::select("SELECT id, row_version FROM core.osc_layout_images WHERE owner_type <> 'legacy' ORDER BY id"));
     }
 }

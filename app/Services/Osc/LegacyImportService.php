@@ -34,6 +34,14 @@ class LegacyImportService
 
     public const SKIP_BROKEN = 'Dilangkau: fail rosak';
 
+    public const SKIP_MANUAL = 'Dilangkau: diletak secara manual';
+
+    /**
+     * Reasons about the plan's content: an imported row for such a paper is removed so reruns converge. Other
+     * reasons (a missing file or point) may be transient, so an existing placement is kept.
+     */
+    public const CONVERGE_REASONS = [self::SKIP_MISMATCH, self::SKIP_SHARED, self::SKIP_OUTSIDE, self::SKIP_NO_WORLD, self::SKIP_TIFF, self::SKIP_BROKEN];
+
     public function __construct(private readonly LayerReplicationService $replication) {}
 
     /**
@@ -88,8 +96,38 @@ class LegacyImportService
     }
 
     /**
-     * Places legacy layout plans from $dir using their world files. A rerun converges: papers whose plan no
-     * longer passes the guards lose their imported placement (the stored file is kept).
+     * Indexes the plan folder, refusing a folder that is missing, unreadable or empty so that a wrong or
+     * unmounted --dir can never be mistaken for "every file is gone".
+     *
+     * @return array<string, string> lower-cased basename => actual filename; key "" holds the directory
+     *
+     * @throws RuntimeException
+     */
+    public function planDirectoryIndex(string $dir): array
+    {
+        $entries = is_dir($dir) && is_readable($dir) ? @scandir($dir) : false;
+        if ($entries === false) {
+            throw new RuntimeException('Direktori pelan tidak ditemui: '.$dir);
+        }
+
+        $index = [];
+        foreach ($entries as $entry) {
+            if ($entry !== '.' && $entry !== '..') {
+                $index[strtolower($entry)] ??= $entry;
+            }
+        }
+        if ($index === []) {
+            throw new RuntimeException('Direktori pelan kosong: '.$dir);
+        }
+        $index[''] = $dir;
+
+        return $index;
+    }
+
+    /**
+     * Places legacy layout plans from $dir using their world files. A rerun converges: papers whose plan fails
+     * for a content reason, or that no longer name a plan, lose their imported placement (the stored file is
+     * kept). Rows placed by hand (placed_by set) are never modified or deleted.
      *
      * @return array<string, int> counts per outcome (placed, then one per skip reason)
      */
@@ -109,9 +147,16 @@ class LegacyImportService
             self::SKIP_MISMATCH => 0,
             self::SKIP_SHARED => 0,
             self::SKIP_BROKEN => 0,
+            self::SKIP_MANUAL => 0,
         ];
 
-        $index = $this->directoryIndex($dir);
+        $index = $this->planDirectoryIndex($dir);
+        $manual = DB::table('core.osc_layout_images')
+            ->where('owner_type', 'legacy')
+            ->whereNotNull('placed_by')
+            ->pluck('owner_id')
+            ->mapWithKeys(fn ($id): array => [(int) $id => true])
+            ->all();
         $papers = DB::table('core.osc_legacy_papers')
             ->where(fn ($q) => $q->whereNotNull('plan_file')->orWhereNotNull('pelan_tapak_scan'))
             ->orderBy('id')
@@ -158,10 +203,10 @@ class LegacyImportService
                 }
             }
             foreach ($checked as $id => $row) {
-                if ($reason === null) {
-                    $this->store($id, $resolved[$id], $srid, $row);
-                } else {
+                if ($reason !== null) {
                     $unplaced[$id] = self::SKIP_SHARED;
+                } elseif (! isset($manual[$id])) {
+                    $this->store($id, $resolved[$id], $srid, $row);
                 }
             }
             if ($reason === self::SKIP_SHARED) {
@@ -173,34 +218,33 @@ class LegacyImportService
             }
         }
 
+        $stale = [];
         foreach ($papers as $paper) {
-            $counts[$unplaced[(int) $paper->id] ?? self::PLACED]++;
+            $id = (int) $paper->id;
+            $outcome = isset($manual[$id]) ? self::SKIP_MANUAL : ($unplaced[$id] ?? self::PLACED);
+            $counts[$outcome]++;
+            if (in_array($outcome, self::CONVERGE_REASONS, true)) {
+                $stale[] = (string) $id;
+            }
         }
 
-        if ($unplaced !== []) {
-            // Imported placements only; rows a user placed by hand (placed_by set) are never touched.
+        // Imported placements only; rows a user placed by hand (placed_by set) are never touched.
+        foreach (array_chunk($stale, 1000) as $chunk) {
             DB::table('core.osc_layout_images')
                 ->where('owner_type', 'legacy')
                 ->whereNull('placed_by')
-                ->whereIn('owner_id', array_map('strval', array_keys($unplaced)))
+                ->whereIn('owner_id', $chunk)
                 ->delete();
         }
+        // Papers that no longer name any plan are no longer candidates: drop their imported rows.
+        DB::delete(
+            "DELETE FROM core.osc_layout_images i
+             USING core.osc_legacy_papers p
+             WHERE i.owner_type = 'legacy' AND i.placed_by IS NULL AND i.owner_id = p.id::text
+               AND p.plan_file IS NULL AND p.pelan_tapak_scan IS NULL",
+        );
 
         return $counts;
-    }
-
-    /** @return array<string, string> lower-cased basename => actual filename; key "" holds the directory */
-    private function directoryIndex(string $dir): array
-    {
-        $index = [];
-        foreach (@scandir($dir) ?: [] as $entry) {
-            if ($entry !== '.' && $entry !== '..') {
-                $index[strtolower($entry)] ??= $entry;
-            }
-        }
-        $index[''] = $dir;
-
-        return $index;
     }
 
     private function path(array $index, string $actual): string
@@ -292,10 +336,14 @@ class LegacyImportService
             }
         }
 
-        $existing = DB::selectOne(
-            "SELECT id, sha256, ST_AsText(corners) AS wkt FROM core.osc_layout_images WHERE owner_type = 'legacy' AND owner_id = ?",
+        $rows = DB::select(
+            "SELECT id, sha256, placed_by, ST_AsText(corners) AS wkt FROM core.osc_layout_images WHERE owner_type = 'legacy' AND owner_id = ?",
             [(string) $id],
         );
+        if (collect($rows)->contains(fn (object $r): bool => $r->placed_by !== null)) {
+            return; // a hand-placed row is never overwritten
+        }
+        $existing = $rows[0] ?? null;
         if ($existing === null) {
             DB::insert(
                 "INSERT INTO core.osc_layout_images (id, owner_type, owner_id, path, mime_type, width, height, sha256, corners, source_srid, row_version, created_at, updated_at)

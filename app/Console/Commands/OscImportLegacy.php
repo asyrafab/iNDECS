@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Services\Osc\LegacyImportService;
 use Illuminate\Console\Command;
+use RuntimeException;
 use Throwable;
 
 class OscImportLegacy extends Command
@@ -29,6 +30,17 @@ class OscImportLegacy extends Command
             $this->error('--srid mesti 990001 atau 990002.');
 
             return self::FAILURE;
+        }
+
+        if ($this->option('images')) {
+            // Checked before any write: a wrong or unmounted folder must not import points or remove placements.
+            try {
+                $service->planDirectoryIndex((string) $this->option('dir'));
+            } catch (RuntimeException $e) {
+                $this->error($e->getMessage());
+
+                return self::FAILURE;
+            }
         }
 
         try {
