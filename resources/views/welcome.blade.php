@@ -3,77 +3,75 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Kenali iNDECS, Sistem Bersepada Kawalan Pembangunan Majlis Bandaraya Seberang Perai. Akses akaun awam dan ruang kerja kakitangan MBSP.">
-    <title>iNDECS · Sistem Bersepada Kawalan Pembangunan</title>
+    <meta name="description" content="iNDECS — Portal Perkhidmatan Pembangunan Majlis Bandaraya Seberang Perai. Panduan urusan pembangunan dan akses akaun awam serta kakitangan.">
+    <title>iNDECS · Portal Perkhidmatan Pembangunan MBSP</title>
     <link rel="icon" href="{{ asset('img/indecs-mark.svg') }}" type="image/svg+xml">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <script src="{{ asset('js/theme.js') }}"></script>
+    <script src="{{ asset('js/landing.js') }}" defer></script>
     <link rel="stylesheet" href="{{ asset('css/indecs.css') }}">
 </head>
 <body class="landing-page">
     <a class="skip-link" href="#main-content">Langkau ke kandungan</a>
+    <div class="landing-introduction" aria-hidden="true"><div><x-mark class="mark-reversed mark-entry" /><strong>iNDECS</strong></div><p>Portal Perkhidmatan Pembangunan MBSP</p></div>
     <header class="public-header landing-header">
         <a href="{{ route('dashboard') }}" class="public-brand" aria-label="Laman utama iNDECS">
             <img src="{{ asset('img/mbsp.png') }}" alt="Majlis Bandaraya Seberang Perai" class="public-crest">
-            <span class="public-wordmark"><x-mark /><span>iNDECS<small>Kawalan Pembangunan</small></span></span>
+            <span class="public-wordmark"><x-mark class="mark-entry" /><span>iNDECS<small>Majlis Bandaraya Seberang Perai</small></span></span>
         </a>
         <nav class="landing-nav" aria-label="Navigasi utama">
-            <a href="#jabatan">Jabatan</a><a href="#panduan">Panduan akses</a><a href="#soalan">Soalan lazim</a>
+            <a href="#services">Perkhidmatan</a><a href="#tracker">Semak permohonan</a><a href="#panduan">Panduan</a><a href="#bantuan">Bantuan</a>
         </nav>
-        <div class="public-header-actions">@include('partials.theme-control')</div>
+        <div class="landing-account-actions"><a class="button button-secondary button-small" href="{{ route('portal.login') }}"><x-icon name="log-in" />Log masuk</a><a class="button button-primary button-small" href="{{ route('login') }}">Portal agensi <x-icon name="arrow-right" /></a></div>
     </header>
     <main id="main-content" tabindex="-1">
-        <section class="landing-hero landing-container" aria-labelledby="landing-title">
-            <div class="landing-intro">
-                <span class="eyebrow">Majlis Bandaraya Seberang Perai</span>
-                <h1 id="landing-title">Urus pembangunan.<br><span>Dengan lebih teratur.</span></h1>
-                <p class="landing-lead">iNDECS menghimpunkan urusan kawalan pembangunan MBSP dalam satu platform bersama.</p>
-                <p class="landing-description">Sistem Bersepada Kawalan Pembangunan menghubungkan rekod permohonan, dokumen dan semakan jabatan untuk menyokong urusan yang jelas dan boleh dijejaki.</p>
-                <div class="action-links">
-                    <a class="button button-primary button-large" href="{{ route('portal.login') }}">Akses portal awam <x-icon name="arrow-right" /></a>
-                    <a class="button button-secondary button-large" href="{{ route('login') }}"><x-icon name="log-in" />Kakitangan MBSP</a>
+        <section class="landing-hero" id="tracker" aria-labelledby="landing-title">
+            <svg class="landing-skyline" viewBox="0 0 1920 280" preserveAspectRatio="none" fill="none" aria-hidden="true" focusable="false"><path vector-effect="non-scaling-stroke" d="M0 250H60V210H90V175H125V230H145V140H185V110H205V140H220V250H240V160H275V200H300V90H320L325 55L330 90H345V250H360V180H395V130H430V165H450V250H475V120H510V195H535V80H555V65H575L580 35L585 65H600V150H630V220H655V140H690V175H720V105H755V250H780V160H820V120H850V190H880V70H910L925 95H950V180H985V250H1010V135H1045V90H1070L1075 45L1080 90H1100V155H1130V210H1160V125H1200V75H1225L1230 25L1235 75H1255V145H1290V250H1315V170H1350V115H1390V160H1420V85H1450L1470 110H1500V185H1530V250H1560V130H1600V65H1620L1625 30L1630 65H1650V120H1680V175H1715V140H1750V210H1785V155H1820V225H1860V250H1920" /></svg>
+            <div class="landing-container landing-hero-content">
+                <span class="eyebrow">Portal Perkhidmatan Pembangunan</span>
+                <h1 id="landing-title">Urusan Pembangunan Anda,<br>Dalam Satu Tempat</h1>
+                <p class="landing-lead">Kenali dan akses perkhidmatan pembangunan Majlis Bandaraya Seberang Perai dengan lebih mudah.</p>
+                <div class="landing-tracker" aria-describedby="tracking-note">
+                    <label for="tracking-reference"><x-icon name="search" />Semak status permohonan</label>
+                    <input id="tracking-reference" type="text" placeholder="PBK/2026/00042" disabled aria-describedby="tracking-note">
+                    <button class="button button-primary" type="button" disabled>Semak status</button>
                 </div>
-                <a class="text-link landing-register" href="{{ route('portal.register') }}">Pengguna baharu? Daftar akaun <x-icon name="arrow-up-right" /></a>
-                <div class="landing-signature"><x-mark class="mark-small" /><span>Satu rekod bersama. Semakan mengikut jabatan.</span></div>
-            </div>
-            <aside class="landing-access" aria-labelledby="access-title">
-                <div class="landing-access-heading"><span class="eyebrow">Mulakan di sini</span><h2 id="access-title">Pilih akses anda</h2><p>Ruang yang sesuai untuk setiap urusan.</p></div>
-                <a class="landing-access-link" href="{{ route('portal.login') }}"><span class="landing-icon"><x-icon name="folder-open" /></span><span><strong>Orang awam &amp; perunding</strong><small>Log masuk atau urus akaun awam anda.</small></span><x-icon name="arrow-up-right" /></a>
-                <a class="landing-access-link" href="{{ route('portal.email') }}"><span class="landing-icon"><x-icon name="file-text" /></span><span><strong>Akses melalui emel</strong><small>Terima pautan untuk masuk tanpa kata laluan.</small></span><x-icon name="arrow-up-right" /></a>
-                <a class="landing-access-link" href="{{ route('login') }}"><span class="landing-icon"><x-icon name="layout-dashboard" /></span><span><strong>Kakitangan MBSP</strong><small>Masuk ke ruang kerja jabatan yang dibenarkan.</small></span><x-icon name="arrow-up-right" /></a>
-                <div class="landing-access-note"><x-icon name="circle-alert" /><p>Akses akaun awam tersedia. Penghantaran permohonan, bayaran dan penjejakan awam belum dibuka.</p></div>
-            </aside>
-        </section>
-        <section class="landing-departments" id="jabatan" aria-labelledby="departments-title">
-            <div class="landing-container">
-                <div class="landing-section-heading"><div><span class="eyebrow">Kenali iNDECS</span><h2 id="departments-title">Empat jabatan. Satu platform.</h2></div><p>Permohonan mengikut bidang, dengan rekod dan dokumen yang tersusun.</p></div>
-                <div class="landing-department-grid">
-                    <article class="landing-department"><x-icon name="building-2" /><span class="status-badge status-info">Ruang kerja kakitangan</span><h3>iNDECS Bangunan</h3><p>Pelan bangunan, tambahan dan ubah suai kecil, bangunan sementara, permit serta struktur telekomunikasi.</p><span class="landing-codes">PB · PBK · PBS · PMT · TEL</span></article>
-                    <article class="landing-department"><x-icon name="map" /><span class="status-badge status-info">Ruang kerja kakitangan</span><h3>iNDECS Perancang</h3><p>Pendaftaran dan semakan kelengkapan permohonan kebenaran merancang.</p><span class="landing-codes">PKM</span></article>
-                    <article class="landing-department"><x-icon name="settings-2" /><span class="status-badge status-pending">Dalam perancangan</span><h3>iNDECS Kejuruteraan</h3><p>Urusan pelan kerja tanah dan pelan saliran dalam pengembangan platform seterusnya.</p><span class="landing-codes">PKT · PKP</span></article>
-                    <article class="landing-department"><x-icon name="map" /><span class="status-badge status-pending">Dalam perancangan</span><h3>iNDECS Landskap</h3><p>Urusan pelan landskap dan keperluan landskap pembangunan dalam pengembangan seterusnya.</p><span class="landing-codes">PL</span></article>
-                </div>
+                <p class="landing-tracking-note" id="tracking-note">Penjejakan status awam belum tersedia. Penghantaran permohonan dan bayaran awam belum dibuka.</p>
+                <a class="landing-hero-link" href="#services">Lihat semua perkhidmatan <x-icon name="arrow-right" /></a>
             </div>
         </section>
-        <section class="landing-container landing-guide" id="panduan" aria-labelledby="guide-title">
-            <div><span class="eyebrow">Panduan akses</span><h2 id="guide-title">Bersedia untuk bermula?</h2><p class="landing-description">Pilih laluan mengikut peranan anda. Akses jabatan untuk kakitangan tertakluk kepada kebenaran akaun.</p><a class="text-link" href="{{ route('portal.register') }}">Daftar akaun awam <x-icon name="arrow-right" /></a></div>
-            <ol class="landing-steps">
-                <li><span class="landing-step-number" aria-hidden="true">01</span><div><h3>Pilih jenis akses</h3><p>Gunakan portal awam untuk pemohon dan perunding, atau akses kakitangan untuk pegawai MBSP.</p></div></li>
-                <li><span class="landing-step-number" aria-hidden="true">02</span><div><h3>Log masuk atau daftar</h3><p>Daftar menggunakan emel anda. Anda juga boleh meminta pautan akses melalui emel tanpa kata laluan.</p></div></li>
-                <li><span class="landing-step-number" aria-hidden="true">03</span><div><h3>Semak akaun anda</h3><p>Ikuti arahan pengesahan emel untuk akaun baharu. Kakitangan boleh meneruskan urusan melalui ruang kerja yang dibenarkan.</p></div></li>
-            </ol>
+        <section class="landing-container landing-services" id="services" aria-labelledby="services-title">
+            <div class="landing-section-mark" aria-hidden="true"></div>
+            <h2 id="services-title">Apa yang anda ingin lakukan?</h2>
+            <p class="landing-description">Pilih urusan anda untuk mendapatkan panduan dan perkhidmatan yang tepat.</p>
+            @php
+                $services = [
+                    ['id' => 'ubah-suai', 'icon' => 'building-2', 'title' => 'Ubah suai kediaman', 'description' => 'Permohonan ubah suai, penambahan kecil dan kerja kediaman.', 'department' => 'iNDECS Bangunan', 'codes' => 'PBK', 'guidance' => 'Kenal pasti skop tambahan atau ubah suai, lokasi tapak dan dokumen pelan yang berkaitan.'],
+                    ['id' => 'bangunan-baharu', 'icon' => 'building-2', 'title' => 'Bina bangunan baharu', 'description' => 'Permohonan pembinaan bangunan komersial, perindustrian dan kediaman.', 'department' => 'iNDECS Bangunan', 'codes' => 'PB', 'guidance' => 'Sediakan butiran cadangan pembangunan, tapak dan perunding untuk urusan pelan bangunan penuh.'],
+                    ['id' => 'kebenaran-merancang', 'icon' => 'map', 'title' => 'Kebenaran merancang', 'description' => 'Urusan kebenaran merancang dan cadangan pembangunan.', 'department' => 'iNDECS Perancang', 'codes' => 'PKM', 'guidance' => 'Kenal pasti jenis cadangan, guna tanah, tapak dan lot yang terlibat untuk semakan perancangan.'],
+                    ['id' => 'permit', 'icon' => 'file-text', 'title' => 'Kerja sementara & permit', 'description' => 'Bangunan sementara, bahan binaan, perancah dan lain-lain permit.', 'department' => 'iNDECS Bangunan', 'codes' => 'PBS · PMT · TEL', 'guidance' => 'Kenal pasti kategori permit, lokasi dan tempoh kerja atau penggunaan yang dicadangkan.'],
+                    ['id' => 'kejuruteraan', 'icon' => 'settings-2', 'title' => 'Pelan kejuruteraan', 'description' => 'Urusan pelan kerja tanah dan pelan saliran pembangunan.', 'department' => 'iNDECS Kejuruteraan', 'codes' => 'PKT · PKP', 'guidance' => 'Modul ini masih dalam perancangan. Perkhidmatan dalam talian belum tersedia.'],
+                    ['id' => 'landskap', 'icon' => 'map', 'title' => 'Kelulusan landskap', 'description' => 'Permohonan pelan landskap dan kerja landskap di tapak pembangunan.', 'department' => 'iNDECS Landskap', 'codes' => 'PL', 'guidance' => 'Modul ini masih dalam perancangan. Perkhidmatan dalam talian belum tersedia.'],
+                ];
+            @endphp
+            <div class="landing-service-grid">
+                @foreach ($services as $service)
+                    <a class="landing-service-card" href="#panduan-{{ $service['id'] }}"><x-icon :name="$service['icon']" /><h3>{{ $service['title'] }}</h3><p>{{ $service['description'] }}</p><span class="landing-service-action">Lihat panduan <x-icon name="arrow-right" /></span></a>
+                @endforeach
+            </div>
+            <div class="landing-callout"><x-icon name="circle-alert" /><div><strong>Tidak pasti perkhidmatan yang sesuai?</strong><p>Dapatkan panduan ringkas berdasarkan keperluan anda.</p></div><a class="button button-primary" href="#panduan">Cari perkhidmatan <x-icon name="arrow-right" /></a></div>
         </section>
-        <section class="landing-container landing-faq" id="soalan" aria-labelledby="faq-title">
-            <div><span class="eyebrow">Soalan lazim</span><h2 id="faq-title">Perkara yang perlu diketahui</h2></div>
+        <section class="landing-container landing-guidance" id="panduan" aria-labelledby="guidance-title">
+            <div><span class="eyebrow">Panduan perkhidmatan</span><h2 id="guidance-title">Kenali urusan anda</h2><p class="landing-description">Panduan awal mengikut bidang jabatan. Penghantaran awam belum dibuka; akaun awam boleh didaftarkan sekarang.</p><a class="text-link" href="{{ route('portal.register') }}">Daftar akaun awam <x-icon name="arrow-right" /></a></div>
             <div class="landing-questions">
-                <details><summary>Siapakah yang boleh menggunakan iNDECS?</summary><p>Orang awam dan perunding boleh mengakses akaun awam. Kakitangan MBSP menggunakan akses kakitangan, dengan ruang kerja ditentukan oleh kebenaran jabatan masing-masing.</p></details>
-                <details><summary>Bolehkah saya menghantar permohonan sekarang?</summary><p>Penghantaran permohonan, bayaran dan penjejakan status melalui portal awam belum tersedia. Buat masa ini, portal awam menyediakan pendaftaran dan akses akaun.</p></details>
-                <details><summary>Bagaimana jika saya terlupa kata laluan?</summary><p>Gunakan <a class="text-link" href="{{ route('portal.forgot') }}">tetapan semula kata laluan</a> untuk akaun awam, atau <a class="text-link" href="{{ route('portal.email') }}">minta pautan akses melalui emel</a>. Kakitangan perlu menggunakan kelayakan akaun yang telah dibenarkan oleh MBSP.</p></details>
-                <details><summary>Adakah semua jabatan sudah tersedia?</summary><p>Ruang kerja kakitangan Bangunan dan Perancang tersedia mengikut kebenaran akaun. Kejuruteraan dan Landskap masih dalam perancangan.</p></details>
+                @foreach ($services as $service)
+                    <details id="panduan-{{ $service['id'] }}"><summary>{{ $service['title'] }}</summary><p><strong>{{ $service['department'] }} · {{ $service['codes'] }}</strong></p><p>{{ $service['guidance'] }}</p>@if (! in_array($service['id'], ['kejuruteraan', 'landskap']))<p>Penghantaran permohonan melalui portal awam belum tersedia.</p>@endif</details>
+                @endforeach
             </div>
         </section>
+        <section class="landing-container landing-help" id="bantuan" aria-labelledby="help-title"><div><span class="eyebrow">Bantuan akses</span><h2 id="help-title">Akses yang sesuai untuk anda</h2><p class="landing-description">Orang awam dan perunding menggunakan akaun awam. Ruang kerja kakitangan tertakluk kepada kebenaran jabatan.</p></div><div class="landing-help-links"><a class="text-link" href="{{ route('portal.email') }}">Dapatkan pautan akses melalui emel <x-icon name="arrow-up-right" /></a><a class="text-link" href="{{ route('portal.forgot') }}">Tetapkan semula kata laluan awam <x-icon name="arrow-up-right" /></a><a class="text-link" href="{{ route('login') }}">Log masuk kakitangan MBSP <x-icon name="arrow-up-right" /></a></div></section>
     </main>
-    <footer class="landing-footer"><div class="landing-container"><div class="landing-footer-brand"><x-mark class="mark-small" /><span><strong>iNDECS</strong><small>Sistem Bersepada Kawalan Pembangunan</small></span></div><span>Majlis Bandaraya Seberang Perai</span><a class="text-link" href="#main-content">Kembali ke atas <x-icon name="arrow-up-right" /></a></div></footer>
+    <footer class="landing-footer"><div class="landing-container"><div class="landing-footer-brand"><x-mark class="mark-small" /><span><strong>iNDECS</strong><small>Sistem Bersepada Kawalan Pembangunan</small></span></div><div class="landing-footer-controls">@include('partials.theme-control')<button class="button button-ghost button-small" type="button" data-introduction-replay>Main semula pengenalan <x-icon name="arrow-right" /></button></div></div></footer>
 </body>
 </html>

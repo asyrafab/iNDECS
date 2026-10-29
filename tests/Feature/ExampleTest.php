@@ -26,7 +26,9 @@ class ExampleTest extends TestCase
 
     public function test_guests_can_choose_access_from_the_landing_page(): void
     {
-        $this->get('/')->assertOk()->assertSee('Urus pembangunan.')
+        $this->get('/')->assertOk()->assertSee('Urusan Pembangunan Anda,')
+            ->assertSee('Dalam Satu Tempat')
+            ->assertSee('Penjejakan status awam belum tersedia.')
             ->assertSee('href="'.route('portal.login').'"', false)
             ->assertSee('href="'.route('portal.register').'"', false)
             ->assertSee('href="'.route('portal.email').'"', false)
