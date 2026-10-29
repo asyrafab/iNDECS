@@ -6,9 +6,11 @@ use App\Http\Controllers\BangunanDocumentCatalogueController;
 use App\Http\Controllers\BangunanDocumentController;
 use App\Http\Controllers\BangunanLegacyController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Gis\TileController;
 use App\Http\Controllers\Osc\AgendaItemController;
 use App\Http\Controllers\Osc\AgendaPaperController;
 use App\Http\Controllers\Osc\MeetingController;
+use App\Http\Controllers\Osc\MeetingMapController;
 use App\Http\Controllers\PkmApplicationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -104,6 +106,7 @@ Route::middleware(['auth', 'osc.access'])->prefix('osc')->name('osc.')->group(fu
     Route::get('/meetings/create', [MeetingController::class, 'create'])->name('meetings.create');
     Route::post('/meetings', [MeetingController::class, 'store'])->name('meetings.store');
     Route::get('/meetings/{meeting}', [MeetingController::class, 'show'])->name('meetings.show');
+    Route::get('/meetings/{meeting}/map-data', [MeetingMapController::class, 'data'])->name('meetings.map-data');
     Route::post('/meetings/{meeting}/reorder', [MeetingController::class, 'reorder'])->name('meetings.reorder');
     Route::post('/meetings/{meeting}/publish', [MeetingController::class, 'publish'])->name('meetings.publish');
     Route::get('/meetings/{meeting}/items/create', [AgendaItemController::class, 'create'])->name('items.create');
@@ -114,3 +117,7 @@ Route::middleware(['auth', 'osc.access'])->prefix('osc')->name('osc.')->group(fu
     Route::post('/items/{item}/papers', [AgendaPaperController::class, 'store'])->name('papers.store');
     Route::get('/papers/{paper}', [AgendaPaperController::class, 'show'])->name('papers.show');
 });
+
+Route::middleware(['auth', 'osc.access'])->get('/gis/tiles/{layer}/{z}/{x}/{y}.pbf', [TileController::class, 'show'])
+    ->whereIn('z', array_map('strval', range(0, 22)))->whereNumber(['x', 'y'])->where('layer', '[a-z0-9_]+')
+    ->name('gis.tiles');

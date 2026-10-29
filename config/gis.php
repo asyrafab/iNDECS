@@ -31,9 +31,10 @@ return [
         ],
     ],
 
-    // Initial layer definitions, seeded into core.gis_layers by GisLayerSeeder (Task 2).
+    // Initial layer definitions, keyed by layer id, seeded into core.gis_layers by GisLayerSeeder.
+    // 'properties' whitelists the feature attributes (lower-case GDAL keys) encoded into vector tiles; no personal data.
     'layers' => [
-        [
+        'lots' => [
             'id' => 'lots',
             'label' => 'Lot kadaster',
             'kind' => 'reference',
@@ -41,9 +42,11 @@ return [
             'where_clause' => '1=1',
             'is_active' => true,
             'sort_order' => 10,
-            'match_attributes' => null,
+            // Application lots column => lots layer attribute. Values are normalised on both sides (see MeetingMapService).
+            'match_attributes' => ['lot_number' => 'lot', 'mukim' => 'mukim', 'district' => 'daerah'],
+            'properties' => ['lot', 'mukim', 'seksyen_id'],
         ],
-        [
+        'zoning' => [
             'id' => 'zoning',
             'label' => 'Zon guna tanah',
             'kind' => 'reference',
@@ -53,7 +56,7 @@ return [
             'sort_order' => 20,
             'match_attributes' => null,
         ],
-        [
+        'utilities' => [
             'id' => 'utilities',
             'label' => 'Utiliti',
             'kind' => 'reference',
@@ -63,7 +66,7 @@ return [
             'sort_order' => 30,
             'match_attributes' => null,
         ],
-        [
+        'legacy_mjkp' => [
             'id' => 'legacy_mjkp',
             'label' => 'Keputusan terdahulu',
             'kind' => 'legacy_papers',

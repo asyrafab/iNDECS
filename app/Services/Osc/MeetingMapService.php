@@ -1,0 +1,267 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Services\Osc;
+
+use App\Models\Gis\GisLayer;
+use App\Models\Osc\AgendaItem;
+use App\Models\Osc\Meeting;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
+
+/**
+ * Builds the GeoJSON FeatureCollection shown on the meeting map: agenda items the user may see, their earlier
+ * tablings, and (for users with the eOSC+ view grant) past decisions within 500 m.
+ */
+final class MeetingMapService
+{
+    private const LEGACY_RADIUS_METRES = 500;
+
+    private const LEGACY_LIMIT = 500;
+
+    /** Decision labels for core.osc_legacy_papers.status_code. */
+    private const DECISIONS = [
+        '1' => 'Lulus Dgn Syarat Tambahan',
+        '2' => 'Lulus Dgn Syarat Teknikal',
+        '3' => 'Tangguh',
+        '4' => 'Tolak',
+    ];
+
+    /** @return array{type: string, features: array<int, array<string, mixed>>, properties: array<string, mixed>} */
+    public function forMeeting(Meeting $meeting, User $user): array
+    {
+        $features = [];
+        $unmapped = [];
+        $geometries = [];
+
+        $items = $meeting->items()->with('application')->get();
+        foreach ($items as $item) {
+            $item->setRelation('meeting', $meeting);
+            if (! OscAccess::canViewItem($user, $item)) {
+                continue;
+            }
+
+            [$geometry, $source] = $this->resolveGeometry($item);
+            if ($geometry === null) {
+                $unmapped[] = ['id' => $item->id, 'title' => $item->title];
+            } else {
+                $geometries[] = $geometry;
+                $features[] = $this->feature($geometry, [
+                    'kind' => 'item',
+                    'id' => $item->id,
+                    'title' => $item->title,
+                    'reference' => $item->reference,
+                    'purpose' => $item->purpose->label(),
+                    'department_id' => $item->department_id,
+                    'status' => $item->status->value,
+                    'position' => $item->position,
+                    'paper_url' => $this->paperUrl($item),
+                    'layout_url' => null,
+                    'geometry_source' => $source,
+                ]);
+            }
+
+            foreach ($this->earlierTablings($item, $user) as $earlier) {
+                [$earlierGeometry] = $this->resolveGeometry($earlier);
+                if ($earlierGeometry === null) {
+                    continue;
+                }
+                $geometries[] = $earlierGeometry;
+                $features[] = $this->feature($earlierGeometry, [
+                    'kind' => 'earlier',
+                    'id' => $earlier->id,
+                    'item_id' => $item->id,
+                    'title' => $earlier->title,
+                    'reference' => $earlier->reference,
+                    'meeting_id' => $earlier->meeting_id,
+                    'purpose' => $earlier->purpose->label(),
+                    'status' => $earlier->status->value,
+                ]);
+            }
+        }
+
+        if ($geometries !== [] && ($user->canPerformOsc('osc.meeting.view') || OscAccess::canManage($user))) {
+            array_push($features, ...$this->pastDecisions($geometries));
+        }
+
+        return [
+            'type' => 'FeatureCollection',
+            'features' => $features,
+            'properties' => ['unmapped' => $unmapped],
+        ];
+    }
+
+    /**
+     * Earlier items of the same application, nearest first, that the user may see.
+     *
+     * @return array<int, AgendaItem>
+     */
+    private function earlierTablings(AgendaItem $item, User $user): array
+    {
+        $earlier = [];
+        $visited = [$item->id => true];
+        $current = $item;
+        while ($current->previous_item_id !== null && ! isset($visited[$current->previous_item_id])) {
+            $previous = AgendaItem::query()->with(['meeting', 'application'])->find($current->previous_item_id);
+            if ($previous === null) {
+                break;
+            }
+            $visited[$previous->id] = true;
+            if (OscAccess::canViewItem($user, $previous)) {
+                $earlier[] = $previous;
+            }
+            $current = $previous;
+        }
+
+        return $earlier;
+    }
+
+    /** @return array{0: array<string, mixed>|null, 1: string|null} GeoJSON geometry and its source. */
+    private function resolveGeometry(AgendaItem $item): array
+    {
+        $own = DB::selectOne('SELECT ST_AsGeoJSON(boundary) AS geojson FROM core.osc_agenda_items WHERE id = ? AND boundary IS NOT NULL', [$item->id]);
+        if ($own !== null) {
+            return [json_decode($own->geojson, true), 'item'];
+        }
+
+        if ($item->application_id === null) {
+            return [null, null];
+        }
+
+        $site = DB::selectOne(
+            'SELECT ST_AsGeoJSON(s.boundary) AS geojson FROM sites s
+             JOIN application_sites a ON a.site_id = s.id
+             WHERE a.application_id = ? AND s.boundary IS NOT NULL
+             ORDER BY a.is_primary DESC, a.id LIMIT 1',
+            [$item->application_id],
+        );
+        if ($site !== null) {
+            return [json_decode($site->geojson, true), 'site'];
+        }
+
+        $lots = $this->lotGeometry($item->application_id);
+
+        return $lots === null ? [null, null] : [$lots, 'lot'];
+    }
+
+    /**
+     * Union of the lots-layer features matching the application's lots. Both sides are normalised with the same SQL
+     * expression (see normalise()), so formats such as "LOT 03899" / "3899" and "Mukim 04" / "MUKIM 4" agree.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function lotGeometry(string $applicationId): ?array
+    {
+        $layer = GisLayer::query()->find('lots');
+        $mapping = $layer?->match_attributes;
+        if ($layer === null || $layer->active_snapshot_id === null || ! is_array($mapping) || ! isset($mapping['lot_number'])) {
+            return null;
+        }
+        foreach ($mapping as $column => $attribute) {
+            if (! in_array($column, ['lot_number', 'mukim', 'district', 'section'], true) || ! is_string($attribute) || ! preg_match('/^[a-z0-9_]+$/', $attribute)) {
+                return null;
+            }
+        }
+
+        $lots = DB::table('lots')->join('application_lots', 'application_lots.lot_id', '=', 'lots.id')
+            ->where('application_lots.application_id', $applicationId)->get(['lots.lot_number', 'lots.mukim', 'lots.district', 'lots.section']);
+
+        $conditions = [];
+        $bindings = [$layer->active_snapshot_id];
+        foreach ($lots as $lot) {
+            $parts = [];
+            $partBindings = [];
+            foreach ($mapping as $column => $attribute) {
+                $value = trim((string) ($lot->{$column} ?? ''));
+                if ($value === '') {
+                    if ($column === 'lot_number') {
+                        continue 2; // Without a lot number nothing can be matched.
+                    }
+
+                    continue;
+                }
+                $parts[] = $this->normalise($column, 'f.attributes ->> ?::text').' = '.$this->normalise($column, '?::text');
+                array_push($partBindings, $attribute, $value);
+            }
+            $conditions[] = '('.implode(' AND ', $parts).')';
+            array_push($bindings, ...$partBindings);
+        }
+        if ($conditions === []) {
+            return null;
+        }
+
+        $row = DB::selectOne(
+            'SELECT ST_AsGeoJSON(ST_Multi(ST_Union(f.geom))) AS geojson FROM core.gis_features f
+             WHERE f.snapshot_id = ?::bigint AND ('.implode(' OR ', $conditions).')',
+            $bindings,
+        );
+
+        return $row?->geojson === null ? null : json_decode($row->geojson, true);
+    }
+
+    /** SQL expression normalising a lot, mukim, district or section value for comparison. $expr is trusted SQL, never user input. */
+    private function normalise(string $column, string $expr): string
+    {
+        $upper = "upper(btrim(regexp_replace($expr, '\\s+', ' ', 'g')))";
+
+        return match ($column) {
+            // "LOT 03899", "No. Lot 3899", "3899" -> "3899"
+            'lot_number' => "regexp_replace(regexp_replace($upper, '^(NO\\.? ?)?(LOT|LT)\\.? ?', ''), '^0+(?=.)', '')",
+            // "Mukim 04", "MK 4", "4" -> "4"
+            'mukim', 'section' => "regexp_replace(regexp_replace($upper, '^(MUKIM|MK|SEKSYEN|SEK)\\.? ?', ''), '^0+(?=.)', '')",
+            default => $upper,
+        };
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $geometries
+     * @return array<int, array<string, mixed>>
+     */
+    private function pastDecisions(array $geometries): array
+    {
+        $conditions = [];
+        $bindings = [];
+        foreach ($geometries as $geometry) {
+            $json = json_encode($geometry);
+            // The bbox test lets the GiST index prune before the exact geography distance check (0.01 degrees is over 1 km).
+            $conditions[] = '(p.geom && ST_Expand(ST_SetSRID(ST_GeomFromGeoJSON(?), 4326), 0.01)
+                AND ST_DWithin(p.geom::geography, ST_SetSRID(ST_GeomFromGeoJSON(?), 4326)::geography, ?))';
+            array_push($bindings, $json, $json, self::LEGACY_RADIUS_METRES);
+        }
+
+        $rows = DB::select(
+            'SELECT p.id, p.title, p.year, p.status_code, p.rujukan, ST_AsGeoJSON(p.geom) AS geojson
+             FROM core.osc_legacy_papers p
+             WHERE p.geom IS NOT NULL AND ('.implode(' OR ', $conditions).')
+             ORDER BY p.id LIMIT '.self::LEGACY_LIMIT,
+            $bindings,
+        );
+
+        return array_map(fn ($row): array => $this->feature(json_decode($row->geojson, true), [
+            'kind' => 'legacy',
+            'id' => $row->id,
+            'title' => $row->title,
+            'year' => $row->year,
+            'rujukan' => $row->rujukan,
+            'decision' => self::DECISIONS[(string) $row->status_code] ?? 'Tiada maklumat',
+        ]), $rows);
+    }
+
+    private function paperUrl(AgendaItem $item): ?string
+    {
+        $paper = $item->papers()->first();
+
+        return $paper === null ? null : route('osc.papers.show', $paper);
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $geometry
+     * @param  array<string, mixed>  $properties
+     * @return array{type: string, geometry: array<string, mixed>|null, properties: array<string, mixed>}
+     */
+    private function feature(?array $geometry, array $properties): array
+    {
+        return ['type' => 'Feature', 'geometry' => $geometry, 'properties' => $properties];
+    }
+}
