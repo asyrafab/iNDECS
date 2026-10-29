@@ -22,6 +22,10 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
     ->name('logout');
 
 Route::get('/', function (Request $request) {
+    if (! $request->user()) {
+        return view('welcome');
+    }
+
     if ($request->user()->isPublicAccount()) {
         return to_route('portal.home');
     }
@@ -34,7 +38,7 @@ Route::get('/', function (Request $request) {
     abort_unless($request->user()->canAccessPkm(), 403);
 
     return app(DashboardController::class)($request);
-})->middleware('auth')->name('dashboard');
+})->name('dashboard');
 
 Route::middleware(['auth', 'perancang.access'])->group(function (): void {
 

@@ -24,9 +24,17 @@ class ExampleTest extends TestCase
             ->assertDontSee('SKPB');
     }
 
-    public function test_guests_are_redirected_to_the_login_page(): void
+    public function test_guests_can_choose_access_from_the_landing_page(): void
     {
-        $this->get('/')->assertRedirect(route('login'));
+        $this->get('/')->assertOk()->assertSee('Urus pembangunan.')
+            ->assertSee('href="'.route('portal.login').'"', false)
+            ->assertSee('href="'.route('portal.register').'"', false)
+            ->assertSee('href="'.route('portal.email').'"', false)
+            ->assertSee('href="'.route('login').'"', false)
+            ->assertDontSee('href="'.route('bangunan.index').'"', false)
+            ->assertDontSee('href="'.route('perancang.index').'"', false);
+        $this->get(route('bangunan.index'))->assertRedirect(route('login'));
+        $this->get(route('perancang.index'))->assertRedirect(route('login'));
         $this->get(route('login'))->assertOk()->assertSee('Log masuk ke iNDECS');
     }
 

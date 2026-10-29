@@ -141,6 +141,12 @@ application, two = linked pair, three = development case.
   `.public-tabs`, `.public-form`, `.public-section` and `.public-details` in
   `indecs.css`. They are unframed account surfaces using the shared tokens.
 
+- The guest landing page at `/` uses `.landing-container`, `.landing-hero`,
+  `.landing-access`, `.landing-department-grid`, `.landing-guide`, `.landing-faq`
+  and `.landing-footer` in `indecs.css` (ADR-312). It reuses public branding and
+  appearance controls. Department cards describe scope, not public submission
+  availability; planned services have no workspace links.
+
 - Bahasa Melayu is the interface language (`lang/ms`). Application type codes stay as-is.
 - Reuse the existing class names in `public/css/indecs.css` before inventing new ones. If you
   need a new component, add it to that file in the same idiom and document it here.

@@ -62,6 +62,11 @@ php artisan serve
 
 Open `http://127.0.0.1:8000`.
 
+Guests see the public iNDECS landing page with public/staff access links,
+department scope, access guidance and frequently asked questions. Signed-in users
+keep their authorised dashboard routing. Public submission, payment and tracking
+remain pending; the landing page labels this availability explicitly (ADR-312).
+
 The test suite runs against a dedicated `indecs_test` database on the local PostgreSQL 18 instance (`127.0.0.1:5434`, see `phpunit.xml`). See [the local development runbook](docs/runbooks/local-development.md) for guarded migration verification.
 
 The current interface does not require a frontend build. CSS and JavaScript are maintained as small, first-party assets under `public/`.
