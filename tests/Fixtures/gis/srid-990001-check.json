@@ -1,0 +1,6 @@
+{
+  "source": "https://spgis.mbsp.gov.my/geoportal/rest/services/DEMARCATION/MJKP_eOSC/FeatureServer/1204",
+  "feature_id": 80,
+  "native": {"srid": 990001, "x": 14171.280799999833, "y": -7872.5374999996275},
+  "wgs84": {"srid": 4326, "lon": 100.47251159070542, "lat": 5.349686231989342}
+}
