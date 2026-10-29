@@ -152,26 +152,44 @@ final class LegacyImportTest extends TestCase
     {
         $this->artisan('osc:import-legacy', ['--points' => true])->assertSuccessful();
         DB::table('core.osc_legacy_papers')->update(['plan_file' => null]);
+        DB::table('core.osc_legacy_papers')->update(['pelan_tapak_scan' => null]);
         foreach ($plan as $id => $file) {
-            DB::table('core.osc_legacy_papers')->where('id', $id)->update(['plan_file' => $file]);
+            [$scan, $planFile] = is_array($file) ? $file : [null, $file];
+            DB::table('core.osc_legacy_papers')->where('id', $id)->update(['plan_file' => $planFile, 'pelan_tapak_scan' => $scan]);
         }
 
         return app(LegacyImportService::class)->importImages($dir, 990001);
     }
 
-    public function test_suffix_fallback_places_image_only_when_full_name_is_absent(): void
+    public function test_pelan_tapak_scan_is_preferred_and_plan_is_the_fallback(): void
+    {
+        $dir = $this->plans(['scan.jpg' => 't1.jpg', 'scan.jgw' => 't1.jgw', 'plan.jpg' => 't1.jpg', 'plan.jgw' => 't1.jgw']);
+        $this->runImages($dir, [101 => ['scan.jpg', 'plan.jpg']]);
+        $this->assertSame(1, LayoutImage::query()->count());
+        $this->assertSame(hash('sha256', file_get_contents($dir.'/scan.jpg')), LayoutImage::query()->first()->sha256);
+
+        // Blank scan field: the plan_ file is used.
+        $dir = $this->plans(['plan.jpg' => 't1.jpg', 'plan.jgw' => 't1.jgw']);
+        LayoutImage::query()->delete();
+        $counts = $this->runImages($dir, [101 => [null, 'plan.jpg']]);
+        $this->assertSame(1, $counts['Diletakkan']);
+
+        // Scan is a TIFF and plan_ has a world file: plan_ places.
+        LayoutImage::query()->delete();
+        $counts = $this->runImages($dir, [101 => ['Rectify1.tif', 'plan.jpg']]);
+        $this->assertSame(1, $counts['Diletakkan']);
+    }
+
+    public function test_underscore_suffix_is_never_guessed(): void
     {
         $dir = $this->plans(['t1.jpg' => 't1.jpg', 't1.jgw' => 't1.jgw']);
         $counts = $this->runImages($dir, [101 => 'REF@1_t1.jpg']);
 
-        $this->assertSame(1, $counts['Diletakkan']);
-        $this->assertSame(1, LayoutImage::query()->where('owner_id', '101')->count());
+        $this->assertSame(0, $counts['Diletakkan']);
+        $this->assertSame(1, $counts['Dilangkau: tiada fail']);
 
-        // The full-name file exists but has no world file: no substitution.
-        LayoutImage::query()->delete();
         $dir = $this->plans(['t1.jpg' => 't1.jpg', 't1.jgw' => 't1.jgw', 'REF@1_t1.jpg' => 't1.jpg']);
         $counts = app(LegacyImportService::class)->importImages($dir, 990001);
-        $this->assertSame(0, $counts['Diletakkan']);
         $this->assertSame(1, $counts['Dilangkau: tiada world file']);
         $this->assertSame(0, LayoutImage::query()->count());
     }
@@ -179,7 +197,7 @@ final class LegacyImportTest extends TestCase
     public function test_file_claimed_by_two_papers_is_placed_for_neither(): void
     {
         $dir = $this->plans(['gen.jpg' => 't1.jpg', 'gen.jgw' => 't1.jgw']);
-        $counts = $this->runImages($dir, [101 => 'A_gen.jpg', 102 => 'B_gen.jpg']);
+        $counts = $this->runImages($dir, [101 => 'gen.jpg', 102 => 'GEN.jpg']);
 
         $this->assertSame(2, $counts['Dilangkau: fail dikongsi']);
         $this->assertSame(0, LayoutImage::query()->count());

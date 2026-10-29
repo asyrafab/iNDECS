@@ -49,8 +49,8 @@ class LegacyImportService
 
         DB::statement(
             "INSERT INTO core.osc_legacy_papers
-                (id, title, status_code, status_kini, year, month, mukim, seksyen, kategori, rujukan, no_fail, plan_file, geom, imported_at)
-             SELECT DISTINCT ON (id) id, title, status_code, status_kini, year, month, mukim, seksyen, kategori, rujukan, no_fail, plan_file,
+                (id, title, status_code, status_kini, year, month, mukim, seksyen, kategori, rujukan, no_fail, plan_file, pelan_tapak_scan, geom, imported_at)
+             SELECT DISTINCT ON (id) id, title, status_code, status_kini, year, month, mukim, seksyen, kategori, rujukan, no_fail, plan_file, pelan_tapak_scan,
                     CASE WHEN g IS NOT NULL AND NOT ST_IsEmpty(g) AND ST_Intersects(g, ST_MakeEnvelope(?, ?, ?, ?, 4326)) THEN g END,
                     now()
              FROM (
@@ -66,6 +66,7 @@ class LegacyImportService
                         NULLIF(attributes->>'rujukan', '') AS rujukan,
                         NULLIF(attributes->>'no_fail', '') AS no_fail,
                         NULLIF(btrim(attributes->>'plan_'), '') AS plan_file,
+                        NULLIF(btrim(attributes->>'pelan_tapak_scan'), '') AS pelan_tapak_scan,
                         ST_GeometryN(geom, 1) AS g
                  FROM core.gis_features
                  WHERE snapshot_id = ? AND attributes->>'id' ~ '^[0-9]+\$'
@@ -75,7 +76,7 @@ class LegacyImportService
                 title = EXCLUDED.title, status_code = EXCLUDED.status_code, status_kini = EXCLUDED.status_kini,
                 year = EXCLUDED.year, month = EXCLUDED.month, mukim = EXCLUDED.mukim, seksyen = EXCLUDED.seksyen,
                 kategori = EXCLUDED.kategori, rujukan = EXCLUDED.rujukan, no_fail = EXCLUDED.no_fail,
-                plan_file = EXCLUDED.plan_file, geom = EXCLUDED.geom, imported_at = EXCLUDED.imported_at",
+                plan_file = EXCLUDED.plan_file, pelan_tapak_scan = EXCLUDED.pelan_tapak_scan, geom = EXCLUDED.geom, imported_at = EXCLUDED.imported_at",
             [$minX, $minY, $maxX, $maxY, $snapshot->id],
         );
 
@@ -112,16 +113,16 @@ class LegacyImportService
 
         $index = $this->directoryIndex($dir);
         $papers = DB::table('core.osc_legacy_papers')
-            ->whereNotNull('plan_file')
+            ->where(fn ($q) => $q->whereNotNull('plan_file')->orWhereNotNull('pelan_tapak_scan'))
             ->orderBy('id')
-            ->get(['id', 'plan_file', DB::raw('geom IS NOT NULL AS has_point')]);
+            ->get(['id', 'plan_file', 'pelan_tapak_scan', DB::raw('geom IS NOT NULL AS has_point')]);
 
         // Pass 1: resolve each paper to one image file and its corners.
         $resolved = [];
         $claims = [];
         $unplaced = [];
         foreach ($papers as $paper) {
-            $result = $this->resolve((string) $paper->plan_file, (bool) $paper->has_point, $index, $srid);
+            $result = $this->resolve([$paper->pelan_tapak_scan, $paper->plan_file], (bool) $paper->has_point, $index, $srid);
             if (is_string($result)) {
                 $unplaced[(int) $paper->id] = $result;
 
@@ -183,23 +184,34 @@ class LegacyImportService
      * @param  array<string, string>  $index
      * @return array{file: string, wkt: string, width: int, height: int, mime: string}|string a skip reason on failure
      */
-    private function resolve(string $planFile, bool $hasPoint, array $index, int $srid): array|string
+    private function resolve(array $names, bool $hasPoint, array $index, int $srid): array|string
     {
         if (! $hasPoint) {
             return self::SKIP_NO_XY;
         }
 
-        $name = basename(str_replace('\\', '/', $planFile));
+        // Order: the pelan_tapak_scan attribute, then the plan_ file name. The first usable file wins; when none
+        // is usable the reason for the first named file is reported.
+        $firstReason = null;
+        foreach (array_filter($names, fn ($n): bool => is_string($n) && trim($n) !== '') as $name) {
+            $result = $this->resolveName(basename(str_replace('\\', '/', trim($name))), $index, $srid);
+            if (is_array($result)) {
+                return $result;
+            }
+            $firstReason ??= $result;
+        }
+
+        return $firstReason ?? self::SKIP_NO_FILE;
+    }
+
+    /** @return array{file: string, wkt: string, width: int, height: int, mime: string}|string */
+    private function resolveName(string $name, array $index, int $srid): array|string
+    {
         if (in_array(strtolower(pathinfo($name, PATHINFO_EXTENSION)), ['tif', 'tiff'], true)) {
             return self::SKIP_TIFF;
         }
 
-        // Most MJKP plan_ names are "<file ref>_<scan>.jpg" and only the scan part carries a world file. The
-        // part after the last underscore is used only when the full name does not exist.
         $actual = $index[strtolower($name)] ?? null;
-        if ($actual === null && ($pos = strrpos($name, '_')) !== false && $pos < strlen($name) - 1) {
-            $actual = $index[strtolower(substr($name, $pos + 1))] ?? null;
-        }
         if ($actual === null) {
             return self::SKIP_NO_FILE;
         }
