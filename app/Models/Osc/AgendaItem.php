@@ -42,6 +42,13 @@ class AgendaItem extends Model
         return $this->hasMany(AgendaItemPaper::class, 'agenda_item_id')->orderByDesc('version');
     }
 
+    public function isMissingPaper(): bool
+    {
+        $cutoff = $this->meeting->paper_cutoff_at;
+
+        return $cutoff !== null && now()->greaterThan($cutoff) && ! $this->papers()->exists();
+    }
+
     public function previousItem(): BelongsTo
     {
         return $this->belongsTo(self::class, 'previous_item_id');
