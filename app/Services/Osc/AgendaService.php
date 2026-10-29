@@ -10,10 +10,14 @@ use App\Enums\Osc\TablingPurpose;
 use App\Models\Application;
 use App\Models\AuditLog;
 use App\Models\Osc\AgendaItem;
+use App\Models\Osc\AgendaVersion;
 use App\Models\Osc\DepartmentSetting;
 use App\Models\Osc\Meeting;
 use App\Models\User;
+use App\Notifications\Osc\AgendaPublished;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
 
 final class AgendaService
@@ -86,6 +90,125 @@ final class AgendaService
         });
     }
 
+    public function accept(AgendaItem $item, int $expectedVersion, User $actor): AgendaItem
+    {
+        abort_unless(OscAccess::canManage($actor), 403);
+
+        return DB::transaction(function () use ($item, $expectedVersion, $actor): AgendaItem {
+            // The meeting lock serialises position allocation between concurrent accepts.
+            Meeting::query()->lockForUpdate()->findOrFail($item->meeting_id);
+            $record = $this->lockItem($item, $expectedVersion);
+            if ($record->status === AgendaItemStatus::Proposed && $this->requiresEndorsement($record->department_id)) {
+                throw ValidationException::withMessages(['item' => 'Cadangan ini perlu disokong ketua jabatan terlebih dahulu.']);
+            }
+            if (! in_array($record->status, [AgendaItemStatus::Proposed, AgendaItemStatus::Endorsed], true)) {
+                throw ValidationException::withMessages(['item' => 'Hanya cadangan yang belum diterima boleh diterima.']);
+            }
+            $position = (int) AgendaItem::query()->where('meeting_id', $record->meeting_id)
+                ->where('status', AgendaItemStatus::Accepted->value)->max('position') + 1;
+            $before = ['status' => $record->status->value, 'position' => $record->position];
+            $record->update(['status' => AgendaItemStatus::Accepted, 'position' => $position,
+                'return_reason' => null, 'row_version' => $record->row_version + 1]);
+            $this->audit($record, 'osc_item_accepted', $actor, $before,
+                ['status' => AgendaItemStatus::Accepted->value, 'position' => $position]);
+
+            return $record->refresh();
+        });
+    }
+
+    public function returnToDepartment(AgendaItem $item, int $expectedVersion, string $reason, User $actor): AgendaItem
+    {
+        abort_unless(OscAccess::canManage($actor), 403);
+        $reason = trim($reason);
+        if ($reason === '') {
+            throw ValidationException::withMessages(['reason' => 'Sebab pengembalian diperlukan.']);
+        }
+
+        return DB::transaction(function () use ($item, $expectedVersion, $reason, $actor): AgendaItem {
+            Meeting::query()->lockForUpdate()->findOrFail($item->meeting_id);
+            $record = $this->lockItem($item, $expectedVersion);
+            if ($record->status === AgendaItemStatus::Returned) {
+                throw ValidationException::withMessages(['item' => 'Cadangan ini telah dikembalikan.']);
+            }
+            $before = ['status' => $record->status->value, 'position' => $record->position];
+            $record->update(['status' => AgendaItemStatus::Returned, 'position' => null,
+                'return_reason' => $reason, 'row_version' => $record->row_version + 1]);
+            $this->audit($record, 'osc_item_returned', $actor, $before,
+                ['status' => AgendaItemStatus::Returned->value, 'position' => null, 'return_reason' => $reason]);
+
+            return $record->refresh();
+        });
+    }
+
+    /** @param array<int, string> $orderedItemIds */
+    public function reorder(Meeting $meeting, array $orderedItemIds, int $expectedMeetingVersion, User $actor): Meeting
+    {
+        abort_unless(OscAccess::canManage($actor), 403);
+
+        return DB::transaction(function () use ($meeting, $orderedItemIds, $expectedMeetingVersion, $actor): Meeting {
+            $record = $this->lockMeeting($meeting, $expectedMeetingVersion);
+            $current = $this->acceptedItems($record)->pluck('id')->all();
+            $given = array_values($orderedItemIds);
+            $sortedGiven = $given;
+            $sortedCurrent = $current;
+            sort($sortedGiven);
+            sort($sortedCurrent);
+            if ($sortedGiven !== $sortedCurrent) {
+                throw ValidationException::withMessages(['items' => 'Susunan agenda tidak lengkap.']);
+            }
+            foreach ($given as $index => $id) {
+                AgendaItem::query()->whereKey($id)->update(['position' => $index + 1]);
+            }
+            $record->update(['row_version' => $record->row_version + 1]);
+            $this->auditMeeting($record, 'osc_agenda_reordered', $actor, ['order' => $current], ['order' => $given]);
+
+            return $record->refresh();
+        });
+    }
+
+    public function publish(Meeting $meeting, int $expectedMeetingVersion, User $actor): AgendaVersion
+    {
+        abort_unless(OscAccess::canManage($actor), 403);
+
+        $version = DB::transaction(function () use ($meeting, $expectedMeetingVersion, $actor): AgendaVersion {
+            $record = $this->lockMeeting($meeting, $expectedMeetingVersion);
+            $accepted = $this->acceptedItems($record);
+            if ($accepted->isEmpty()) {
+                throw ValidationException::withMessages(['meeting' => 'Agenda tiada perkara untuk diterbitkan.']);
+            }
+            $items = $accepted->map(fn (AgendaItem $i): array => [
+                'id' => $i->id, 'position' => $i->position, 'title' => $i->title, 'reference' => $i->reference,
+                'purpose' => $i->purpose->value, 'department_id' => $i->department_id, 'presenter_id' => $i->presenter_id,
+                'application_id' => $i->application_id, 'standalone_type' => $i->standalone_type,
+            ])->all();
+            $previous = AgendaVersion::query()->where('meeting_id', $record->id)->orderByDesc('version')->first();
+            $number = $record->agenda_version + 1;
+            $agenda = AgendaVersion::query()->create([
+                'meeting_id' => $record->id, 'version' => $number, 'items' => $items,
+                'changes' => $this->changes($previous->items ?? [], $items),
+                'published_by' => $actor->id, 'published_at' => now(),
+            ]);
+            $before = ['status' => $record->status->value, 'agenda_version' => $record->agenda_version];
+            $record->update([
+                'agenda_version' => $number,
+                'status' => $record->status === MeetingStatus::Draft ? MeetingStatus::AgendaPublished : $record->status,
+                'row_version' => $record->row_version + 1,
+            ]);
+            $this->auditMeeting($record, 'osc_agenda_published', $actor, $before,
+                ['status' => $record->status->value, 'agenda_version' => $number, 'item_count' => count($items)]);
+
+            return $agenda;
+        });
+
+        $record = Meeting::query()->findOrFail($version->meeting_id);
+        $recipients = User::query()
+            ->whereIn('id', $record->members()->pluck('user_id'))
+            ->where('id', '!=', $actor->id)->get();
+        Notification::send($recipients, new AgendaPublished($record, count($version->items), $version->version));
+
+        return $version;
+    }
+
     public function requiresEndorsement(string $departmentId): bool
     {
         return (bool) DepartmentSetting::query()->whereKey($departmentId)->value('requires_endorsement');
@@ -149,6 +272,65 @@ final class AgendaService
         ]);
 
         return $item->refresh();
+    }
+
+    private function lockItem(AgendaItem $item, int $expectedVersion): AgendaItem
+    {
+        $record = AgendaItem::query()->lockForUpdate()->findOrFail($item->id);
+        if ($record->row_version !== $expectedVersion) {
+            throw ValidationException::withMessages(['item' => 'Rekod telah berubah. Muat semula sebelum meneruskan.']);
+        }
+
+        return $record;
+    }
+
+    private function lockMeeting(Meeting $meeting, int $expectedVersion): Meeting
+    {
+        $record = Meeting::query()->lockForUpdate()->findOrFail($meeting->id);
+        if ($record->row_version !== $expectedVersion) {
+            throw ValidationException::withMessages(['meeting' => 'Rekod telah berubah. Muat semula sebelum meneruskan.']);
+        }
+
+        return $record;
+    }
+
+    /** @return Collection<int, AgendaItem> */
+    private function acceptedItems(Meeting $meeting): Collection
+    {
+        return AgendaItem::query()->where('meeting_id', $meeting->id)
+            ->where('status', AgendaItemStatus::Accepted->value)->orderBy('position')->orderBy('id')->get();
+    }
+
+    /**
+     * Relative order is compared only over ids present in both versions.
+     *
+     * @param  array<int, array<string, mixed>>  $previous
+     * @param  array<int, array<string, mixed>>  $current
+     * @return array{added: array<int, string>, removed: array<int, string>, reordered: bool}
+     */
+    private function changes(array $previous, array $current): array
+    {
+        $old = array_column($previous, 'id');
+        $new = array_column($current, 'id');
+
+        return [
+            'added' => array_values(array_diff($new, $old)),
+            'removed' => array_values(array_diff($old, $new)),
+            'reordered' => array_values(array_intersect($old, $new)) !== array_values(array_intersect($new, $old)),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $before
+     * @param  array<string, mixed>  $after
+     */
+    private function auditMeeting(Meeting $meeting, string $event, User $actor, ?array $before, array $after): void
+    {
+        AuditLog::query()->create([
+            'auditable_type' => Meeting::class, 'auditable_id' => $meeting->id, 'event' => $event,
+            'actor_id' => $actor->id, 'before_values' => $before, 'after_values' => $after,
+            'ip_address' => request()?->ip(),
+        ]);
     }
 
     /**
