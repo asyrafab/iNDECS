@@ -146,8 +146,10 @@ final class MeetingMapService
     }
 
     /**
-     * Union of the lots-layer features matching the application's lots. Both sides are normalised with the same SQL
-     * expression (see normalise()), so formats such as "LOT 03899" / "3899" and "Mukim 04" / "MUKIM 4" agree.
+     * Union of the lots-layer features matching the application's lots. A lot takes part only when its lot number,
+     * mukim and district are all present after normalisation, and only when it matches exactly one feature
+     * (otherwise the location would be a guess). Both sides use the same normalisation (see normalise()), so
+     * "LOT 03899" / "3899" and "Mukim 04" / "MUKIM 4" agree.
      *
      * @return array<string, mixed>|null
      */
@@ -155,46 +157,52 @@ final class MeetingMapService
     {
         $layer = GisLayer::query()->find('lots');
         $mapping = $layer?->match_attributes;
-        if ($layer === null || $layer->active_snapshot_id === null || ! is_array($mapping) || ! isset($mapping['lot_number'])) {
+        if ($layer === null || $layer->active_snapshot_id === null || ! is_array($mapping)) {
             return null;
         }
-        foreach ($mapping as $column => $attribute) {
-            if (! in_array($column, ['lot_number', 'mukim', 'district', 'section'], true) || ! is_string($attribute) || ! preg_match('/^[a-z0-9_]+$/', $attribute)) {
+        $keys = [];
+        foreach (['lot_number', 'mukim', 'district'] as $column) {
+            $attribute = $mapping[$column] ?? null;
+            if (! is_string($attribute) || ! preg_match('/^[a-z0-9_]+$/', $attribute)) {
                 return null;
             }
+            $keys[$column] = $attribute;
         }
 
         $lots = DB::table('lots')->join('application_lots', 'application_lots.lot_id', '=', 'lots.id')
-            ->where('application_lots.application_id', $applicationId)->get(['lots.lot_number', 'lots.mukim', 'lots.district', 'lots.section']);
+            ->where('application_lots.application_id', $applicationId)->get(['lots.lot_number', 'lots.mukim', 'lots.district']);
 
-        $conditions = [];
-        $bindings = [$layer->active_snapshot_id];
+        $featureIds = [];
         foreach ($lots as $lot) {
-            $parts = [];
-            $partBindings = [];
-            foreach ($mapping as $column => $attribute) {
-                $value = trim((string) ($lot->{$column} ?? ''));
-                if ($value === '') {
-                    if ($column === 'lot_number') {
-                        continue 2; // Without a lot number nothing can be matched.
-                    }
-
-                    continue;
-                }
-                $parts[] = $this->normalise($column, 'f.attributes ->> ?::text').' = '.$this->normalise($column, '?::text');
-                array_push($partBindings, $attribute, $value);
+            // Attribute names are validated above; the lot expression must match the gis_features_lot_norm_idx definition.
+            $featureLot = "core.gis_norm_lot(f.attributes ->> '{$keys['lot_number']}')";
+            $featureMukim = $this->normalise('mukim', "f.attributes ->> '{$keys['mukim']}'");
+            $featureDistrict = $this->normalise('district', "f.attributes ->> '{$keys['district']}'");
+            $paramMukim = $this->normalise('mukim', '?::text');
+            $paramDistrict = $this->normalise('district', '?::text');
+            $rows = DB::select(
+                "SELECT f.id FROM core.gis_features f
+                 WHERE f.snapshot_id = ?::bigint
+                   AND core.gis_norm_lot(?::text) <> '' AND $paramMukim <> '' AND $paramDistrict <> ''
+                   AND $featureLot = core.gis_norm_lot(?::text)
+                   AND $featureMukim = $paramMukim
+                   AND $featureDistrict = $paramDistrict
+                 LIMIT 2",
+                [$layer->active_snapshot_id,
+                    (string) $lot->lot_number, (string) $lot->mukim, (string) $lot->district,
+                    (string) $lot->lot_number, (string) $lot->mukim, (string) $lot->district],
+            );
+            if (count($rows) === 1) { // Zero is unmatched; more than one is ambiguous and ignored.
+                $featureIds[] = $rows[0]->id;
             }
-            $conditions[] = '('.implode(' AND ', $parts).')';
-            array_push($bindings, ...$partBindings);
         }
-        if ($conditions === []) {
+        if ($featureIds === []) {
             return null;
         }
 
         $row = DB::selectOne(
-            'SELECT ST_AsGeoJSON(ST_Multi(ST_Union(f.geom))) AS geojson FROM core.gis_features f
-             WHERE f.snapshot_id = ?::bigint AND ('.implode(' OR ', $conditions).')',
-            $bindings,
+            'SELECT ST_AsGeoJSON(ST_Multi(ST_Union(f.geom))) AS geojson FROM core.gis_features f WHERE f.id IN ('.implode(',', array_fill(0, count($featureIds), '?')).')',
+            $featureIds,
         );
 
         return $row?->geojson === null ? null : json_decode($row->geojson, true);

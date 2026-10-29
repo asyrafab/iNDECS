@@ -218,6 +218,56 @@ final class MeetingMapTest extends TestCase
         $this->assertNotContains($viaLot->id, array_column($unmapped, 'id'));
     }
 
+    /** @param  array<int, array{0: float, 1: float, 2: array<string, string>}>  $features */
+    private function lotsLayer(array $features): void
+    {
+        $layer = GisLayer::query()->updateOrCreate(['id' => 'lots'], [
+            'label' => 'Lot', 'kind' => 'reference', 'source_url' => 'https://example.test/lots',
+            'match_attributes' => ['lot_number' => 'lot', 'mukim' => 'mukim', 'district' => 'daerah'],
+        ]);
+        $snapshot = GisLayerSnapshot::query()->create(['layer_id' => 'lots', 'status' => 'active', 'feature_count' => count($features)]);
+        $layer->update(['active_snapshot_id' => $snapshot->id]);
+        foreach ($features as [$lon, $lat, $attrs]) {
+            $wkt = $this->square($lon, $lat);
+            DB::insert(
+                'INSERT INTO core.gis_features (snapshot_id, attributes, geom, geom_web) VALUES (?, ?::jsonb, ST_GeomFromText(?, 4326), ST_Transform(ST_GeomFromText(?, 4326), 3857))',
+                [$snapshot->id, json_encode($attrs), $wkt, $wkt],
+            );
+        }
+    }
+
+    private function itemWithLot(string $title, array $lot): AgendaItem
+    {
+        $app = $this->application('LOT/'.$title);
+        $app->lots()->attach(Lot::query()->create($lot)->id);
+
+        return $this->propose($title, 'JBANG', $app->id);
+    }
+
+    public function test_lot_fallback_requires_lot_mukim_and_district_and_a_unique_match(): void
+    {
+        $tengah = ['mukim' => 'MUKIM 4', 'daerah' => 'SEBERANG PERAI TENGAH'];
+        $this->lotsLayer([
+            [100.50, 5.50, ['lot' => '12'] + $tengah],
+            [100.51, 5.50, ['lot' => '12', 'mukim' => 'MUKIM 5', 'daerah' => 'SEBERANG PERAI TENGAH']],
+            [100.52, 5.50, ['lot' => '77'] + $tengah],
+            [100.53, 5.50, ['lot' => '77'] + $tengah],
+            [100.54, 5.50, ['lot' => '900'] + $tengah],
+        ]);
+        $noMukim = $this->itemWithLot('TanpaMukim', ['lot_number' => '12', 'mukim' => '', 'district' => 'Seberang Perai Tengah']);
+        $noDistrict = $this->itemWithLot('TanpaDaerah', ['lot_number' => '12', 'mukim' => 'Mukim 4', 'district' => ' ']);
+        $ambiguous = $this->itemWithLot('Kabur', ['lot_number' => '77', 'mukim' => 'Mukim 4', 'district' => 'Seberang Perai Tengah']);
+        $this->itemWithLot('Jelas', ['lot_number' => 'LOT 0900', 'mukim' => 'Mukim 04', 'district' => 'Seberang Perai Tengah']);
+
+        $json = $this->mapData($this->secretary)->assertOk()->json();
+        $mapped = array_column(array_column($this->items($json), 'properties'), 'geometry_source', 'title');
+        $this->assertSame(['Jelas' => 'lot'], $mapped);
+        $this->assertEqualsCanonicalizing(
+            [$noMukim->id, $noDistrict->id, $ambiguous->id],
+            array_column($json['properties']['unmapped'], 'id'),
+        );
+    }
+
     public function test_earlier_tablings_are_listed_when_visible(): void
     {
         $app = $this->application('OSC/4');
