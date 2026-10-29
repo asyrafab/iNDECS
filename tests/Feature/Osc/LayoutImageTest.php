@@ -360,8 +360,30 @@ final class LayoutImageTest extends TestCase
         $features = $this->actingAs($this->member)->getJson(route('osc.meetings.map-data', $this->meeting))->assertOk()->json('features');
         $this->assertNotEmpty($features);
         foreach ($features as $feature) {
-            $this->assertNotSame('legacy', $feature['properties']['kind']);
-            $this->assertArrayNotHasKey('layout_corners', $feature['properties']['kind'] === 'legacy' ? $feature['properties'] : []);
+            $this->assertNull($feature['properties']['layout_url'] ?? null);
+            $this->assertNull($feature['properties']['layout_corners'] ?? null);
         }
+    }
+
+    public function test_failed_attempt_never_deletes_a_committed_content_addressed_file(): void
+    {
+        $this->place();
+        $first = $this->itemLayout();
+        // Another attempt with identical bytes has already committed the final file for the next version.
+        $png = $this->png(400, 300);
+        $final = 'osc/layouts/items/'.$this->item->id.'/'.hash_file('sha256', $png->getRealPath()).'.png';
+        Storage::disk('local')->put($final, (string) file_get_contents($png->getRealPath()));
+
+        $this->place($this->planner, ['layout' => $png, 'expected_version' => 99])->assertSessionHasErrors(['layout' => self::STALE]);
+
+        Storage::disk('local')->assertExists($final);
+        Storage::disk('local')->assertExists($first->path);
+        $this->assertSame($first->path, $this->itemLayout()->path);
+        $this->assertSame([], Storage::disk('local')->allFiles('osc/layouts/tmp'));
+
+        // A successful attempt reuses the existing final file and still leaves no temporary file.
+        $this->place($this->planner, ['layout' => $this->png(400, 300), 'expected_version' => 1])->assertSessionHasNoErrors();
+        $this->assertSame($final, $this->itemLayout()->path);
+        $this->assertSame([], Storage::disk('local')->allFiles('osc/layouts/tmp'));
     }
 }

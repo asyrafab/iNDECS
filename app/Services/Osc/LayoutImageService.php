@@ -53,29 +53,33 @@ final class LayoutImageService
         $sha256 = hash_file('sha256', $realPath);
         $path = 'osc/layouts/items/'.$item->id.'/'.$sha256.'.'.self::MIMES[$mime];
         $disk = Storage::disk('local');
-        $created = false;
+        $temp = 'osc/layouts/tmp/'.Str::ulid().'.'.self::MIMES[$mime];
         $scanError = null;
 
         try {
-            // Store and scan before any lock is taken: a slow scan must not hold the item and layout rows.
-            if (! $disk->exists($path)) {
-                if (! $disk->put($path, (string) file_get_contents($realPath))) {
-                    throw ValidationException::withMessages(['layout' => 'Imej tidak dapat disimpan.']);
-                }
-                $created = true;
+            // Write to a per-attempt temporary path and scan it before any lock is taken: a slow scan must not hold
+            // the item and layout rows, and concurrent attempts never share a file until the final move.
+            if (! $disk->put($temp, (string) file_get_contents($realPath))) {
+                throw ValidationException::withMessages(['layout' => 'Imej tidak dapat disimpan.']);
             }
             try {
-                $this->scanner->assertClean($disk->path($path));
+                $this->scanner->assertClean($disk->path($temp));
             } catch (Throwable $rejection) {
                 $scanError = $rejection;
                 throw ValidationException::withMessages(['layout' => 'Imej gagal imbasan keselamatan dan tidak diterima.']);
             }
 
-            return DB::transaction(function () use ($item, $actor, $mime, $width, $height, $corners, $sha256, $path, $expectedVersion): LayoutImage {
+            return DB::transaction(function () use ($item, $actor, $mime, $width, $height, $corners, $sha256, $path, $temp, $expectedVersion, $disk): LayoutImage {
                 AgendaItem::query()->lockForUpdate()->findOrFail($item->id); // serialises placements for this item
                 $existing = LayoutImage::query()->where('owner_type', 'agenda_item')->where('owner_id', $item->id)->lockForUpdate()->first();
                 if ($existing !== null && $existing->row_version !== $expectedVersion) {
                     throw ValidationException::withMessages(['layout' => self::STALE]);
+                }
+                // Under the lock: promote the scanned file to its content-addressed path, or reuse the one already there.
+                if ($disk->exists($path)) {
+                    $disk->delete($temp);
+                } elseif (! $disk->move($temp, $path)) {
+                    throw ValidationException::withMessages(['layout' => 'Imej tidak dapat disimpan.']);
                 }
 
                 $before = $existing === null ? null : ['sha256' => $existing->sha256, 'corners' => $this->cornersOf($existing->id)];
@@ -107,15 +111,15 @@ final class LayoutImageService
                 return LayoutImage::query()->findOrFail($id);
             });
         } catch (Throwable $error) {
-            if ($created) {
-                $disk->delete($path); // a replaced plan's old file is never removed; only a file this attempt created is
-            }
+            // Only this attempt's temporary file is ever removed; content-addressed files may belong to a committed row.
             if ($scanError !== null) {
                 Log::warning('eOSC+ layout plan rejected by security scan.', [
                     'item_id' => $item->id, 'actor_id' => $actor->id, 'error' => $scanError->getMessage(),
                 ]);
             }
             throw $error;
+        } finally {
+            $disk->delete($temp); // no-op once promoted or reused
         }
     }
 
