@@ -21,14 +21,21 @@ two local Cassini projections that PostGIS does not ship.
   20 random MJKP papers that have both an ArcGIS point and a georeferenced plan): the point falls inside the
   image corners for 17 of 20 (85 %) under 990001 and 17 of 20 (85 %) under 990002; the three misses are the same
   under both and are far off (3 to 38 km), so they are bad legacy points or mismatched plans, not a projection
-  error. The two SRIDs differ by only about 10 m at plan scale, so the check cannot separate them. The default
-  for `osc:import-legacy --srid` is **990001**, the ArcGIS layer CRS. Most legacy `plan_` names are
-  `<file ref>_<scan>.jpg` and only the scan part has a `.jgw`, so the importer also tries the part after the
-  last underscore.
+  error. The two SRIDs differ by about 11 m at plan scale (measured), and the 100 m containment guard cannot
+  separate them. The default for `osc:import-legacy --srid` is **990001**, the ArcGIS layer CRS, pending the
+  go-live check below. The importer names each plan from the paper's `pelan_tapak_scan` attribute first, then
+  from `plan_`; it does not guess file names (the earlier underscore-suffix heuristic was removed).
+- **Go-live check for the legacy SRID (owner decision).** Before go-live, overlay 5 to 10 legacy plans that show
+  lot lines on the replicated cadastre, once imported under 990001 and once under 990002, measure the offset
+  between the plan's lot lines and the cadastre for each, and choose the SRID with the smaller offset. Expect a
+  difference of about 11 m between the two. Rerunning `osc:import-legacy --images --srid=<chosen>` converges:
+  imported placements are recomputed and hand-placed ones are left alone. Record the measurements here.
 - **Snapshot replication with ogr2ogr.** Reference layers are copied from ArcGIS into dated snapshots
   (`core.gis_layer_snapshots`); a layer points at its active snapshot, and a failed import never replaces it.
   ArcGIS queries are anonymous; a token, if ever needed, lives in `.env` only and is redacted from logs.
-- **Vector tiles from PostGIS.** Reference layers are served as Mapbox vector tiles with `ST_AsMVT`.
+- **Vector tiles from PostGIS.** Reference layers are served as Mapbox vector tiles with `ST_AsMVT`, from zoom
+  12 only (lower zooms would aggregate a whole layer per tile) and throttled per user. Agenda items, earlier
+  tablings and past decisions are not tiles: they come as GeoJSON from the meeting's map-data endpoint.
 - **OpenLayers vendored** under `public/vendor/openlayers` at a pinned 10.x version, with its licence and
   `VERSION` file. There is no build step.
 - **Layout placement by corners.** A scanned layout plan is stored as an image plus a four-corner polygon in 4326
@@ -44,5 +51,6 @@ two local Cassini projections that PostGIS does not ship.
 
 - PostGIS is a hard requirement (already in the platform decision). The migration creates the extension and the
   two SRIDs; its `down()` refuses to run while any GIS data exists.
-- Reference data can be up to one refresh old; the snapshot date is shown on the map.
+- Reference data can be up to one refresh old. The snapshot date is not shown on the map; it is shown only on
+  the `/osc` "Lapisan peta" panel, to managers.
 - Eloquent models do not read or write geometry columns; PostGIS SQL does.
