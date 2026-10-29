@@ -22,7 +22,7 @@ final class AgendaService
     {
         $department = (string) $application->responsible_department_id;
         $this->authorisePropose($actor, $department);
-        abort_unless($actor->canAccessApplication($application), 403);
+        abort_unless(OscAccess::canManage($actor) || $actor->canAccessApplication($application), 403);
 
         return DB::transaction(function () use ($meeting, $application, $purpose, $presenter, $actor, $department): AgendaItem {
             $record = $this->lockOpenMeeting($meeting, $actor);
@@ -46,7 +46,7 @@ final class AgendaService
     /** @param array<string, mixed> $data */
     public function proposeStandalone(Meeting $meeting, array $data, User $actor): AgendaItem
     {
-        $department = (string) $actor->department_id;
+        $department = $this->standaloneDepartment($data, $actor);
         $this->authorisePropose($actor, $department);
 
         return DB::transaction(function () use ($meeting, $data, $actor, $department): AgendaItem {
@@ -95,6 +95,20 @@ final class AgendaService
     private function authorisePropose(User $actor, string $department): void
     {
         abort_unless(OscAccess::canManage($actor) || $actor->canPerformOsc('osc.agenda.propose', $department), 403);
+    }
+
+    /** @param array<string, mixed> $data */
+    private function standaloneDepartment(array $data, User $actor): string
+    {
+        if (! OscAccess::canManage($actor)) {
+            return (string) $actor->department_id;
+        }
+        $department = (string) ($data['department_id'] ?? '');
+        if ($department === '' || ! DB::table('departments')->where('id', $department)->exists()) {
+            throw ValidationException::withMessages(['department_id' => 'Jabatan mesti dipilih.']);
+        }
+
+        return $department;
     }
 
     private function lockOpenMeeting(Meeting $meeting, User $actor): Meeting

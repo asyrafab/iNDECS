@@ -176,7 +176,7 @@ final class AgendaProposalTest extends TestCase
 
         $this->assertRefused('Tarikh tutup cadangan agenda telah berlalu.', fn () => $this->service()->proposeLinked($this->meeting, $application, TablingPurpose::Permohonan, $this->officer, $this->officer));
 
-        $item = $this->service()->proposeStandalone($this->meeting, $this->standalone(), $this->secretary);
+        $item = $this->service()->proposeStandalone($this->meeting, $this->standalone(['department_id' => 'JPBD']), $this->secretary);
         $this->assertSame(AgendaItemStatus::Proposed, $item->status);
     }
 
@@ -235,5 +235,40 @@ final class AgendaProposalTest extends TestCase
         $this->assertForbidden(fn () => $this->service()->endorse($item, 1, $this->seniorOfficer));
         $seniorPlanner = User::factory()->create(['role' => 'senior_planning_officer', 'department_id' => 'JPBD']);
         $this->assertRefused('Rekod telah berubah. Muat semula sebelum meneruskan.', fn () => $this->service()->endorse($item, 0, $seniorPlanner));
+    }
+
+    public function test_secretary_chooses_department_for_standalone_item(): void
+    {
+        $item = $this->service()->proposeStandalone($this->meeting, $this->standalone(['department_id' => 'JBANG']), $this->secretary);
+        $this->assertSame('JBANG', $item->department_id);
+
+        foreach ([[], ['department_id' => 'XXXX']] as $extra) {
+            $this->assertRefused('Jabatan mesti dipilih.', fn () => $this->service()->proposeStandalone($this->meeting, $this->standalone($extra), $this->secretary), 'department_id');
+        }
+        $this->assertSame(1, $this->meeting->items()->count());
+    }
+
+    public function test_officer_standalone_ignores_department_id(): void
+    {
+        $item = $this->service()->proposeStandalone($this->meeting, $this->standalone(['department_id' => 'JBANG']), $this->planner);
+
+        $this->assertSame('JPBD', $item->department_id);
+    }
+
+    public function test_secretary_tables_linked_application_on_behalf_of_department(): void
+    {
+        $item = $this->service()->proposeLinked($this->meeting, $this->application(), TablingPurpose::Permohonan, $this->officer, $this->secretary);
+
+        $this->assertSame('JBANG', $item->department_id);
+        $this->assertSame($this->secretary->id, $item->proposed_by);
+    }
+
+    public function test_secretary_tables_linked_application_after_cutoff(): void
+    {
+        $this->travelTo(now()->addDays(3));
+
+        $item = $this->service()->proposeLinked($this->meeting, $this->application(), TablingPurpose::Permohonan, $this->officer, $this->secretary);
+
+        $this->assertSame(AgendaItemStatus::Proposed, $item->status);
     }
 }
