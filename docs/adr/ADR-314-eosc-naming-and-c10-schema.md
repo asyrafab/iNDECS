@@ -18,7 +18,11 @@ roles so that the modules do not collide and the identifiers stay predictable.
 - Permissions: `osc.meeting.view`, `osc.meeting.manage`, `osc.agenda.propose`,
   `osc.agenda.endorse`.
 - Roles: `osc_secretary` (Setiausaha OSC) and `osc_steno` (STENO OSC).
-- Every mutable record carries `row_version` for optimistic concurrency.
+- Every mutable record carries `row_version` for optimistic concurrency, except the two
+  tables named under Consequences (meeting members and department settings).
+- Times are stored as UTC instants (`timestamptz`, written with an explicit offset). eOSC+
+  parses form input and displays times in `config('app.display_timezone')`
+  (`Asia/Kuala_Lumpur`); the application-wide timezone stays UTC.
 - PHP code lives in `App\Enums\Osc` and `App\Models\Osc`.
 
 ## Consequences

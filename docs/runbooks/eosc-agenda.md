@@ -15,9 +15,20 @@ The migration creates `core.osc_meetings`, `core.osc_meeting_members`, `core.osc
 
 Rollback refuses to drop the tables once any meeting exists; use a reviewed data-preserving forward fix instead.
 
+Papers can be up to 50 MB. PHP must accept that: set `upload_max_filesize` and `post_max_size` to at least `50M` (`post_max_size` slightly larger is safer) in the PHP configuration used by the web server, and allow the same body size in the web server or reverse proxy. Check with `php -i | grep -E "upload_max_filesize|post_max_size"` for the CLI and a phpinfo check for the web SAPI. With lower limits an upload fails before it reaches iNDECS.
+
+Times: every date and time in eOSC+ (meeting time, cut-offs, published-at labels) is entered and shown in Malaysian local time (`Asia/Kuala_Lumpur`, UTC+8), set by `DISPLAY_TIMEZONE` (config `app.display_timezone`). The database stores UTC. Do not change the application timezone (`config/app.php`) for eOSC+.
+
 ## Granting roles
 
-A staff account has one role in `users.role`. Set it to `osc_secretary` or `osc_steno` for the people who run the meeting. Both receive `osc.meeting.view` and `osc.meeting.manage` and are called "managers" below. Only active staff accounts (`account_type = staff`) can use `/osc`; others get 403.
+A staff account has one role in `users.role`. Set it to `osc_secretary` or `osc_steno` for the people who run the meeting. Both receive `osc.meeting.view` and `osc.meeting.manage` and are called "managers" below. They can sign in with that role alone and land on `/osc`.
+
+Who can open `/osc` (only active staff accounts, `account_type = staff`, `is_active = true`):
+
+- holders of `osc.meeting.view` (the roles in the table below, the OSC roles and `system_admin`);
+- any staff account that is the chairperson, secretary, STENO or a member of a meeting, or the presenter or proposer of an agenda item, whatever its role. Such a person can sign in even with no other iNDECS access and lands on `/osc`.
+
+Everyone else gets 403 on `/osc`, and an account with no other iNDECS workspace is refused at sign-in. Opening `/osc` does not show every meeting: each meeting and item is still checked individually (see "What people see").
 
 Existing roles already get grants from the seeder:
 
@@ -33,12 +44,31 @@ The `senior_*` roles act as heads of department for endorsement. Any other role 
 
 ## Creating a meeting
 
-A manager opens `/osc` and chooses to create a meeting. Enter the meeting number (unique), date and time (must be in the future), venue, and two cut-offs, both on or before the meeting time:
+A manager opens `/osc` and chooses to create a meeting. Enter the meeting number (unique per meeting type), date and time in Malaysian local time (must be in the future), venue, and two cut-offs, both on or before the meeting time:
 
-- **Tutup cadangan** (proposal cut-off): after this, officers cannot propose items. Managers still can.
+- **Tutup cadangan agenda** (proposal cut-off): after this, officers cannot propose items. Managers still can.
 - **Tutup kertas kerja** (paper cut-off): accepted items without a paper after this time are flagged as missing a paper.
 
-Choose the chairperson (set per meeting, not a fixed role), secretary, optional STENO and the members. All must be active staff. Members are set when the meeting is created. Changing them later needs a screen that is planned for Plan 3; Plan 1 has none. A new meeting starts as a draft.
+Choose the chairperson (set per meeting, not a fixed role), secretary, optional STENO and the members. All must be active staff. Any active staff account may be chosen; being chosen is enough to open the meeting in `/osc` once its agenda is published. Members are set when the meeting is created. A new meeting starts as a draft.
+
+### Changing members before a screen exists
+
+Plan 1 has no screen for changing members (planned for Plan 3). Until then an operator makes the change on request from the meeting secretary, through the audited service method, never by editing `core.osc_meeting_members` directly:
+
+1. Record the request (who asked, the meeting number, the full new list) in the change ticket.
+2. Check that every person is an active staff account: `SELECT id, name, account_type, is_active FROM users WHERE id IN (...);` The service does not repeat the screen's staff check, so do not continue if any row is not `staff` and `true`.
+3. Run `php artisan tinker` on the application server with the production environment and call the service as the requesting secretary (an account holding `osc.meeting.manage`):
+
+```php
+$meeting = App\Models\Osc\Meeting::query()->where('meeting_type', 'jawatankuasa_osc')->where('number', 'Bil. 21/2026')->firstOrFail();
+$actor = App\Models\User::query()->where('email', 'secretary@mbsp.gov.my')->firstOrFail();
+app(App\Services\Osc\MeetingService::class)->setMembers($meeting, [
+    'chair_id' => 12, 'secretary_id' => 34, 'steno_id' => 56, // steno_id may be null
+    'member_ids' => [78, 90],
+], $meeting->row_version, $actor);
+```
+
+The list replaces the whole membership, so give the chairperson, secretary, STENO and every member each time. The call uses the meeting's current `row_version`; if someone changed the meeting in between it is refused ("Rekod telah berubah") and you rerun step 3. It is refused for closed or minutes-confirmed meetings. It writes an `osc_meeting_members_changed` audit row with the before and after lists and the secretary as actor; quote that audit row id in the ticket.
 
 ## Proposing items
 
@@ -83,10 +113,12 @@ The item's presenter, proposer or a manager can upload a paper. Rules: PDF only,
 | Presenter or proposer | Their own items, whatever the status, including a return reason |
 | Head of department | All items of their own department, and the Sokong action |
 
+The `/osc` list shows the same meetings: managers see all; others see meetings where they are a member (once published), presenter or proposer, or where their department has an item they may endorse. A head of department also sees how many items are waiting for their endorsement.
+
 ## Staff accounts only
 
 Until Plan 4 (attendee access) ships, members, chairperson and presenters must be staff accounts. External attendees (PSP, owner, outside agencies) cannot be added or log in. Plan meetings with staff only.
 
 ## Validation
 
-`php artisan test` covers meetings, linked and standalone proposals, cut-offs, endorsement, accept/return, versioned publishing and changes, papers, visibility and closed-meeting refusals. Use the configured test database, never a production connection.
+`php artisan test` covers meetings, linked and standalone proposals, cut-offs, endorsement, accept/return, versioned publishing and changes, papers, visibility, closed-meeting refusals, sign-in for eOSC+-only staff and members, and cut-offs in Malaysian local time. Use the configured test database, never a production connection.
