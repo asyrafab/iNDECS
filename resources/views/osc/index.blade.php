@@ -21,7 +21,7 @@
         <ol class="agenda-list">
             @foreach ($pickable as $option)
                 <li class="agenda-row">
-                    <span class="agenda-row-number" aria-hidden="true"><x-icon name="calendar-plus" /></span>
+                    <span class="agenda-row-number" aria-hidden="true"><x-icon name="file-plus-2" /></span>
                     <div class="agenda-row-body"><strong>{{ $option->number }}</strong><p class="agenda-row-meta"><span>{{ $option->scheduled_at->format('d/m/Y H:i') }}</span><span>{{ $option->venue }}</span><span>Tutup cadangan {{ $option->proposal_cutoff_at->format('d/m/Y H:i') }}</span></p></div>
                     <div class="agenda-row-actions"><a class="button button-primary button-small" href="{{ route('osc.items.create', [$option, 'application' => $application->id]) }}">Bentang ke mesyuarat ini</a></div>
                 </li>

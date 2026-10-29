@@ -98,7 +98,11 @@ final class MeetingController extends Controller
             return view('osc.show', $data);
         }
 
-        $data['mine'] = $meeting->items()->where('presenter_id', $user->id)->with(['presenter', 'papers'])->get();
+        $endorsable = OscAccess::endorsableDepartments($user, $meeting);
+        $data['endorsable'] = $endorsable;
+        $data['endorsing'] = DepartmentSetting::query()->where('requires_endorsement', true)->pluck('department_id')->all();
+        $data['mine'] = $meeting->items()->where(fn (Builder $own) => $own->where('presenter_id', $user->id)
+            ->orWhere('proposed_by', $user->id)->orWhereIn('department_id', $endorsable))->with(['presenter', 'papers'])->get();
         $data['agenda'] = collect();
         $data['published'] = null;
         if ($meeting->status !== MeetingStatus::Draft && OscAccess::isMember($user, $meeting)) {

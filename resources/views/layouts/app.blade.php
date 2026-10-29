@@ -9,7 +9,7 @@
     $workspaceName = $isOsc ? 'eOSC+' : ($isBangunan ? 'iNDECS Bangunan' : 'iNDECS Perancang');
     $workspaceShort = $isOsc ? 'eOSC+' : ($isBangunan ? 'Bangunan' : 'Perancang');
     $workspaceDepartment = $isOsc ? 'Mesyuarat OSC' : ($isBangunan ? 'Jabatan Bangunan' : 'Jabatan Perancang Bandar');
-    $workspaceIcon = $isOsc ? 'gavel' : ($isBangunan ? 'building-2' : 'map');
+    $workspaceIcon = $isOsc ? 'folder-open' : ($isBangunan ? 'building-2' : 'map');
     $homeUrl = $isOsc ? route('osc.meetings.index') : ($isBangunan ? ($canBangunan ? route('bangunan.index') : route('bangunan.legacy.index')) : ($canBangunan ? route('perancang.index') : route('dashboard')));
     $canRegisterBangunan = $canBangunan && collect(\App\Models\BangunanApplication::TYPES)->contains(fn ($family) => $staff->canPerformBangunan('access', $family) && $staff->canPerformBangunan('register', $family));
 @endphp
@@ -43,7 +43,7 @@
                 <nav aria-label="Pilih ruang jabatan">
                     @if ($canPerancang)<a href="{{ $canBangunan ? route('perancang.index') : route('dashboard') }}" @if (! $isBangunan && ! $isOsc) aria-current="page" @endif><x-icon name="map" />iNDECS Perancang</a>@endif
                     @if ($canBangunan)<a href="{{ route('bangunan.index') }}" @if ($isBangunan && ! request()->routeIs('bangunan.legacy.*')) aria-current="page" @endif><x-icon name="building-2" />iNDECS Bangunan</a>@elseif ($canLegacy)<a href="{{ route('bangunan.legacy.index') }}" aria-current="page"><x-icon name="archive" />Bangunan · Rekod warisan</a>@endif
-                    @if ($canOsc)<a href="{{ route('osc.meetings.index') }}" @if ($isOsc) aria-current="page" @endif><x-icon name="gavel" />eOSC+</a>@endif
+                    @if ($canOsc)<a href="{{ route('osc.meetings.index') }}" @if ($isOsc) aria-current="page" @endif><x-icon name="folder-open" />eOSC+</a>@endif
                 </nav>
             </details>
             <nav class="primary-nav" aria-label="Navigasi utama">
@@ -55,13 +55,13 @@
                     @endif
                     @if ($canLegacy)<a href="{{ route('bangunan.legacy.index') }}" class="nav-link {{ request()->routeIs('bangunan.legacy.*') ? 'active' : '' }}" @if (request()->routeIs('bangunan.legacy.*')) aria-current="page" @endif><x-icon name="archive" />Carian Rekod Warisan</a>@endif
                 @elseif ($isOsc)
-                    <a href="{{ route('osc.meetings.index') }}" class="nav-link active" aria-current="page"><x-icon name="gavel" />Mesyuarat OSC</a>
+                    <a href="{{ route('osc.meetings.index') }}" class="nav-link active" aria-current="page"><x-icon name="folder-open" />Mesyuarat OSC</a>
                 @else
                     @if (! $canBangunan)<a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" @if (request()->routeIs('dashboard')) aria-current="page" @endif><x-icon name="layout-dashboard" />Ringkasan</a>@endif
                     <a href="{{ route('perancang.index') }}" class="nav-link {{ request()->routeIs('perancang.index', 'perancang.show') ? 'active' : '' }}" @if (request()->routeIs('perancang.index', 'perancang.show')) aria-current="page" @endif><x-icon name="files" />Permohonan PKM</a>
                     @if ($staff->canPerformPkm('perancang.pkm.register'))<a href="{{ route('perancang.create') }}" class="nav-link {{ request()->routeIs('perancang.create') ? 'active' : '' }}" @if (request()->routeIs('perancang.create')) aria-current="page" @endif><x-icon name="file-plus-2" />Daftar PKM</a>@endif
                 @endif
-                @if ($canOsc && ! $isOsc)<a href="{{ route('osc.meetings.index') }}" class="nav-link"><x-icon name="gavel" />eOSC+</a>@endif
+                @if ($canOsc && ! $isOsc)<a href="{{ route('osc.meetings.index') }}" class="nav-link"><x-icon name="folder-open" />eOSC+</a>@endif
                 <span class="nav-label nav-label-spaced">Bantuan</span>
                 <button class="nav-link" type="button" data-amira-open aria-controls="amira-panel" aria-expanded="false"><x-icon name="messages-square" />Panduan AMIRA</button>
             </nav>

@@ -61,9 +61,7 @@ final class AgendaItemController extends Controller
             $agenda->proposeStandalone($meeting, $data, $user);
         }
 
-        $target = OscAccess::canViewMeeting($user, $meeting) ? route('osc.meetings.show', $meeting) : route('osc.meetings.index');
-
-        return redirect($target)->with('status', 'Cadangan telah dihantar ke agenda mesyuarat.');
+        return to_route('osc.meetings.show', $meeting)->with('status', 'Cadangan telah dihantar ke agenda mesyuarat.');
     }
 
     public function endorse(Request $request, AgendaItem $item, AgendaService $agenda): RedirectResponse

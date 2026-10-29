@@ -29,6 +29,18 @@ final class OscAccess
             return true;
         }
 
-        return $meeting->items()->where('presenter_id', $user->id)->exists();
+        if ($meeting->items()->where(fn ($items) => $items->where('presenter_id', $user->id)->orWhere('proposed_by', $user->id))->exists()) {
+            return true;
+        }
+
+        return self::endorsableDepartments($user, $meeting) !== [];
+    }
+
+    /** @return array<int, string> Departments in this meeting's items that the user may endorse for. */
+    public static function endorsableDepartments(User $user, Meeting $meeting): array
+    {
+        return $meeting->items()->reorder()->distinct()->pluck('department_id')
+            ->filter(fn ($department) => $user->canPerformOsc('osc.agenda.endorse', (string) $department))
+            ->values()->all();
     }
 }

@@ -159,8 +159,7 @@ application, two = linked pair, three = development case.
 
 - eOSC+ screens (`resources/views/osc/`) use `.agenda-list`, `.agenda-row`, `.agenda-row-number`,
   `.agenda-row-body`, `.agenda-row-meta`, `.agenda-row-actions`, `.inline-form` and `.panel-stack`
-  in `indecs.css`; rows collapse to one column on phones. The Lucide sprite gained `gavel`,
-  `calendar-plus` and `arrow-down`.
+  in `indecs.css`; rows collapse to one column on phones.
 
 - Bahasa Melayu is the interface language (`lang/ms`). Application type codes stay as-is.
 - Reuse the existing class names in `public/css/indecs.css` before inventing new ones. If you

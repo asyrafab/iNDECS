@@ -111,7 +111,7 @@
                         </div>
                         @if (! $locked)
                             <div class="agenda-row-actions">
-                                @foreach ([['up', $up, 'arrow-up', 'Naikkan', $index === 0], ['down', $down, 'arrow-down', 'Turunkan', $index === count($ids) - 1]] as [$direction, $order, $icon, $label, $disabled])
+                                @foreach ([['up', $up, 'arrow-up', 'Naikkan', $index === 0], ['down', $down, 'chevron-down', 'Turunkan', $index === count($ids) - 1]] as [$direction, $order, $icon, $label, $disabled])
                                     <form method="POST" action="{{ route('osc.meetings.reorder', $meeting) }}">
                                         @csrf
                                         <input type="hidden" name="expected_version" value="{{ $meeting->row_version }}">
@@ -146,7 +146,7 @@
 @else
     @if ($mine->isNotEmpty())
     <section class="content-card" id="cadangan-saya">
-        <div class="card-heading"><h2>Cadangan saya</h2><span class="muted">{{ $mine->count() }} perkara</span></div>
+        <div class="card-heading"><h2>{{ count($endorsable) ? 'Cadangan' : 'Cadangan saya' }}</h2><span class="muted">{{ $mine->count() }} perkara</span></div>
         <ul class="agenda-list">
             @foreach ($mine as $item)
                 <li class="agenda-row">
@@ -155,8 +155,11 @@
                         <strong>{{ $item->title }}</strong>
                         <p class="agenda-row-meta"><span class="status-badge {{ $itemBadge[$item->status->value] }}">{{ $item->status->label() }}</span><span>{{ $item->reference ?: $item->standalone_type }}</span><span>{{ $item->purpose->label() }}</span><span>{{ $departments[$item->department_id] ?? $item->department_id }}</span></p>
                         @if ($item->status === \App\Enums\Osc\AgendaItemStatus::Returned && $item->return_reason)<p class="agenda-row-meta"><span class="status-badge status-attention">Sebab pengembalian</span><span>{{ $item->return_reason }}</span></p>@endif
-                        @include('osc._paper', ['item' => $item, 'upload' => ! $locked])
+                        @include('osc._paper', ['item' => $item, 'upload' => ! $locked && ($item->presenter_id === $viewer->id || $item->proposed_by === $viewer->id)])
                     </div>
+                    @if (! $locked && $item->status === \App\Enums\Osc\AgendaItemStatus::Proposed && in_array($item->department_id, $endorsable, true) && in_array($item->department_id, $endorsing, true))
+                        <div class="agenda-row-actions"><form method="POST" action="{{ route('osc.items.endorse', $item) }}">@csrf<input type="hidden" name="expected_version" value="{{ $item->row_version }}"><button type="submit" class="button button-secondary button-small">Sokong</button></form></div>
+                    @endif
                 </li>
             @endforeach
         </ul>

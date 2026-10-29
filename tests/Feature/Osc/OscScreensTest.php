@@ -12,11 +12,13 @@ use App\Enums\Osc\MeetingStatus;
 use App\Enums\Osc\TablingPurpose;
 use App\Models\Application;
 use App\Models\Osc\AgendaItem;
+use App\Models\Osc\DepartmentSetting;
 use App\Models\Osc\Meeting;
 use App\Models\Site;
 use App\Models\User;
 use App\Services\Osc\AgendaService;
 use App\Services\Osc\MeetingService;
+use App\Services\Osc\OscAccess;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -265,6 +267,53 @@ final class OscScreensTest extends TestCase
         $item = AgendaItem::query()->where('application_id', $application->id)->firstOrFail();
         $this->assertSame(AgendaItemStatus::Proposed, $item->status);
         $this->assertSame('Cadangan bangunan pejabat', $item->title);
+    }
+
+    public function test_department_endorser_sees_only_own_department_items_and_can_endorse(): void
+    {
+        DepartmentSetting::query()->create(['department_id' => 'JBANG', 'requires_endorsement' => true]);
+        $endorser = User::factory()->create(['role' => 'senior_building_officer', 'department_id' => 'JBANG']);
+        $mine = $this->propose('Perkara JBANG Disokong', $this->officer, 'JBANG');
+        $this->propose('Perkara JPBD Tersembunyi', $this->member, 'JPBD');
+
+        $this->actingAs($endorser)->get(route('osc.meetings.show', $this->meeting))->assertOk()
+            ->assertSee('Perkara JBANG Disokong')->assertSee('Sokong')
+            ->assertDontSee('Perkara JPBD Tersembunyi')->assertDontSee('Terbitkan agenda');
+        $this->actingAs($endorser)->post(route('osc.items.endorse', $mine), ['expected_version' => $mine->row_version])
+            ->assertSessionHasNoErrors()->assertSessionHas('status');
+        $this->assertSame(AgendaItemStatus::Endorsed, $mine->fresh()->status);
+    }
+
+    public function test_endorser_for_another_department_gets_403(): void
+    {
+        $this->propose('Perkara JBANG');
+        $planningHead = User::factory()->create(['role' => 'senior_planning_officer', 'department_id' => 'JPBD']);
+        $this->actingAs($planningHead)->get(route('osc.meetings.show', $this->meeting))->assertForbidden();
+    }
+
+    public function test_proposer_naming_another_presenter_is_redirected_to_the_meeting_and_sees_the_item(): void
+    {
+        $response = $this->actingAs($this->officer)->post(route('osc.items.store', $this->meeting), [
+            'purpose' => 'permohonan', 'standalone_type' => 'Lain', 'title' => 'Item Dicadang Pegawai', 'presenter_id' => $this->member->id,
+        ])->assertSessionHasNoErrors();
+        $response->assertRedirect(route('osc.meetings.show', $this->meeting));
+        $this->propose('Perkara Orang Lain', $this->member, 'JPBD');
+        $this->actingAs($this->officer)->get(route('osc.meetings.show', $this->meeting))->assertOk()
+            ->assertSee('Item Dicadang Pegawai')->assertDontSee('Perkara Orang Lain');
+    }
+
+    public function test_view_access_branches(): void
+    {
+        $endorser = User::factory()->create(['role' => 'senior_building_officer', 'department_id' => 'JBANG']);
+        $this->assertFalse(OscAccess::canViewMeeting($endorser, $this->meeting));
+        $this->assertFalse(OscAccess::canViewMeeting($this->officer, $this->meeting));
+        $item = $this->propose('Perkara A', $this->member, 'JBANG');
+        $this->assertTrue(OscAccess::canViewMeeting($endorser, $this->meeting));
+        $this->assertSame(['JBANG'], OscAccess::endorsableDepartments($endorser, $this->meeting));
+        $this->assertSame([], OscAccess::endorsableDepartments($this->officer, $this->meeting));
+        $item->update(['proposed_by' => $this->officer->id]);
+        $this->assertTrue(OscAccess::canViewMeeting($this->officer, $this->meeting));
+        $this->assertFalse(OscAccess::canViewMeeting($this->outsider, $this->meeting));
     }
 
     public function test_closed_meeting_hides_agenda_actions(): void
