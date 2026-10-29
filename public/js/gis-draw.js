@@ -125,6 +125,190 @@
         root.boundaryField = { map: map, source: source, snapSource: snapSource, draw: draw, modify: modify, snap: snap, collectLots: collectLots };
     }
 
-    function start() { document.querySelectorAll('[data-boundary-field]').forEach(init); }
+    /* Control-points mode: place a scanned plan from three matching points. The user clicks a point on the image, then the
+       same point on the map, three times. A live preview drapes the image over the map using the affine fit through the
+       three pairs (in EPSG:3857, pixel-centre convention like a world file); the server recomputes the corners from the
+       submitted points and is the authority. Hidden inputs control_points[i][pixel|map][0|1] carry the pairs. */
+    function initControlPoints(root) {
+        const mapEl = root.querySelector('[data-layout-map]');
+        const configEl = root.querySelector('[data-layout-config]');
+        const fileInput = root.querySelector('[data-layout-file]');
+        const imageStage = root.querySelector('[data-layout-stage]');
+        const img = root.querySelector('[data-layout-image]');
+        const pointsEl = root.querySelector('[data-layout-points]');
+        const statusEl = root.querySelector('[data-layout-status]');
+        const saveButton = root.querySelector('[data-layout-save]');
+        const resetButton = root.querySelector('[data-layout-reset]');
+        if (!mapEl || !configEl || !fileInput || !img || !pointsEl) return;
+
+        root.querySelectorAll('[data-layout-needs-js]').forEach(el => { el.hidden = false; });
+        const gis = window.GisMap.create(mapEl, JSON.parse(configEl.textContent));
+        const map = gis.map;
+        const palette = gis.palette;
+        const messages = JSON.parse(configEl.textContent).messages || {};
+
+        let pairs = [];
+        let objectUrl = null;
+        let loaded = false;
+        let styleCache = null;
+        gis.refreshers.push(() => { styleCache = null; });
+
+        const markerSource = new ol.source.Vector();
+        map.addLayer(new ol.layer.Vector({
+            source: markerSource, zIndex: 120,
+            style: feature => {
+                if (!styleCache) styleCache = {};
+                const n = String(feature.get('n'));
+                if (!styleCache[n]) {
+                    styleCache[n] = new ol.style.Style({
+                        image: new ol.style.Circle({ radius: 11, fill: new ol.style.Fill({ color: palette.measure }), stroke: new ol.style.Stroke({ color: palette.surface, width: 2 }) }),
+                        text: new ol.style.Text({ text: n, fill: new ol.style.Fill({ color: palette.surface }), font: '600 12px sans-serif' }),
+                    });
+                }
+                return styleCache[n];
+            },
+        }));
+
+        /* The draped preview: the same canvas transform osc-map.js uses for positioned plans. */
+        const previewImage = new Image();
+        let previewPoints = null;
+        const previewSource = new ol.source.ImageCanvas({
+            canvasFunction: function (extent, resolution, pixelRatio, size) {
+                const canvas = document.createElement('canvas');
+                canvas.width = size[0];
+                canvas.height = size[1];
+                if (!previewPoints || !previewImage.complete || !previewImage.naturalWidth) return canvas;
+                const ctx = canvas.getContext('2d');
+                const scale = resolution / pixelRatio;
+                const px = p => [(p[0] - extent[0]) / scale, (extent[3] - p[1]) / scale];
+                const tl = px(previewPoints[0]);
+                const tr = px(previewPoints[1]);
+                const bl = px(previewPoints[3]);
+                const w = previewImage.naturalWidth;
+                const h = previewImage.naturalHeight;
+                ctx.setTransform((tr[0] - tl[0]) / w, (tr[1] - tl[1]) / w, (bl[0] - tl[0]) / h, (bl[1] - tl[1]) / h, tl[0], tl[1]);
+                ctx.drawImage(previewImage, 0, 0);
+                return canvas;
+            },
+            ratio: 1,
+        });
+        previewImage.addEventListener('load', () => previewSource.changed());
+        map.addLayer(new ol.layer.Image({ source: previewSource, zIndex: 110, opacity: 0.65 }));
+
+        function say(text) { if (statusEl) statusEl.textContent = text; }
+
+        /* Affine fit through three pairs by Cramer's rule; null when the pixel points are collinear. */
+        function corners() {
+            const p = pairs.map(pair => pair.pixel);
+            const m = pairs.map(pair => ol.proj.fromLonLat(pair.map));
+            const det = p[0][0] * (p[1][1] - p[2][1]) - p[0][1] * (p[1][0] - p[2][0]) + (p[1][0] * p[2][1] - p[2][0] * p[1][1]);
+            if (Math.abs(det) < 1e-9) return null;
+            const solve = (v0, v1, v2) => [
+                (v0 * (p[1][1] - p[2][1]) - p[0][1] * (v1 - v2) + (v1 * p[2][1] - v2 * p[1][1])) / det,
+                (p[0][0] * (v1 - v2) - v0 * (p[1][0] - p[2][0]) + (p[1][0] * v2 - p[2][0] * v1)) / det,
+                (p[0][0] * (p[1][1] * v2 - p[2][1] * v1) - p[0][1] * (p[1][0] * v2 - p[2][0] * v1) + v0 * (p[1][0] * p[2][1] - p[2][0] * p[1][1])) / det,
+            ];
+            const fx = solve(m[0][0], m[1][0], m[2][0]);
+            const fy = solve(m[0][1], m[1][1], m[2][1]);
+            const w = img.naturalWidth;
+            const h = img.naturalHeight;
+            return [[-0.5, -0.5], [w - 0.5, -0.5], [w - 0.5, h - 0.5], [-0.5, h - 0.5]]
+                .map(c => [fx[0] * c[0] + fx[1] * c[1] + fx[2], fy[0] * c[0] + fy[1] * c[1] + fy[2]]);
+        }
+
+        function marker(n, pixel) {
+            const el = document.createElement('span');
+            el.className = 'layout-marker';
+            el.textContent = String(n);
+            el.style.left = ((pixel[0] + 0.5) / img.naturalWidth * 100) + '%';
+            el.style.top = ((pixel[1] + 0.5) / img.naturalHeight * 100) + '%';
+            return el;
+        }
+
+        function render() {
+            imageStage.querySelectorAll('.layout-marker').forEach(el => el.remove());
+            markerSource.clear();
+            pointsEl.replaceChildren();
+            pairs.forEach((pair, i) => {
+                if (pair.pixel) imageStage.querySelector('[data-layout-wrap]').append(marker(i + 1, pair.pixel));
+                if (pair.map) {
+                    const feature = new ol.Feature(new ol.geom.Point(ol.proj.fromLonLat(pair.map)));
+                    feature.set('n', i + 1);
+                    markerSource.addFeature(feature);
+                }
+                if (pair.pixel && pair.map) {
+                    [['pixel', 0, pair.pixel[0]], ['pixel', 1, pair.pixel[1]], ['map', 0, pair.map[0]], ['map', 1, pair.map[1]]].forEach(([kind, axis, value]) => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'control_points[' + i + '][' + kind + '][' + axis + ']';
+                        input.value = String(Math.round(value * 1e7) / 1e7);
+                        pointsEl.append(input);
+                    });
+                }
+            });
+            const done = pairs.length === 3 && pairs[2].map !== null;
+            previewPoints = null;
+            if (done) {
+                const result = corners();
+                if (result) previewPoints = result;
+                else { say(messages.invalid || ''); pairs = []; render(); say(messages.invalid || ''); return; }
+                say(messages.ready || '');
+            } else if (!loaded) {
+                say(messages.choose || '');
+            } else {
+                const current = pairs[pairs.length - 1];
+                const n = current && !current.map ? pairs.length : pairs.length + 1;
+                say(current && !current.map ? (messages.pickMap || '').replace(':n', String(n)) : (messages.pickImage || '').replace(':n', String(n)));
+            }
+            saveButton.disabled = !(done && previewPoints);
+            previewSource.changed();
+        }
+
+        function reset() { pairs = []; render(); }
+
+        fileInput.addEventListener('change', () => {
+            if (objectUrl) URL.revokeObjectURL(objectUrl);
+            loaded = false;
+            const file = fileInput.files[0];
+            if (!file) { img.removeAttribute('src'); img.hidden = true; previewImage.removeAttribute('src'); reset(); return; }
+            objectUrl = URL.createObjectURL(file);
+            img.hidden = false;
+            img.src = objectUrl;
+            previewImage.src = objectUrl;
+        });
+        img.addEventListener('load', () => { loaded = true; reset(); });
+        img.addEventListener('error', () => { loaded = false; say(messages.unreadable || ''); });
+
+        img.addEventListener('click', event => {
+            if (!loaded || pairs.length > 3) return;
+            const last = pairs[pairs.length - 1];
+            if (pairs.length === 3 && last.map) return;
+            const rect = img.getBoundingClientRect();
+            const clamp = (v, max) => Math.min(max - 0.5, Math.max(-0.5, v));
+            const pixel = [
+                clamp((event.clientX - rect.left) / rect.width * img.naturalWidth - 0.5, img.naturalWidth),
+                clamp((event.clientY - rect.top) / rect.height * img.naturalHeight - 0.5, img.naturalHeight),
+            ];
+            if (last && !last.map) last.pixel = pixel; // re-pick the pending image point
+            else pairs.push({ pixel: pixel, map: null });
+            render();
+        });
+        map.on('singleclick', event => {
+            const last = pairs[pairs.length - 1];
+            if (!loaded || !last || last.map) { if (loaded) say(messages.pickImageFirst || ''); return; }
+            const lonLat = ol.proj.toLonLat(event.coordinate);
+            last.map = lonLat;
+            render();
+        });
+        resetButton.addEventListener('click', reset);
+        render();
+
+        root.layoutEditor = { map: map, pairs: () => pairs, reset: reset };
+    }
+
+    function start() {
+        document.querySelectorAll('[data-boundary-field]').forEach(init);
+        document.querySelectorAll('[data-layout-editor]').forEach(initControlPoints);
+    }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();

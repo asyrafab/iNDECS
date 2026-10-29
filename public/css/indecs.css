@@ -886,3 +886,16 @@ html[data-motion='reduced'] *, html[data-motion='reduced'] *::before, html[data-
 .boundary-field-area { margin-left: var(--space-2); color: var(--color-text-muted); font-size: var(--font-size-sm); font-variant-numeric: tabular-nums; }
 .boundary-field-stage { position: relative; height: 420px; overflow: hidden; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-bg-soft); }
 @media (max-width: 660px) { .boundary-field-stage { height: 320px; } }
+
+/* eOSC+ layout plan positioning: image beside a map, three control points. */
+.layout-editor { display: grid; gap: var(--space-3); }
+.layout-editor [hidden] { display: none; }
+.layout-editor-status { margin: 0; color: var(--color-text-muted); font-size: var(--font-size-sm); }
+.layout-editor-panes { display: grid; gap: var(--space-3); grid-template-columns: 1fr; }
+@media (min-width: 900px) { .layout-editor-panes { grid-template-columns: 1fr 1fr; } }
+.layout-editor-image, .layout-editor-map { position: relative; height: 420px; overflow: auto; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-bg-soft); }
+.layout-editor-map { overflow: hidden; }
+@media (max-width: 660px) { .layout-editor-image, .layout-editor-map { height: 320px; } }
+.layout-editor-wrap { position: relative; display: inline-block; min-width: 100%; }
+.layout-editor-wrap img { display: block; max-width: none; width: 100%; height: auto; cursor: crosshair; }
+.layout-marker { position: absolute; display: grid; place-items: center; width: 22px; height: 22px; transform: translate(-50%, -50%); border: 2px solid var(--color-surface); border-radius: 50%; background: var(--color-accent-700); color: var(--color-on-accent); font-size: var(--font-size-xs); font-weight: 600; pointer-events: none; }

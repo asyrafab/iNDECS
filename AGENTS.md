@@ -167,6 +167,11 @@ application, two = linked pair, three = development case.
   `.map-measure-output`, `.map-layer-list`, `.map-layer-row`, `.map-item-list`, `.map-item-button`, `.map-notice`,
   `.map-swipe` and `.map-popup` in `indecs.css`. Map colours are read from CSS custom properties at runtime in JS, never
   hex; the page config JSON (`#osc-map-config`) carries no item data, which comes only from `osc.meetings.map-data`.
+- Layout plan positioning (`resources/views/osc/layout.blade.php`, control-points mode in `public/js/gis-draw.js`, served by
+  `App\Services\Osc\LayoutImageService`) uses `.layout-editor`, `.layout-editor-status`, `.layout-editor-panes`,
+  `.layout-editor-image`, `.layout-editor-map`, `.layout-editor-wrap` and `.layout-marker` in `indecs.css`. The server recomputes
+  the corners from the three submitted point pairs; the browser preview is only a guide. Map features carry `layout_url` and
+  `layout_corners` (TL, TR, BR, BL, EPSG:4326) only for layouts the user may see.
 - Boundary drawing (`resources/views/partials/gis-boundary-field.blade.php`, `public/js/gis-draw.js`) uses
   `.boundary-field`, `.boundary-field-head`, `.boundary-field-toolbar`, `.boundary-field-area` and `.boundary-field-stage`
   in `indecs.css`. It is optional: the hidden input stays empty without JavaScript. Boundaries are validated and

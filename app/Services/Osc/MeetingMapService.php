@@ -36,6 +36,7 @@ final class MeetingMapService
         $geometries = [];
 
         $items = $meeting->items()->with('application')->get();
+        $layouts = $this->layouts('agenda_item', $items->pluck('id')->all());
         foreach ($items as $item) {
             $item->setRelation('meeting', $meeting);
             if (! OscAccess::canViewItem($user, $item)) {
@@ -57,7 +58,8 @@ final class MeetingMapService
                     'status' => $item->status->value,
                     'position' => $item->position,
                     'paper_url' => $this->paperUrl($item),
-                    'layout_url' => null,
+                    'layout_url' => $layouts[$item->id]['layout_url'] ?? null,
+                    'layout_corners' => $layouts[$item->id]['layout_corners'] ?? null,
                     'geometry_source' => $source,
                 ]);
             }
@@ -246,6 +248,8 @@ final class MeetingMapService
             $bindings,
         );
 
+        $layouts = $this->layouts('legacy', array_map(fn ($row): string => (string) $row->id, $rows));
+
         return array_map(fn ($row): array => $this->feature(json_decode($row->geojson, true), [
             'kind' => 'legacy',
             'id' => $row->id,
@@ -253,7 +257,36 @@ final class MeetingMapService
             'year' => $row->year,
             'rujukan' => $row->rujukan,
             'decision' => self::DECISIONS[(string) $row->status_code] ?? 'Tiada maklumat',
-        ]), $rows);
+        ] + ($layouts[(string) $row->id] ?? [])), $rows);
+    }
+
+    /**
+     * Positioned layout plans for the given owners, keyed by owner id. The caller has already checked that the user may
+     * see each owner; the image itself is checked again by osc.layout.show.
+     *
+     * @param  array<int, string>  $ownerIds
+     * @return array<string, array{layout_url: string, layout_corners: array<int, array<int, float>>}>
+     */
+    private function layouts(string $ownerType, array $ownerIds): array
+    {
+        if ($ownerIds === []) {
+            return [];
+        }
+        $rows = DB::select(
+            'SELECT id, owner_id, ST_AsGeoJSON(corners) AS geojson FROM core.osc_layout_images
+             WHERE owner_type = ? AND owner_id IN ('.implode(',', array_fill(0, count($ownerIds), '?')).')',
+            [$ownerType, ...array_values($ownerIds)],
+        );
+        $result = [];
+        foreach ($rows as $row) {
+            $ring = json_decode($row->geojson, true)['coordinates'][0] ?? [];
+            $result[(string) $row->owner_id] = [
+                'layout_url' => route('osc.layout.show', ['layoutImage' => $row->id]),
+                'layout_corners' => array_slice($ring, 0, 4),
+            ];
+        }
+
+        return $result;
     }
 
     private function paperUrl(AgendaItem $item): ?string

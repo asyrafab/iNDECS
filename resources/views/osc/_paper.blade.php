@@ -12,4 +12,5 @@
         <label class="field"><span class="sr-only">Fail PDF kertas kerja untuk {{ $item->title }}</span><input type="file" name="paper" accept="application/pdf" required></label>
         <button type="submit" class="button button-secondary button-small">{{ $latest ? 'Muat naik versi baharu' : 'Muat naik kertas' }}</button>
     </form>
+    <a class="text-link" href="{{ route('osc.layout.edit', $item) }}"><x-icon name="map" />Letak pelan susun atur pada peta</a>
 @endif

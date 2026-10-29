@@ -10,6 +10,7 @@ use App\Http\Controllers\Gis\BoundaryController;
 use App\Http\Controllers\Gis\TileController;
 use App\Http\Controllers\Osc\AgendaItemController;
 use App\Http\Controllers\Osc\AgendaPaperController;
+use App\Http\Controllers\Osc\LayoutImageController;
 use App\Http\Controllers\Osc\MeetingController;
 use App\Http\Controllers\Osc\MeetingMapController;
 use App\Http\Controllers\PkmApplicationController;
@@ -118,6 +119,9 @@ Route::middleware(['auth', 'osc.access'])->prefix('osc')->name('osc.')->group(fu
     Route::post('/items/{item}/return', [AgendaItemController::class, 'return'])->name('items.return');
     Route::post('/items/{item}/papers', [AgendaPaperController::class, 'store'])->name('papers.store');
     Route::get('/papers/{paper}', [AgendaPaperController::class, 'show'])->name('papers.show');
+    Route::get('/items/{item}/layout', [LayoutImageController::class, 'edit'])->name('layout.edit');
+    Route::post('/items/{item}/layout', [LayoutImageController::class, 'store'])->name('layout.store');
+    Route::get('/layouts/{layoutImage}', [LayoutImageController::class, 'show'])->name('layout.show');
 });
 
 Route::middleware('auth')->post('/gis/applications/{application}/boundary', [BoundaryController::class, 'store'])

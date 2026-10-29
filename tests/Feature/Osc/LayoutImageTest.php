@@ -1,0 +1,292 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Feature\Osc;
+
+use App\Contracts\DocumentScanner;
+use App\Enums\Osc\TablingPurpose;
+use App\Models\AuditLog;
+use App\Models\Osc\AgendaItem;
+use App\Models\Osc\LayoutImage;
+use App\Models\Osc\Meeting;
+use App\Models\User;
+use App\Services\Osc\AgendaService;
+use App\Services\Osc\MeetingService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Tests\TestCase;
+
+final class LayoutImageTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private const STALE = 'Rekod telah berubah. Muat semula sebelum meneruskan.';
+
+    private User $secretary;
+
+    private User $chair;
+
+    private User $planner;
+
+    private User $member;
+
+    private Meeting $meeting;
+
+    private AgendaItem $item;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Storage::fake('local');
+        $this->seed();
+        Notification::fake();
+        $this->secretary = User::factory()->create(['role' => 'osc_secretary', 'department_id' => 'JPBD']);
+        $this->chair = User::factory()->create(['role' => 'senior_building_officer', 'department_id' => 'JBANG']);
+        $this->planner = User::factory()->create(['role' => 'planning_officer', 'department_id' => 'JPBD']);
+        $this->member = User::factory()->create(['role' => 'intake_officer', 'department_id' => 'JBANG']);
+        $this->meeting = app(MeetingService::class)->create([
+            'number' => 'Bil. 21/2026', 'scheduled_at' => now()->addWeek(), 'venue' => 'Bilik OSC',
+            'proposal_cutoff_at' => now()->addDays(2), 'paper_cutoff_at' => now()->addDays(4),
+            'chair_id' => $this->chair->id, 'secretary_id' => $this->secretary->id,
+        ], $this->secretary);
+        app(MeetingService::class)->setMembers($this->meeting, [
+            'chair_id' => $this->chair->id, 'secretary_id' => $this->secretary->id, 'member_ids' => [$this->member->id],
+        ], $this->meeting->row_version, $this->secretary);
+        $this->meeting->refresh();
+        $this->item = app(AgendaService::class)->proposeStandalone($this->meeting, [
+            'standalone_type' => 'Penamaan Jalan & Taman', 'title' => 'A', 'reference' => null,
+            'purpose' => TablingPurpose::Permohonan, 'presenter_id' => $this->planner->id, 'department_id' => 'JPBD',
+        ], $this->secretary);
+        $this->scanner(null);
+    }
+
+    private function scanner(?string $failure): void
+    {
+        $this->app->instance(DocumentScanner::class, new class($failure) implements DocumentScanner
+        {
+            public function __construct(private readonly ?string $failure) {}
+
+            public function assertClean(string $path): void
+            {
+                if ($this->failure !== null) {
+                    throw new \RuntimeException($this->failure);
+                }
+            }
+        });
+    }
+
+    private function png(int $width = 400, int $height = 200, string $name = 'pelan.png'): UploadedFile
+    {
+        $row = "\0".str_repeat("\x80\x80\x80", $width);
+        $chunk = fn (string $type, string $data): string => pack('N', strlen($data)).$type.$data.pack('N', crc32($type.$data));
+        $bytes = "\x89PNG\r\n\x1a\n".$chunk('IHDR', pack('NNCCCCC', $width, $height, 8, 2, 0, 0, 0))
+            .$chunk('IDAT', gzcompress(str_repeat($row, $height))).$chunk('IEND', '');
+
+        return UploadedFile::fake()->createWithContent($name, $bytes);
+    }
+
+    /** Three points mapping a 400x200 image onto roughly 400 m x 200 m in Seberang Perai. */
+    private function points(): array
+    {
+        return [
+            ['pixel' => [0, 0], 'map' => [100.4000, 5.4020]],
+            ['pixel' => [400, 0], 'map' => [100.4036, 5.4020]],
+            ['pixel' => [0, 200], 'map' => [100.4000, 5.4002]],
+        ];
+    }
+
+    private function place(?User $actor = null, array $overrides = [])
+    {
+        return $this->actingAs($actor ?? $this->planner)->post(route('osc.layout.store', $this->item), $overrides + [
+            'layout' => $this->png(), 'control_points' => $this->points(),
+        ]);
+    }
+
+    private function itemLayout(): LayoutImage
+    {
+        return LayoutImage::query()->where('owner_type', 'agenda_item')->where('owner_id', $this->item->id)->firstOrFail();
+    }
+
+    public function test_presenter_places_layout_with_three_points(): void
+    {
+        $this->place()->assertSessionHasNoErrors()->assertRedirect();
+
+        $layout = $this->itemLayout();
+        $this->assertSame([400, 200, 'image/png', $this->planner->id, 1], [$layout->width, $layout->height, $layout->mime_type, $layout->placed_by, $layout->row_version]);
+        Storage::disk('local')->assertExists($layout->path);
+        $this->assertSame(hash_file('sha256', Storage::disk('local')->path($layout->path)), $layout->sha256);
+
+        $corners = json_decode(DB::selectOne('SELECT ST_AsGeoJSON(corners) AS g FROM core.osc_layout_images WHERE id = ?', [$layout->id])->g, true)['coordinates'][0];
+        $this->assertCount(5, $corners);
+        $this->assertEqualsWithDelta(100.4000, $corners[0][0], 0.0001); // top-left
+        $this->assertEqualsWithDelta(5.4020, $corners[0][1], 0.0001);
+        $this->assertEqualsWithDelta(100.4036, $corners[1][0], 0.0001); // top-right
+        $this->assertEqualsWithDelta(5.4002, $corners[3][1], 0.0001);   // bottom-left
+        [$west, $south, $east, $north] = config('gis.region_bbox');
+        foreach ($corners as [$lon, $lat]) {
+            $this->assertTrue($lon >= $west && $lon <= $east && $lat >= $south && $lat <= $north);
+        }
+        $audit = AuditLog::query()->where('event', 'osc_layout_placed')->firstOrFail();
+        $this->assertSame($this->item->id, $audit->auditable_id);
+        $this->assertNull($audit->before_values);
+        $this->assertSame($layout->sha256, $audit->after_values['sha256']);
+        $this->assertCount(4, $audit->after_values['corners']);
+    }
+
+    public function test_replacing_keeps_the_old_file_checks_the_version_and_audits(): void
+    {
+        $this->place();
+        $first = $this->itemLayout();
+        $oldPath = $first->path;
+        $oldSha = $first->sha256;
+
+        $this->place($this->planner, ['layout' => $this->png(400, 300)])->assertSessionHasErrors(['layout' => self::STALE]);
+        $this->place($this->planner, ['layout' => $this->png(400, 300), 'expected_version' => 5])->assertSessionHasErrors(['layout' => self::STALE]);
+
+        $this->place($this->secretary, ['layout' => $this->png(400, 300), 'expected_version' => 1])->assertSessionHasNoErrors();
+
+        $this->assertSame(1, LayoutImage::query()->where('owner_id', $this->item->id)->count());
+        $second = $this->itemLayout();
+        $this->assertSame([400, 300, 2, $this->secretary->id], [$second->width, $second->height, $second->row_version, $second->placed_by]);
+        $this->assertNotSame($oldPath, $second->path);
+        Storage::disk('local')->assertExists($oldPath);
+        Storage::disk('local')->assertExists($second->path);
+        $audit = AuditLog::query()->where('event', 'osc_layout_placed')->latest('id')->firstOrFail();
+        $this->assertSame($oldSha, $audit->before_values['sha256']);
+        $this->assertSame($second->sha256, $audit->after_values['sha256']);
+        $this->assertCount(4, $audit->before_values['corners']);
+    }
+
+    public function test_only_presenter_proposer_or_manager_may_place(): void
+    {
+        $this->place($this->member)->assertForbidden();
+        $this->place($this->chair)->assertForbidden();
+        $this->actingAs($this->member)->get(route('osc.layout.edit', $this->item))->assertForbidden();
+        $this->assertDatabaseCount('core.osc_layout_images', 0);
+        $this->place($this->secretary)->assertSessionHasNoErrors();
+        $this->actingAs($this->planner)->get(route('osc.layout.edit', $this->item))->assertOk()->assertSee('Simpan kedudukan');
+    }
+
+    public function test_collinear_points_rejected(): void
+    {
+        $this->place(null, ['control_points' => [
+            ['pixel' => [0, 0], 'map' => [100.4000, 5.4020]],
+            ['pixel' => [100, 100], 'map' => [100.4010, 5.4010]],
+            ['pixel' => [200, 200], 'map' => [100.4020, 5.4000]],
+        ]])->assertSessionHasErrors(['control_points' => 'Titik kawalan tidak sah.']);
+        $this->assertDatabaseCount('core.osc_layout_images', 0);
+        Storage::disk('local')->assertDirectoryEmpty('osc/layouts');
+    }
+
+    public function test_layout_outside_the_region_is_rejected(): void
+    {
+        $this->place(null, ['control_points' => [
+            ['pixel' => [0, 0], 'map' => [101.0000, 5.4020]],
+            ['pixel' => [400, 0], 'map' => [101.0036, 5.4020]],
+            ['pixel' => [0, 200], 'map' => [101.0000, 5.4002]],
+        ]])->assertSessionHasErrors(['control_points' => 'Lokasi berada di luar kawasan MBSP.']);
+        $this->assertDatabaseCount('core.osc_layout_images', 0);
+    }
+
+    public function test_malformed_input_is_rejected(): void
+    {
+        $this->place(null, ['control_points' => array_slice($this->points(), 0, 2)])->assertSessionHasErrors('control_points');
+        $bad = $this->points();
+        $bad[0]['pixel'] = ['x', 1];
+        $this->place(null, ['control_points' => $bad])->assertSessionHasErrors('control_points');
+        $this->place(null, ['layout' => UploadedFile::fake()->createWithContent('x.png', 'not an image')])->assertSessionHasErrors('layout');
+        $gif = base64_decode('R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==');
+        $this->place(null, ['layout' => UploadedFile::fake()->createWithContent('x.png', $gif)])->assertSessionHasErrors('layout');
+        $this->assertDatabaseCount('core.osc_layout_images', 0);
+    }
+
+    public function test_infected_image_refused(): void
+    {
+        $this->scanner('infected');
+
+        $this->place()->assertSessionHasErrors(['layout' => 'Imej gagal imbasan keselamatan dan tidak diterima.']);
+        $this->assertDatabaseCount('core.osc_layout_images', 0);
+        Storage::disk('local')->assertDirectoryEmpty('osc/layouts');
+        $this->assertDatabaseMissing('audit_logs', ['event' => 'osc_layout_placed']);
+    }
+
+    public function test_layout_image_access_follows_item_visibility(): void
+    {
+        $this->place();
+        $url = route('osc.layout.show', $this->itemLayout());
+
+        // An endorser of another department, and a member before the item is published, are refused.
+        $this->actingAs($this->chair)->get($url)->assertForbidden();
+        $this->actingAs($this->member)->get($url)->assertForbidden();
+        app(AgendaService::class)->accept($this->item->fresh(), $this->item->fresh()->row_version, $this->secretary);
+        app(AgendaService::class)->publish($this->meeting, $this->meeting->fresh()->row_version, $this->secretary);
+        $this->actingAs($this->member)->get($url)->assertOk();
+
+        $response = $this->actingAs($this->secretary)->get($url)->assertOk();
+        $this->assertStringContainsString('no-store', (string) $response->headers->get('Cache-Control'));
+        $this->assertStringContainsString('private', (string) $response->headers->get('Cache-Control'));
+        $this->assertSame('nosniff', $response->headers->get('X-Content-Type-Options'));
+        $this->assertSame('image/png', $response->headers->get('Content-Type'));
+        $this->actingAs($this->planner)->get($url)->assertOk();
+    }
+
+    private function giveItemBoundary(): void
+    {
+        DB::update("UPDATE core.osc_agenda_items SET boundary = ST_GeomFromText('MULTIPOLYGON(((100.4 5.4,100.401 5.4,100.401 5.401,100.4 5.401,100.4 5.4)))', 4326) WHERE id = ?", [$this->item->id]);
+    }
+
+    public function test_item_layout_is_in_map_data(): void
+    {
+        $this->giveItemBoundary();
+        $this->place();
+
+        $props = collect($this->actingAs($this->secretary)->getJson(route('osc.meetings.map-data', $this->meeting))->assertOk()->json('features'))
+            ->firstWhere('properties.kind', 'item')['properties'];
+        $this->assertSame(route('osc.layout.show', $this->itemLayout()), $props['layout_url']);
+        $this->assertCount(4, $props['layout_corners']);
+        $this->assertEqualsWithDelta(100.4, $props['layout_corners'][0][0], 0.0001);
+        $this->assertEqualsWithDelta(5.402, $props['layout_corners'][0][1], 0.0001);
+        $this->assertEqualsWithDelta(5.4002, $props['layout_corners'][3][1], 0.0001);
+    }
+
+    private function legacyLayout(): LayoutImage
+    {
+        DB::insert(
+            "INSERT INTO core.osc_legacy_papers (id, title, status_code, year, imported_at, geom) VALUES (77, 'Lama', '1', '2019', now(), ST_SetSRID(ST_MakePoint(100.4005, 5.4005), 4326))",
+        );
+        Storage::disk('local')->put('osc/layouts/legacy/x.png', $this->png()->getContent());
+        DB::insert(
+            "INSERT INTO core.osc_layout_images (id, owner_type, owner_id, path, mime_type, width, height, sha256, corners, source_srid, row_version, created_at, updated_at)
+             VALUES (?, 'legacy', '77', 'osc/layouts/legacy/x.png', 'image/png', 400, 200, ?, ST_GeomFromText('POLYGON((100.4 5.402,100.4036 5.402,100.4036 5.4002,100.4 5.4002,100.4 5.402))', 4326), 3857, 1, now(), now())",
+            [(string) Str::ulid(), str_repeat('a', 64)],
+        );
+
+        return LayoutImage::query()->where('owner_type', 'legacy')->firstOrFail();
+    }
+
+    public function test_legacy_layout_hidden_without_view_grant(): void
+    {
+        $legacy = $this->legacyLayout();
+        $url = route('osc.layout.show', $legacy);
+
+        $this->actingAs($this->member)->get($url)->assertForbidden();
+        $this->actingAs($this->secretary)->get($url)->assertOk();
+        $this->actingAs($this->chair)->get($url)->assertOk(); // holds osc.meeting.view
+    }
+
+    public function test_legacy_layout_rides_on_the_past_decision_feature_for_viewers(): void
+    {
+        $legacy = $this->legacyLayout();
+        $this->giveItemBoundary();
+
+        $features = $this->actingAs($this->secretary)->getJson(route('osc.meetings.map-data', $this->meeting))->assertOk()->json('features');
+        $past = collect($features)->firstWhere('properties.kind', 'legacy')['properties'];
+        $this->assertSame(route('osc.layout.show', $legacy), $past['layout_url']);
+        $this->assertCount(4, $past['layout_corners']);
+    }
+}
