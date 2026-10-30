@@ -22,6 +22,13 @@
                 <button type="button" class="icon-button" data-map-tool="zoom" aria-label="Zum ke tapak" title="Zum ke tapak"><x-icon name="crosshair" /></button>
             </div>
             <p class="map-measure-output" data-map-measure aria-live="polite"></p>
+            <div class="map-layers">
+                <div class="map-layers-panel" id="osc-map-layers" role="region" aria-labelledby="osc-map-layers-title" data-open="false" inert>
+                    <h2 class="map-panel-title" id="osc-map-layers-title">Lapisan</h2>
+                    <ul class="map-layer-list" data-map-layers></ul>
+                </div>
+                <button type="button" class="icon-button map-layers-toggle" data-map-layers-toggle aria-expanded="false" aria-controls="osc-map-layers" aria-label="Lapisan" title="Lapisan"><x-icon name="layers" /></button>
+            </div>
             <div class="map-swipe" id="osc-map-swipe" role="slider" tabindex="0" aria-label="Bandingkan" aria-orientation="horizontal" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" hidden><span></span></div>
             <div class="map-popup" id="osc-map-popup" hidden>
                 <button type="button" class="icon-button map-popup-close" data-map-popup-close aria-label="Tutup"><x-icon name="x" /></button>
@@ -30,10 +37,6 @@
         </div>
         <aside class="map-panel map-sheet" id="osc-map-panel" role="dialog" aria-labelledby="osc-map-panel-title">
             <h2 class="map-panel-title map-panel-heading" id="osc-map-panel-title" tabindex="-1">Peta</h2>
-            <section class="map-panel-section">
-                <h2 class="map-panel-title">Lapisan</h2>
-                <ul class="map-layer-list" data-map-layers></ul>
-            </section>
             <section class="map-panel-section">
                 <h2 class="map-panel-title">Permohonan</h2>
                 <ol class="map-item-list" data-map-items><li class="muted">Memuatkan…</li></ol>

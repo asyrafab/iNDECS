@@ -211,6 +211,21 @@
             }
         }
 
+        /* Floating layer panel: the layers button at the bottom left of the map opens and closes it; Escape closes it. */
+        const layersToggle = document.querySelector('[data-map-layers-toggle]');
+        const layersPanel = layersToggle && document.getElementById(layersToggle.getAttribute('aria-controls'));
+        function setLayersPanel(open) {
+            layersPanel.dataset.open = String(open);
+            layersPanel.inert = !open;
+            layersToggle.setAttribute('aria-expanded', String(open));
+        }
+        if (layersPanel) {
+            layersToggle.addEventListener('click', () => setLayersPanel(layersPanel.dataset.open !== 'true'));
+            layersPanel.addEventListener('keydown', event => {
+                if (event.key === 'Escape') { setLayersPanel(false); layersToggle.focus(); }
+            });
+        }
+
         const layers = { imagery: {}, reference: {} };
 
         /* Base layers (bottom of the stack). */
