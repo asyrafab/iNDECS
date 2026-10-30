@@ -840,6 +840,9 @@ html[data-motion='reduced'] *, html[data-motion='reduced'] *::before, html[data-
 .map-tools .button[aria-pressed="true"] { border-color: var(--color-accent-700); background: var(--color-accent-100); color: var(--color-accent-800); }
 .map-measure-output { margin: 0; min-height: var(--space-5); color: var(--color-text-muted); font-size: var(--font-size-sm); font-variant-numeric: tabular-nums; }
 .map-layer-list, .map-item-list { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.map-item-list > li { display: grid; gap: var(--space-1); }
+.map-layout-toggle { justify-self: start; }
+.map-layout-toggle[aria-pressed="true"] { border-color: var(--color-accent-700); background: var(--color-accent-100); color: var(--color-accent-800); }
 .map-layer-row { display: grid; grid-template-columns: minmax(0, 1fr) 96px; align-items: center; gap: var(--space-3); font-size: var(--font-size-sm); }
 .map-layer-row label { display: flex; align-items: center; gap: var(--space-2); min-width: 0; overflow-wrap: anywhere; }
 .map-layer-row input[type="range"] { width: 100%; min-height: var(--space-6); padding: 0; border: 0; background: transparent; accent-color: var(--color-accent-600); }

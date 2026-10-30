@@ -21,6 +21,8 @@ final class MeetingMapController extends Controller
         'panel' => 'Peta',
         'application' => 'Permohonan',
         'layout' => 'Pelan susun atur',
+        'showLayout' => 'Lihat pelan susun atur',
+        'hideLayout' => 'Sembunyi pelan susun atur',
         'cadastre' => 'Lot kadaster',
         'imagery' => 'Imej satelit',
         'street' => 'Peta jalan',

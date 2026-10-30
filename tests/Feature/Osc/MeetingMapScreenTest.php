@@ -78,6 +78,8 @@ final class MeetingMapScreenTest extends TestCase
         $this->assertNull($config['focusItemId']);
         $this->assertSame('Peta', $config['labels']['panel']);
         $this->assertSame('Imej satelit tidak tersedia. Lapisan tempatan masih dipaparkan.', $config['labels']['imageryUnavailable']);
+        $this->assertSame('Lihat pelan susun atur', $config['labels']['showLayout']);
+        $this->assertSame('Sembunyi pelan susun atur', $config['labels']['hideLayout']);
         $this->assertStringNotContainsString('Tajuk Rahsia Perkara', $html);
         $this->assertStringNotContainsString('REF-RAHSIA', $html);
     }

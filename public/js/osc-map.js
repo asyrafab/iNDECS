@@ -74,19 +74,24 @@
     gis.addLayer({ id: 'items', label: labels.application, layer: itemLayer, zIndex: 60 });
     gis.addLayer({ id: 'past', label: labels.earlier, layer: pastLayer, zIndex: 50 });
 
-    /* Layout plans: one image layer per positioned plan, shown together as "Pelan susun atur". Past-decision (legacy)
-       plans can be many, so they render only from zoom 17, and every image is fetched the first time its layer renders
-       (in view, at a zoom where it is shown); agenda item plans render at every zoom. */
-    const LEGACY_LAYOUT_MIN_ZOOM = 17;
-    const layoutGroup = new ol.layer.Group({ layers: [] });
-    gis.addLayer({ id: 'layout', label: labels.layout, layer: layoutGroup, zIndex: 40 });
+    /* Layout plans: one "Pelan susun atur" layer that shows at most one plan, the one switched on with the
+       "Lihat pelan susun atur" button of an application (agenda item or past decision). No plan shows by default,
+       and an image is only fetched when its plan is switched on. */
+    const layoutLayer = new ol.layer.Image();
+    gis.addLayer({ id: 'layout', label: labels.layout, layer: layoutLayer, zIndex: 40 });
+    gis.addSwipeLayer(layoutLayer);
+    let activeLayoutKey = null;
 
-    function layoutLayer(url, corners, legacy) {
+    function layoutKey(feature) { return feature.get('kind') + ':' + feature.get('id'); }
+    function hasLayout(feature) {
+        const corners = feature && feature.get('layout_corners');
+        return Boolean(feature && feature.get('layout_url') && Array.isArray(corners) && corners.length === 4);
+    }
+
+    function layoutSource(url, corners, onError) {
         const image = new Image();
-        let source;
         const points = corners.map(c => ol.proj.fromLonLat(c)); // top-left, top-right, bottom-right, bottom-left
-        const extent = ol.extent.boundingExtent(points);
-        source = new ol.source.ImageCanvas({
+        const source = new ol.source.ImageCanvas({
             canvasFunction: function (canvasExtent, resolution, pixelRatio, size) {
                 const canvas = document.createElement('canvas');
                 canvas.width = size[0];
@@ -108,15 +113,57 @@
             ratio: 1,
         });
         image.addEventListener('load', () => source.changed());
-        // OpenLayers minZoom is exclusive; a hair below 17 shows legacy plans from zoom 17 inclusive.
-        const layer = new ol.layer.Image(Object.assign({ source: source, extent: extent }, legacy ? { minZoom: LEGACY_LAYOUT_MIN_ZOOM - 0.001 } : {}));
-        image.addEventListener('error', () => {
-            layer.setVisible(false);
-            layoutGroup.getLayers().remove(layer);
+        image.addEventListener('error', onError);
+        return { source: source, extent: ol.extent.boundingExtent(points) };
+    }
+
+    /* Show the plan of `feature`, or none when feature is null. Switching on a plan replaces the previous one. */
+    function showLayout(feature) {
+        if (!feature || !hasLayout(feature)) {
+            activeLayoutKey = null;
+            layoutLayer.setSource(null);
+            updateLayoutButtons();
+            return;
+        }
+        const key = layoutKey(feature);
+        const plan = layoutSource(feature.get('layout_url'), feature.get('layout_corners'), () => {
+            if (activeLayoutKey !== key) return;
             console.warn('Pelan susun atur tidak dapat dimuatkan.');
+            showLayout(null);
         });
-        gis.addSwipeLayer(layer);
-        return layer;
+        activeLayoutKey = key;
+        layoutLayer.setExtent(plan.extent);
+        layoutLayer.setSource(plan.source);
+        layoutLayer.setVisible(true);
+        // Bring the plan into view: zoom to it unless it is already fully visible at a useful size.
+        const viewExtent = map.getView().calculateExtent(map.getSize());
+        const tooSmall = ol.extent.getWidth(plan.extent) < ol.extent.getWidth(viewExtent) * 0.2;
+        // Instant fit: an animated fit is cancelled by the popup's auto-pan.
+        if (tooSmall || !ol.extent.containsExtent(viewExtent, plan.extent)) {
+            map.getView().cancelAnimations();
+            map.getView().fit(plan.extent, { size: map.getSize(), padding: [48, 48, 48, 48], maxZoom: 19 });
+        }
+        updateLayoutButtons();
+    }
+    function toggleLayout(feature) {
+        showLayout(feature && activeLayoutKey === layoutKey(feature) ? null : feature);
+    }
+    function layoutButton(feature) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'button button-secondary button-small map-layout-toggle';
+        button.dataset.layoutKey = layoutKey(feature);
+        button.addEventListener('click', event => { event.stopPropagation(); toggleLayout(feature); });
+        setLayoutButton(button);
+        return button;
+    }
+    function setLayoutButton(button) {
+        const on = button.dataset.layoutKey === activeLayoutKey;
+        button.setAttribute('aria-pressed', String(on));
+        button.textContent = on ? labels.hideLayout : labels.showLayout;
+    }
+    function updateLayoutButtons() {
+        document.querySelectorAll('.map-layout-toggle').forEach(setLayoutButton);
     }
 
     /* Popup, built with textContent only: titles are user-entered. */
@@ -175,6 +222,7 @@
             }
             if (zoneProps) zoneLines(zoneProps).forEach(text => popupBody.append(line(text)));
         }
+        if (hasLayout(feature)) popupBody.append(layoutButton(feature));
         const links = document.createElement('div');
         links.className = 'map-popup-links';
         if (feature && feature.get('paper_url')) links.append(link(feature.get('paper_url'), 'Kertas kerja', true));
@@ -216,6 +264,7 @@
             if (f.get('status_label')) { button.classList.add('map-item-muted'); button.append(statusBadge(f.get('status_label'))); }
             button.addEventListener('click', () => select(f.get('id'), true));
             li.append(button);
+            if (hasLayout(f)) li.append(layoutButton(f));
             listEl.append(li);
         });
         if (!features.length) listEl.append(Object.assign(document.createElement('li'), { className: 'muted', textContent: '—' }));
@@ -274,10 +323,6 @@
                     byId[f.get('id')] = f;
                 } else {
                     pastSource.addFeature(f);
-                }
-                const corners = f.get('layout_corners');
-                if (f.get('layout_url') && Array.isArray(corners) && corners.length === 4) {
-                    layoutGroup.getLayers().push(layoutLayer(f.get('layout_url'), corners, kind === 'legacy'));
                 }
             });
             renderList(items, (collection.properties && collection.properties.unmapped) || []);
