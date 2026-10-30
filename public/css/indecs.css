@@ -764,10 +764,12 @@ h1, h2, h3, h4 { color: var(--color-navy); }
   .assistant-open .field-span-2 { grid-column: span 2; }
   .public-header { padding: var(--space-4); }
 }
-/* Desktop: the menu button collapses the sidebar; the choice is remembered (indecs.sidebar, applied by theme.js before paint). */
+/* Desktop: the menu button slides the sidebar away (motion off under reduced motion); the choice is remembered (indecs.sidebar, applied by theme.js before paint). */
 @media (min-width: 901px) {
   .menu-button { display: inline-flex; }
-  html[data-sidebar="collapsed"] .sidebar { display: none; }
+  .sidebar { transition: transform var(--duration-normal) var(--ease-standard), visibility var(--duration-normal); }
+  .page-shell { transition: margin-left var(--duration-normal) var(--ease-standard), width var(--duration-normal) var(--ease-standard); }
+  html[data-sidebar="collapsed"] .sidebar { transform: translateX(-100%); visibility: hidden; }
   html[data-sidebar="collapsed"] .page-shell { width: 100%; margin-left: 0; }
 }
 @media (max-width: 660px) {
