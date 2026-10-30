@@ -768,11 +768,11 @@ h1, h2, h3, h4 { color: var(--color-navy); }
    the choice is remembered (indecs.sidebar, applied by theme.js before paint). Below 901px the menu button opens it instead. */
 .sidebar-edge-toggle { display: none; }
 @media (min-width: 901px) {
-  .sidebar-edge-toggle { position: fixed; z-index: 31; top: 50%; left: var(--sidebar-width); display: inline-flex; align-items: center; justify-content: center; width: var(--space-6); height: var(--space-12); padding: 0; border: 1px solid var(--color-sidebar-border); border-left: 0; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; background: var(--color-sidebar-bg); color: var(--color-sidebar-text); cursor: pointer; transform: translateY(-50%); transition: left var(--duration-normal) var(--ease-standard), background var(--duration-fast); }
+  .sidebar-edge-toggle { position: fixed; z-index: 31; top: 50%; left: calc(var(--sidebar-width) - var(--space-6) - 1px); display: inline-flex; align-items: center; justify-content: center; width: var(--space-6); height: var(--space-12); padding: 0; border: 1px solid var(--color-sidebar-border); border-right: 0; border-radius: var(--radius-sm) 0 0 var(--radius-sm); background: var(--color-sidebar-bg); color: var(--color-sidebar-text); cursor: pointer; transform: translateY(-50%); transition: left var(--duration-normal) var(--ease-standard), background var(--duration-fast); }
   .sidebar-edge-toggle:hover { background: var(--color-sidebar-hover); }
   .sidebar-edge-toggle:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
   .sidebar-edge-toggle .icon { width: 16px; height: 16px; transition: transform var(--duration-normal) var(--ease-standard); }
-  html[data-sidebar="collapsed"] .sidebar-edge-toggle { left: 0; }
+  html[data-sidebar="collapsed"] .sidebar-edge-toggle { left: 0; border-right: 1px solid var(--color-sidebar-border); border-left: 0; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
   html[data-sidebar="collapsed"] .sidebar-edge-toggle .icon { transform: rotate(180deg); }
   .sidebar { transition: transform var(--duration-normal) var(--ease-standard), visibility var(--duration-normal); }
   .page-shell { transition: margin-left var(--duration-normal) var(--ease-standard), width var(--duration-normal) var(--ease-standard); }
@@ -930,15 +930,25 @@ body.map-mode .workspace-footer { display: none; }
 body.map-mode .map-page { position: relative; flex: 1 1 auto; min-height: 0; display: block; }
 body.map-mode .map-layout { position: absolute; inset: 0; display: block; height: auto; min-height: 0; }
 body.map-mode .map-stage { position: absolute; inset: 0; height: auto; border: 0; border-radius: 0; }
-.map-heading { position: absolute; z-index: 3; top: var(--space-3); left: var(--space-3); display: grid; gap: var(--space-1); max-width: calc(100% - 2 * var(--space-12)); padding: var(--space-2) var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); box-shadow: var(--shadow-raised); }
-.map-heading .back-link { font-size: var(--font-size-xs); }
-.map-heading h1 { margin: 0 auto 0 0; font-size: var(--font-size-lg); }
-.map-heading-row { gap: var(--space-2); }
-.map-heading .icon-button { width: var(--space-8); min-height: var(--space-8); padding: var(--space-1); }
-.map-heading [data-header-toggle][aria-expanded="false"] { border-color: var(--color-accent-700); background: var(--color-accent-100); color: var(--color-accent-800); }
+/* Header arrow: same navy tab as the sidebar's, centred on the map's top edge; points up to collapse, down to reopen. */
+.header-edge-toggle { position: absolute; z-index: 4; top: 0; left: 50%; display: inline-flex; align-items: center; justify-content: center; width: var(--space-12); height: var(--space-5); padding: 0; border: 1px solid var(--color-sidebar-border); border-top: 0; border-radius: 0 0 var(--radius-sm) var(--radius-sm); background: var(--color-sidebar-bg); color: var(--color-sidebar-text); cursor: pointer; transform: translateX(-50%); transition: background var(--duration-fast); }
+.header-edge-toggle:hover { background: var(--color-sidebar-hover); }
+.header-edge-toggle:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+.header-edge-toggle .icon { width: 16px; height: 16px; transform: rotate(90deg); transition: transform var(--duration-normal) var(--ease-standard); }
+.header-edge-toggle[aria-expanded="false"] .icon { transform: rotate(-90deg); }
+/* Meeting title, floating top centre under the header arrow; links back to the meeting. */
+.map-title { position: absolute; z-index: 3; top: calc(var(--space-5) + var(--space-2)); left: 50%; display: flex; align-items: center; gap: var(--space-3); max-width: calc(100% - 2 * (340px + var(--space-16) + var(--space-6))); min-width: 0; padding: var(--space-2) var(--space-4) var(--space-2) var(--space-2); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); box-shadow: var(--shadow-raised); color: var(--color-text); text-decoration: none; transform: translateX(-50%); }
+.map-title:hover { border-color: var(--color-accent-700); color: var(--color-text); }
+.map-title:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+.map-title-crest { flex: 0 0 auto; width: var(--space-10); height: var(--space-10); object-fit: contain; }
+.map-title div { display: grid; min-width: 0; }
+.map-title h1 { margin: 0; overflow: hidden; font-size: var(--font-size-base); text-overflow: ellipsis; white-space: nowrap; }
+.map-title small { overflow: hidden; color: var(--color-text-muted); font-size: var(--font-size-xs); text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 1200px) { .map-title { left: var(--space-3); max-width: calc(100% - 340px - var(--space-16) - var(--space-12)); transform: none; } }
+@media (max-width: 767px) { .map-title { max-width: calc(100% - var(--space-16) - var(--space-6)); } }
 .map-canvas .ol-zoom { top: auto; left: auto; right: var(--space-3); bottom: calc(var(--space-12) + var(--space-2)); }
 .map-notice { top: auto; right: auto; bottom: var(--space-3); left: 50%; width: max-content; max-width: calc(100% - 2 * var(--space-16)); transform: translateX(-50%); }
-.map-measure-output { right: auto; left: 50%; transform: translateX(-50%); }
+.map-measure-output { top: calc(var(--space-5) + var(--space-16) + var(--space-2)); right: auto; left: 50%; transform: translateX(-50%); }
 .map-panel-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4); }
 .map-panel-collapse { width: var(--space-8); min-height: var(--space-8); padding: var(--space-1); border-color: transparent; }
 .map-panel-collapse .icon { transition: transform var(--duration-normal) var(--ease-standard); }

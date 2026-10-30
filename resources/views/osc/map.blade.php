@@ -17,6 +17,7 @@
                 <button type="button" class="icon-button" data-map-tool="area" aria-pressed="false" aria-label="Ukur keluasan" title="Ukur keluasan"><x-icon name="square-dashed" /></button>
                 <button type="button" class="icon-button" data-map-tool="compare" aria-pressed="false" aria-label="Bandingkan" title="Bandingkan"><x-icon name="columns-2" /></button>
                 <button type="button" class="icon-button" data-map-tool="zoom" aria-label="Zum ke tapak" title="Zum ke tapak"><x-icon name="crosshair" /></button>
+                <button type="button" class="icon-button map-sheet-toggle" data-map-sheet-toggle aria-expanded="false" aria-controls="osc-map-panel" aria-label="Senarai permohonan" title="Senarai permohonan"><x-icon name="panel-right" /></button>
             </div>
             <p class="map-measure-output" data-map-measure aria-live="polite"></p>
             <div class="map-layers">
@@ -27,14 +28,11 @@
                 <button type="button" class="icon-button map-layers-toggle" data-map-layers-toggle aria-expanded="false" aria-controls="osc-map-layers" aria-label="Lapisan" title="Lapisan"><x-icon name="layers" /></button>
             </div>
             <div class="map-swipe" id="osc-map-swipe" role="slider" tabindex="0" aria-label="Bandingkan" aria-orientation="horizontal" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" hidden><span></span></div>
-            <div class="map-heading">
-                <a href="{{ route('osc.meetings.show', $meeting) }}" class="back-link"><x-icon name="arrow-left" /> Mesyuarat OSC {{ $meeting->number }}</a>
-                <div class="map-heading-row">
-                    <h1>Peta</h1>
-                    <button type="button" class="icon-button" data-header-toggle aria-expanded="true" aria-label="Sembunyi pengepala" title="Sembunyi pengepala"><x-icon name="panel-top" /></button>
-                    <button type="button" class="icon-button map-sheet-toggle" data-map-sheet-toggle aria-expanded="false" aria-controls="osc-map-panel" aria-label="Senarai permohonan" title="Senarai permohonan"><x-icon name="panel-right" /></button>
-                </div>
-            </div>
+            <button type="button" class="header-edge-toggle" data-header-toggle aria-expanded="true" aria-label="Sembunyi pengepala" title="Sembunyi pengepala"><x-icon name="chevron-left" /></button>
+            <a class="map-title" href="{{ route('osc.meetings.show', $meeting) }}" title="Kembali ke mesyuarat">
+                <img src="{{ asset('img/mbsp.png') }}" alt="Majlis Bandaraya Seberang Perai" class="map-title-crest">
+                <div><h1>Mesyuarat OSC {{ $meeting->number }}</h1><small>{{ \App\Services\Osc\OscTime::format($meeting->scheduled_at) }} · {{ $meeting->venue }}</small></div>
+            </a>
             <div class="map-popup" id="osc-map-popup" hidden>
                 <button type="button" class="icon-button map-popup-close" data-map-popup-close aria-label="Tutup"><x-icon name="x" /></button>
                 <div class="map-popup-body" data-map-popup-body></div>
