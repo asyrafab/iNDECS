@@ -911,6 +911,43 @@ html[data-motion='reduced'] *, html[data-motion='reduced'] *::before, html[data-
   .map-sheet[data-open="true"] { transform: translateY(0); visibility: visible; transition: transform var(--duration-normal) var(--ease-standard), visibility 0s; }
 }
 
+/* — eOSC+ map mode: the map fills the page under the topbar and beside the sidebar; everything else floats over it.
+     The topbar collapses (html[data-header="collapsed"], key indecs.header, applied by theme.js before paint). — */
+body.map-mode .page-shell { display: flex; flex-direction: column; height: 100dvh; }
+body.map-mode .topbar { flex: 0 0 auto; max-height: 160px; overflow: hidden; transition: max-height var(--duration-normal) var(--ease-standard), min-height var(--duration-normal) var(--ease-standard), padding var(--duration-normal) var(--ease-standard), border-width var(--duration-normal) var(--ease-standard); }
+html[data-header="collapsed"] body.map-mode .topbar { max-height: 0; min-height: 0; padding-block: 0; border-bottom-width: 0; }
+body.map-mode .workspace-body { flex: 1 1 auto; min-height: 0; }
+body.map-mode .amira-panel { overflow-y: auto; }
+body.map-mode .page-content { display: flex; flex-direction: column; width: 100%; max-width: none; margin: 0; padding: 0; }
+body.map-mode .workspace-footer { display: none; }
+body.map-mode .map-page { position: relative; flex: 1 1 auto; min-height: 0; display: block; }
+body.map-mode .map-layout { position: absolute; inset: 0; display: block; height: auto; min-height: 0; }
+body.map-mode .map-stage { position: absolute; inset: 0; height: auto; border: 0; border-radius: 0; }
+.map-heading { position: absolute; z-index: 3; top: var(--space-3); left: var(--space-3); display: grid; gap: var(--space-1); max-width: calc(100% - 2 * var(--space-12)); padding: var(--space-2) var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); box-shadow: var(--shadow-raised); }
+.map-heading .back-link { font-size: var(--font-size-xs); }
+.map-heading h1 { margin: 0 auto 0 0; font-size: var(--font-size-lg); }
+.map-heading-row { gap: var(--space-2); }
+.map-heading .icon-button { width: var(--space-8); min-height: var(--space-8); padding: var(--space-1); }
+.map-heading [data-header-toggle][aria-expanded="false"] { border-color: var(--color-accent-700); background: var(--color-accent-100); color: var(--color-accent-800); }
+.map-canvas .ol-zoom { top: auto; left: auto; right: var(--space-3); bottom: calc(var(--space-12) + var(--space-2)); }
+.map-notice { top: auto; right: auto; bottom: var(--space-3); left: 50%; width: max-content; max-width: calc(100% - 2 * var(--space-16)); transform: translateX(-50%); }
+.map-measure-output { right: auto; left: 50%; transform: translateX(-50%); }
+.map-panel-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4); }
+.map-panel-collapse { width: var(--space-8); min-height: var(--space-8); padding: var(--space-1); border-color: transparent; }
+.map-panel-collapse .icon { transition: transform var(--duration-normal) var(--ease-standard); }
+.map-panel[data-collapsed="true"] .map-panel-collapse .icon { transform: rotate(-90deg); }
+.map-panel-body { min-height: 0; overflow-y: auto; padding: 0 var(--space-4) var(--space-4); }
+@media (min-width: 768px) {
+  /* Floating item list, left of the tool bar; it folds to its heading with a height transition. */
+  .map-panel { position: absolute; z-index: 3; top: var(--space-3); right: calc(var(--space-3) * 2 + var(--space-12) + 2px); display: grid; grid-template-rows: auto 1fr; align-content: stretch; width: 340px; min-width: 0; max-width: calc(100% - var(--space-3) * 3 - var(--space-12) - 2px); max-height: calc(100% - var(--space-6)); overflow: hidden; box-shadow: var(--shadow-raised); transition: grid-template-rows var(--duration-normal) var(--ease-standard); }
+  .map-panel[data-collapsed="true"] { grid-template-rows: auto 0fr; }
+  .map-panel[data-collapsed="true"] .map-panel-body { padding-bottom: 0; }
+}
+@media (max-width: 767px) {
+  .map-panel-collapse { display: none; }
+  .map-panel { display: grid; grid-template-rows: auto minmax(0, 1fr); }
+}
+
 /* — Boundary drawing field on registration forms and application pages — */
 .boundary-field { display: grid; gap: var(--space-3); }
 .boundary-field-head .subsection-title { margin-bottom: var(--space-1); }

@@ -163,9 +163,12 @@ application, two = linked pair, three = development case.
   `.agenda-row-body`, `.agenda-row-meta`, `.agenda-row-actions`, `.inline-form` and `.panel-stack`
   in `indecs.css`; rows collapse to one column on phones.
 
+- Map mode: a page that sets `@section('body-class', 'map-mode')` (the eOSC+ meeting map) fills the space under the topbar
+  and beside the sidebar with the map; everything else floats over it. Its `[data-header-toggle]` button collapses the topbar
+  with a height transition (`html[data-header="collapsed"]`, `localStorage` key `indecs.header`, applied by `theme.js`).
 - The eOSC+ meeting map (`resources/views/osc/map.blade.php`, `public/js/gis-map.js`, `public/js/osc-map.js`, OpenLayers
   vendored in `public/vendor/openlayers/`, version in `VERSION`) uses `.map-page`, `.map-layout`, `.map-stage`, `.map-canvas`,
-  `.map-panel` / `.map-sheet` (side panel from 768px, bottom sheet below), `.map-sheet-toggle`, `.map-tools` (floating icon toolbar at the top right of the map: measure distance, measure area, compare, zoom to site; the measurement shows beside it in `.map-measure-output`),
+  `.map-heading` (floating card: back link, title, header and list toggles), `.map-panel` / `.map-sheet` (floating list from 768px with `.map-panel-head`, `.map-panel-collapse` folding `.map-panel-body` to its heading; bottom sheet below 768px), `.map-sheet-toggle`, `.map-tools` (floating icon toolbar at the top right of the map: measure distance, measure area, compare, zoom to site; the measurement shows beside it in `.map-measure-output`),
   `.map-measure-output`, `.map-layers` (floating at the bottom left of the map: `.map-layers-toggle` icon button opens `.map-layers-panel`, which fades and rises in; Escape closes it), `.map-layer-list`, `.map-layer-row` (with `.map-layer-grip` drag handle and `.map-layer-move` up/down buttons on every layer except base maps, which sit under a `.map-layer-group` "Peta asas" heading), `.map-item-list`, `.map-item-button` (Bil. in `.map-item-bil`, then `.map-item-body`: type | paper reference, title, developer; with `.map-item-muted` and a `.status-badge` for items not yet accepted), `.map-layout-toggle`
   (the per-application "Lihat pelan susun atur" button in the map popup; `aria-pressed` marks the one plan shown), `.map-notice`,
   `.map-swipe` and `.map-popup` in `indecs.css`. Map colours are read from CSS custom properties at runtime in JS, never

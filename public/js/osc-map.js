@@ -35,6 +35,20 @@
         if (open && panelTitle) { void panel.offsetHeight; panelTitle.focus({ preventScroll: true }); }
         else if (!open && wasOpen && restoreFocus !== false) toggle.focus();
     }
+    /* From 768px the floating list folds to its heading. */
+    const collapseButton = document.querySelector('[data-map-panel-collapse]');
+    const panelBody = document.getElementById('osc-map-panel-body');
+    if (collapseButton && panel && panelBody) {
+        collapseButton.addEventListener('click', () => {
+            const collapsed = panel.dataset.collapsed !== 'true';
+            panel.dataset.collapsed = String(collapsed);
+            panelBody.inert = collapsed;
+            const text = collapsed ? labels.showList : labels.hideList;
+            collapseButton.setAttribute('aria-expanded', String(!collapsed));
+            collapseButton.setAttribute('aria-label', text);
+            collapseButton.setAttribute('title', text);
+        });
+    }
     if (toggle && panel) {
         toggle.addEventListener('click', () => setSheet(panel.dataset.open !== 'true'));
         document.addEventListener('keydown', event => {

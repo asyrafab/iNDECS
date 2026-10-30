@@ -1,13 +1,10 @@
 @extends('layouts.app')
 @section('title', 'Peta · Mesyuarat '.$meeting->number)
+@section('body-class', 'map-mode')
 @section('content')
 <link rel="stylesheet" href="{{ asset('vendor/openlayers/ol.css') }}">
 <div class="map-page">
-    <div class="map-heading">
-        <a href="{{ route('osc.meetings.show', $meeting) }}" class="back-link"><x-icon name="arrow-left" /> Mesyuarat OSC {{ $meeting->number }}</a>
-        <div class="map-heading-row"><h1>Peta</h1>
-    <button type="button" class="button button-primary map-sheet-toggle" data-map-sheet-toggle aria-expanded="false" aria-controls="osc-map-panel"><x-icon name="panel-right" />Lapisan &amp; senarai</button></div>
-    </div>
+    {{-- The map fills the page; the heading, item list and tools float over it. --}}
     <div class="map-layout" id="osc-map-root">
         <div class="map-stage">
             <div class="map-canvas" id="osc-map" role="application" aria-label="Peta"></div>
@@ -30,17 +27,28 @@
                 <button type="button" class="icon-button map-layers-toggle" data-map-layers-toggle aria-expanded="false" aria-controls="osc-map-layers" aria-label="Lapisan" title="Lapisan"><x-icon name="layers" /></button>
             </div>
             <div class="map-swipe" id="osc-map-swipe" role="slider" tabindex="0" aria-label="Bandingkan" aria-orientation="horizontal" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" hidden><span></span></div>
+            <div class="map-heading">
+                <a href="{{ route('osc.meetings.show', $meeting) }}" class="back-link"><x-icon name="arrow-left" /> Mesyuarat OSC {{ $meeting->number }}</a>
+                <div class="map-heading-row">
+                    <h1>Peta</h1>
+                    <button type="button" class="icon-button" data-header-toggle aria-expanded="true" aria-label="Sembunyi pengepala" title="Sembunyi pengepala"><x-icon name="panel-top" /></button>
+                    <button type="button" class="icon-button map-sheet-toggle" data-map-sheet-toggle aria-expanded="false" aria-controls="osc-map-panel" aria-label="Senarai permohonan" title="Senarai permohonan"><x-icon name="panel-right" /></button>
+                </div>
+            </div>
             <div class="map-popup" id="osc-map-popup" hidden>
                 <button type="button" class="icon-button map-popup-close" data-map-popup-close aria-label="Tutup"><x-icon name="x" /></button>
                 <div class="map-popup-body" data-map-popup-body></div>
             </div>
         </div>
         <aside class="map-panel map-sheet" id="osc-map-panel" role="dialog" aria-labelledby="osc-map-panel-title">
-            <section class="map-panel-section">
+            <div class="map-panel-head">
                 <h2 class="map-panel-title" id="osc-map-panel-title" tabindex="-1">Permohonan</h2>
+                <button type="button" class="icon-button map-panel-collapse" data-map-panel-collapse aria-expanded="true" aria-controls="osc-map-panel-body" aria-label="Sembunyi senarai" title="Sembunyi senarai"><x-icon name="chevron-down" /></button>
+            </div>
+            <div class="map-panel-body" id="osc-map-panel-body">
                 <ol class="map-item-list" data-map-items><li class="muted">Memuatkan…</li></ol>
                 <div data-map-unmapped hidden></div>
-            </section>
+            </div>
         </aside>
     </div>
 </div>

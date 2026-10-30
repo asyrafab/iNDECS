@@ -28,7 +28,7 @@
     <link rel="stylesheet" href="{{ asset('css/indecs.css') }}">
     <script src="{{ asset('js/indecs.js') }}" defer></script>
 </head>
-<body>
+<body class="@yield('body-class')">
     <a class="skip-link" href="#main-content">Langkau ke kandungan</a>
     <div class="app-shell">
         <button class="sidebar-backdrop" data-menu-close aria-label="Tutup menu navigasi" hidden></button>

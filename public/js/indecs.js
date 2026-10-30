@@ -70,6 +70,25 @@ document.addEventListener('DOMContentLoaded', () => {
         setSidebar(!sidebar.classList.contains('open'));
     });
     sidebarBackdrop?.addEventListener('click', () => setSidebar(false));
+    /* Pages in map mode can collapse the topbar; the choice is remembered like the sidebar's. */
+    const headerToggles = document.querySelectorAll('[data-header-toggle]');
+    const syncHeader = () => {
+        const collapsed = root.dataset.header === 'collapsed';
+        const text = collapsed ? 'Tunjuk pengepala' : 'Sembunyi pengepala';
+        headerToggles.forEach(button => {
+            button.setAttribute('aria-expanded', String(!collapsed));
+            button.setAttribute('aria-label', text);
+            button.setAttribute('title', text);
+        });
+    };
+    headerToggles.forEach(button => button.addEventListener('click', () => {
+        const collapsed = root.dataset.header !== 'collapsed';
+        if (collapsed) root.dataset.header = 'collapsed';
+        else delete root.dataset.header;
+        try { localStorage.setItem('indecs.header', collapsed ? 'collapsed' : 'expanded'); } catch { /* The choice lasts for this page only. */ }
+        syncHeader();
+    }));
+    syncHeader();
     document.querySelector('[data-menu-close-inline]')?.addEventListener('click', () => setSidebar(false));
     document.querySelectorAll('[data-amira-open]').forEach(button => button.addEventListener('click', () => {
         assistantOpener = button;
