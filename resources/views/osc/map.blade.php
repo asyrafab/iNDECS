@@ -15,6 +15,13 @@
                 <span data-map-notice-text></span>
                 <button type="button" class="icon-button" data-map-notice-close aria-label="Tutup"><x-icon name="x" /></button>
             </div>
+            <div class="map-tools" role="toolbar" aria-label="Alat peta" aria-orientation="vertical">
+                <button type="button" class="icon-button" data-map-tool="distance" aria-pressed="false" aria-label="Ukur jarak" title="Ukur jarak"><x-icon name="ruler" /></button>
+                <button type="button" class="icon-button" data-map-tool="area" aria-pressed="false" aria-label="Ukur keluasan" title="Ukur keluasan"><x-icon name="square-dashed" /></button>
+                <button type="button" class="icon-button" data-map-tool="compare" aria-pressed="false" aria-label="Bandingkan" title="Bandingkan"><x-icon name="columns-2" /></button>
+                <button type="button" class="icon-button" data-map-tool="zoom" aria-label="Zum ke tapak" title="Zum ke tapak"><x-icon name="crosshair" /></button>
+            </div>
+            <p class="map-measure-output" data-map-measure aria-live="polite"></p>
             <div class="map-swipe" id="osc-map-swipe" role="slider" tabindex="0" aria-label="Bandingkan" aria-orientation="horizontal" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" hidden><span></span></div>
             <div class="map-popup" id="osc-map-popup" hidden>
                 <button type="button" class="icon-button map-popup-close" data-map-popup-close aria-label="Tutup"><x-icon name="x" /></button>
@@ -23,15 +30,6 @@
         </div>
         <aside class="map-panel map-sheet" id="osc-map-panel" role="dialog" aria-labelledby="osc-map-panel-title">
             <h2 class="map-panel-title map-panel-heading" id="osc-map-panel-title" tabindex="-1">Peta</h2>
-            <section class="map-panel-section">
-                <div class="map-tools" role="group" aria-label="Alat">
-                    <button type="button" class="button button-secondary button-small" data-map-tool="distance" aria-pressed="false">Ukur jarak</button>
-                    <button type="button" class="button button-secondary button-small" data-map-tool="area" aria-pressed="false">Ukur keluasan</button>
-                    <button type="button" class="button button-secondary button-small" data-map-tool="compare" aria-pressed="false">Bandingkan</button>
-                    <button type="button" class="button button-secondary button-small" data-map-tool="zoom">Zum ke tapak</button>
-                </div>
-                <p class="map-measure-output" data-map-measure aria-live="polite"></p>
-            </section>
             <section class="map-panel-section">
                 <h2 class="map-panel-title">Lapisan</h2>
                 <ul class="map-layer-list" data-map-layers></ul>

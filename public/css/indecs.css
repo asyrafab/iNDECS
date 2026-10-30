@@ -844,9 +844,12 @@ html[data-motion='reduced'] *, html[data-motion='reduced'] *::before, html[data-
 .map-panel-title { margin: 0; font-size: var(--font-size-base); }
 .map-panel-heading { padding: var(--space-4) var(--space-4) 0; }
 .map-panel-heading:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
-.map-tools { display: flex; flex-wrap: wrap; gap: var(--space-2); }
-.map-tools .button[aria-pressed="true"] { border-color: var(--color-accent-700); background: var(--color-accent-100); color: var(--color-accent-800); }
-.map-measure-output { margin: 0; min-height: var(--space-5); color: var(--color-text-muted); font-size: var(--font-size-sm); font-variant-numeric: tabular-nums; }
+.map-tools { position: absolute; z-index: 3; top: var(--space-3); right: var(--space-3); display: grid; gap: var(--space-1); padding: var(--space-1); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); box-shadow: var(--shadow-raised); }
+.map-tools .icon-button { border-color: transparent; }
+.map-tools .icon-button[aria-pressed="true"] { border-color: var(--color-accent-700); background: var(--color-accent-100); color: var(--color-accent-800); }
+.map-tools .icon-button:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 1px; }
+.map-measure-output { position: absolute; z-index: 3; top: var(--space-3); right: calc(var(--space-12) + var(--space-6)); margin: 0; padding: var(--space-1) var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); box-shadow: var(--shadow-raised); color: var(--color-text); font-size: var(--font-size-sm); font-weight: 500; font-variant-numeric: tabular-nums; }
+.map-measure-output:empty { display: none; }
 .map-layer-list, .map-item-list { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
 .map-item-list > li { display: grid; gap: var(--space-1); }
 .map-layout-toggle { justify-self: start; }
@@ -874,7 +877,7 @@ html[data-motion='reduced'] *, html[data-motion='reduced'] *::before, html[data-
 .map-item-button span { color: var(--color-text-muted); font-size: var(--font-size-xs); }
 .map-item-button .status-badge, .map-popup-body .status-badge { justify-self: start; color: var(--status-pending-text); }
 .map-item-muted strong { color: var(--color-text-muted); }
-.map-notice { position: absolute; z-index: 3; top: var(--space-3); left: var(--space-3); right: var(--space-12); display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-3); border-left: 4px solid var(--status-attention); border-radius: var(--radius-sm); background: var(--status-attention-bg); color: var(--status-attention-text); font-size: var(--font-size-sm); font-weight: 500; }
+.map-notice { position: absolute; z-index: 3; top: var(--space-3); left: var(--space-3); right: calc(var(--space-12) + var(--space-6)); display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-3); border-left: 4px solid var(--status-attention); border-radius: var(--radius-sm); background: var(--status-attention-bg); color: var(--status-attention-text); font-size: var(--font-size-sm); font-weight: 500; }
 .map-notice[hidden], .map-swipe[hidden] { display: none; }
 .map-notice span { flex: 1 1 auto; }
 .map-swipe { position: absolute; z-index: 2; top: 0; bottom: 0; left: 50%; width: var(--space-6); margin-left: calc(var(--space-3) * -1); cursor: ew-resize; touch-action: none; }
