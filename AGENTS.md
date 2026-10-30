@@ -129,7 +129,9 @@ application, two = linked pair, three = development case.
 ## Working rules
 
 - The approved workspace (ADR-311) has a persistent navy sidebar shared by all
-  departments. `.workspace-switcher` exposes authorised departments only;
+  departments. On desktop the topbar menu button collapses it (`html[data-sidebar="collapsed"]`,
+  remembered in `localStorage` key `indecs.sidebar` and applied by `theme.js` before paint); below 901px it is the
+  off-canvas menu as before. `.workspace-switcher` exposes authorised departments only;
   `.workspace-body`, `.topbar-actions`, `.workspace-footer`, `.record-tabs` and
   `.catalogue-tools` organise existing screens. `.indecs-mark` renders the unchanged
   three-square geometry; `mark-reversed`, `mark-small` and `mark-entry` are its variants.
@@ -164,7 +166,7 @@ application, two = linked pair, three = development case.
 - The eOSC+ meeting map (`resources/views/osc/map.blade.php`, `public/js/gis-map.js`, `public/js/osc-map.js`, OpenLayers
   vendored in `public/vendor/openlayers/`, version in `VERSION`) uses `.map-page`, `.map-layout`, `.map-stage`, `.map-canvas`,
   `.map-panel` / `.map-sheet` (side panel from 768px, bottom sheet below), `.map-sheet-toggle`, `.map-tools`,
-  `.map-measure-output`, `.map-layer-list`, `.map-layer-row`, `.map-item-list`, `.map-item-button` (with `.map-item-muted` and a `.status-badge` for items not yet accepted), `.map-layout-toggle`
+  `.map-measure-output`, `.map-layer-list`, `.map-layer-row` (with `.map-layer-grip` drag handle and `.map-layer-move` up/down buttons on every layer except base maps, which sit under a `.map-layer-group` "Peta asas" heading), `.map-item-list`, `.map-item-button` (with `.map-item-muted` and a `.status-badge` for items not yet accepted), `.map-layout-toggle`
   (the per-application "Lihat pelan susun atur" button in the item list and popup; `aria-pressed` marks the one plan shown), `.map-notice`,
   `.map-swipe` and `.map-popup` in `indecs.css`. Map colours are read from CSS custom properties at runtime in JS, never
   hex; the page config JSON (`#osc-map-config`) carries no item data, which comes only from `osc.meetings.map-data`.

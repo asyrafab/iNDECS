@@ -29,6 +29,7 @@
     mode = modes.includes(stored) ? stored : 'system';
     motion = read('indecs.theme.motion', 'system') === 'reduced' ? 'reduced' : 'system';
     try { localStorage.removeItem('indecs.theme.accent'); } catch { /* Legacy accent is ignored. */ }
+    if (read('indecs.sidebar', 'expanded') === 'collapsed') root.dataset.sidebar = 'collapsed'; // desktop only; set before paint
     window.iNDECSTheme = {
         setMode(value) {
             if (!modes.includes(value)) return;

@@ -24,9 +24,28 @@ document.addEventListener('DOMContentLoaded', () => {
         sidebar.inert = mobile.matches && !showing;
         if (sidebarBackdrop) sidebarBackdrop.hidden = !showing;
         if (pageShell) pageShell.inert = showing;
-        menuToggle?.setAttribute('aria-expanded', String(showing));
+        if (mobile.matches) {
+            menuToggle?.setAttribute('aria-expanded', String(showing));
+            menuToggle?.setAttribute('aria-label', 'Buka menu');
+            menuToggle?.removeAttribute('title');
+        } else syncCollapsed();
         if (showing) focusable(sidebar)[0]?.focus();
         else if (returnFocus && mobile.matches) menuToggle?.focus();
+    };
+    /* Desktop: the same button collapses the sidebar so the page (e.g. the meeting map) gets the full width. */
+    const root = document.documentElement;
+    const syncCollapsed = () => {
+        const collapsed = root.dataset.sidebar === 'collapsed';
+        const text = collapsed ? 'Tunjuk menu' : 'Sembunyi menu';
+        menuToggle?.setAttribute('aria-expanded', String(!collapsed));
+        menuToggle?.setAttribute('aria-label', text);
+        menuToggle?.setAttribute('title', text);
+    };
+    const setCollapsed = (collapsed) => {
+        if (collapsed) root.dataset.sidebar = 'collapsed';
+        else delete root.dataset.sidebar;
+        try { localStorage.setItem('indecs.sidebar', collapsed ? 'collapsed' : 'expanded'); } catch { /* The choice lasts for this page only. */ }
+        syncCollapsed();
     };
     const setAssistant = (open, moveFocus = true) => {
         if (!assistant) return;
@@ -46,6 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     setSidebar(false, false);
     menuToggle?.addEventListener('click', () => {
+        if (!mobile.matches) { setCollapsed(root.dataset.sidebar !== 'collapsed'); return; }
         setAssistant(false, false);
         setSidebar(!sidebar.classList.contains('open'));
     });

@@ -76,26 +76,65 @@
         if (noticeEl) noticeEl.querySelector('[data-map-notice-close]').addEventListener('click', () => { noticeEl.hidden = true; });
 
         /* Layer switcher: one checkbox and one opacity slider per layer. Layers are registered with a sort position,
-           top to bottom, so the list matches the stacking order. */
+           top to bottom, so the list matches the stacking order. Every layer except the base maps can be reordered by
+           dragging its handle or with its up and down buttons; base maps always stay at the bottom. */
         const listEl = document.querySelector('[data-map-layers]');
+        const REORDER_FLOOR = 20; // reordered layers take z-indexes just above this, under measuring (100)
+        const spriteUrl = ((document.querySelector('svg.icon use') || { getAttribute: () => '' }).getAttribute('href') || '').split('#')[0];
+        function icon(name) {
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('class', 'icon');
+            svg.setAttribute('aria-hidden', 'true');
+            svg.setAttribute('focusable', 'false');
+            svg.setAttribute('viewBox', '0 0 24 24');
+            svg.setAttribute('fill', 'none');
+            svg.setAttribute('stroke', 'currentColor');
+            svg.setAttribute('stroke-width', '2');
+            svg.setAttribute('stroke-linecap', 'round');
+            svg.setAttribute('stroke-linejoin', 'round');
+            const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+            use.setAttribute('href', spriteUrl + '#' + name);
+            svg.append(use);
+            return svg;
+        }
         function addLayer(def) {
             const layer = def.layer;
             layer.setZIndex(def.zIndex);
             layer.setVisible(def.visible !== false);
             layer.setOpacity(def.opacity === undefined ? 1 : def.opacity);
             map.addLayer(layer);
-            const entry = { id: def.id, label: def.label, layer: layer, zIndex: def.zIndex };
+            const entry = { id: def.id, label: def.label, layer: layer, zIndex: def.zIndex, base: def.base === true };
             registry.push(entry);
             registry.sort((a, b) => b.zIndex - a.zIndex);
             renderSwitcher();
             return entry;
         }
-        function renderSwitcher() {
+        function movable() { return registry.filter(e => !e.base); }
+        function moveLayer(entry, toIndex) {
+            const order = movable();
+            const from = order.indexOf(entry);
+            if (from < 0 || toIndex < 0 || toIndex >= order.length || toIndex === from) return false;
+            order.splice(from, 1);
+            order.splice(toIndex, 0, entry);
+            order.forEach((e, i) => { e.zIndex = REORDER_FLOOR + order.length - i; e.layer.setZIndex(e.zIndex); });
+            registry.sort((a, b) => b.zIndex - a.zIndex);
+            return true;
+        }
+        let dragged = null;
+        function renderSwitcher(focus) {
             if (!listEl) return;
             listEl.replaceChildren();
+            const order = movable();
             registry.forEach(entry => {
+                if (entry.base && registry.find(e => e.base) === entry) {
+                    const heading = document.createElement('li');
+                    heading.className = 'map-layer-group';
+                    heading.textContent = labels.basemap || 'Peta asas';
+                    listEl.append(heading);
+                }
                 const row = document.createElement('li');
                 row.className = 'map-layer-row';
+                row.dataset.layerId = entry.id;
                 const label = document.createElement('label');
                 const check = document.createElement('input');
                 check.type = 'checkbox';
@@ -108,9 +147,68 @@
                 range.value = String(entry.layer.getOpacity());
                 range.setAttribute('aria-label', entry.label + ' — kelegapan');
                 range.addEventListener('input', () => entry.layer.setOpacity(Number(range.value)));
-                row.append(label, range);
+                if (entry.base) {
+                    row.append(label, range);
+                    listEl.append(row);
+                    return;
+                }
+                const index = order.indexOf(entry);
+                const grip = document.createElement('span');
+                grip.className = 'map-layer-grip';
+                grip.title = labels.dragToReorder || 'Seret untuk susun semula';
+                grip.append(icon('grip-vertical'));
+                grip.addEventListener('pointerdown', () => { row.draggable = true; });
+                grip.addEventListener('pointerup', () => { row.draggable = false; });
+                const moves = document.createElement('span');
+                moves.className = 'map-layer-move';
+                [['up', 'arrow-up', labels.moveUp || 'Naikkan', index - 1], ['down', 'arrow-down', labels.moveDown || 'Turunkan', index + 1]].forEach(([dir, name, text, target]) => {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'icon-button';
+                    button.dataset.layerMove = dir;
+                    button.setAttribute('aria-label', text + ' ' + entry.label);
+                    button.title = text;
+                    button.disabled = target < 0 || target >= order.length;
+                    button.append(icon(name));
+                    button.addEventListener('click', () => { if (moveLayer(entry, target)) renderSwitcher({ id: entry.id, dir: dir }); });
+                    moves.append(button);
+                });
+                row.addEventListener('dragstart', event => {
+                    dragged = entry;
+                    row.classList.add('is-dragging');
+                    event.dataTransfer.effectAllowed = 'move';
+                    event.dataTransfer.setData('text/plain', entry.id);
+                });
+                row.addEventListener('dragend', () => {
+                    dragged = null;
+                    row.draggable = false;
+                    row.classList.remove('is-dragging');
+                    listEl.querySelectorAll('[data-drop]').forEach(el => el.removeAttribute('data-drop'));
+                });
+                row.addEventListener('dragover', event => {
+                    if (!dragged || dragged === entry) return;
+                    event.preventDefault();
+                    const rect = row.getBoundingClientRect();
+                    row.dataset.drop = event.clientY > rect.top + rect.height / 2 ? 'after' : 'before';
+                });
+                row.addEventListener('dragleave', () => row.removeAttribute('data-drop'));
+                row.addEventListener('drop', event => {
+                    event.preventDefault();
+                    if (!dragged || dragged === entry) return;
+                    let target = order.indexOf(entry) + (row.dataset.drop === 'after' ? 1 : 0);
+                    if (order.indexOf(dragged) < target) target -= 1;
+                    moveLayer(dragged, target);
+                    renderSwitcher();
+                });
+                row.append(grip, label, range, moves);
                 listEl.append(row);
             });
+            if (focus) {
+                const buttons = listEl.querySelectorAll('[data-layer-id="' + focus.id + '"] [data-layer-move]');
+                const preferred = Array.from(buttons).find(b => b.dataset.layerMove === focus.dir && !b.disabled);
+                const fallback = Array.from(buttons).find(b => !b.disabled);
+                if (preferred || fallback) (preferred || fallback).focus();
+            }
         }
 
         const layers = { imagery: {}, reference: {} };
@@ -121,7 +219,7 @@
             source.on('tileloaderror', onTileError);
             const layer = new ol.layer.Tile({ source: source });
             layers.imagery[src.key] = layer;
-            addLayer({ id: src.key, label: labels[src.key] || src.label, layer: layer, zIndex: 10 + index, visible: src.key === 'imagery' });
+            addLayer({ id: src.key, label: labels[src.key] || src.label, layer: layer, zIndex: 10 + index, visible: src.key === 'imagery', base: true });
         });
 
         /* Reference layers: cadastral lots above other layers, which sit above imagery. */
