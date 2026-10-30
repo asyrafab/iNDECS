@@ -764,9 +764,16 @@ h1, h2, h3, h4 { color: var(--color-navy); }
   .assistant-open .field-span-2 { grid-column: span 2; }
   .public-header { padding: var(--space-4); }
 }
-/* Desktop: the menu button slides the sidebar away (motion off under reduced motion); the choice is remembered (indecs.sidebar, applied by theme.js before paint). */
+/* Desktop: the arrow tab on the sidebar's right edge slides the sidebar away and back (motion off under reduced motion);
+   the choice is remembered (indecs.sidebar, applied by theme.js before paint). Below 901px the menu button opens it instead. */
+.sidebar-edge-toggle { display: none; }
 @media (min-width: 901px) {
-  .menu-button { display: inline-flex; }
+  .sidebar-edge-toggle { position: fixed; z-index: 31; top: 50%; left: var(--sidebar-width); display: inline-flex; align-items: center; justify-content: center; width: var(--space-6); height: var(--space-12); padding: 0; border: 1px solid var(--color-sidebar-border); border-left: 0; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; background: var(--color-sidebar-bg); color: var(--color-sidebar-text); cursor: pointer; transform: translateY(-50%); transition: left var(--duration-normal) var(--ease-standard), background var(--duration-fast); }
+  .sidebar-edge-toggle:hover { background: var(--color-sidebar-hover); }
+  .sidebar-edge-toggle:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+  .sidebar-edge-toggle .icon { width: 16px; height: 16px; transition: transform var(--duration-normal) var(--ease-standard); }
+  html[data-sidebar="collapsed"] .sidebar-edge-toggle { left: 0; }
+  html[data-sidebar="collapsed"] .sidebar-edge-toggle .icon { transform: rotate(180deg); }
   .sidebar { transition: transform var(--duration-normal) var(--ease-standard), visibility var(--duration-normal); }
   .page-shell { transition: margin-left var(--duration-normal) var(--ease-standard), width var(--duration-normal) var(--ease-standard); }
   html[data-sidebar="collapsed"] .sidebar { transform: translateX(-100%); visibility: hidden; }

@@ -129,7 +129,7 @@ application, two = linked pair, three = development case.
 ## Working rules
 
 - The approved workspace (ADR-311) has a persistent navy sidebar shared by all
-  departments. On desktop the topbar menu button collapses it (`html[data-sidebar="collapsed"]`,
+  departments. On desktop the `.sidebar-edge-toggle` arrow on its right edge collapses it (`html[data-sidebar="collapsed"]`,
   remembered in `localStorage` key `indecs.sidebar` and applied by `theme.js` before paint); below 901px it is the
   off-canvas menu as before. `.workspace-switcher` exposes authorised departments only;
   `.workspace-body`, `.topbar-actions`, `.workspace-footer`, `.record-tabs` and

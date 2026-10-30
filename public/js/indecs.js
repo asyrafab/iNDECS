@@ -24,22 +24,19 @@ document.addEventListener('DOMContentLoaded', () => {
         sidebar.inert = mobile.matches && !showing;
         if (sidebarBackdrop) sidebarBackdrop.hidden = !showing;
         if (pageShell) pageShell.inert = showing;
-        if (mobile.matches) {
-            menuToggle?.setAttribute('aria-expanded', String(showing));
-            menuToggle?.setAttribute('aria-label', 'Buka menu');
-            menuToggle?.removeAttribute('title');
-        } else syncCollapsed();
+        menuToggle?.setAttribute('aria-expanded', String(showing));
         if (showing) focusable(sidebar)[0]?.focus();
         else if (returnFocus && mobile.matches) menuToggle?.focus();
     };
-    /* Desktop: the same button collapses the sidebar so the page (e.g. the meeting map) gets the full width. */
+    /* Desktop: the arrow on the sidebar's right edge collapses it so the page (e.g. the meeting map) gets the full width. */
     const root = document.documentElement;
+    const edgeToggle = document.querySelector('[data-sidebar-collapse]');
     const syncCollapsed = () => {
         const collapsed = root.dataset.sidebar === 'collapsed';
         const text = collapsed ? 'Tunjuk menu' : 'Sembunyi menu';
-        menuToggle?.setAttribute('aria-expanded', String(!collapsed));
-        menuToggle?.setAttribute('aria-label', text);
-        menuToggle?.setAttribute('title', text);
+        edgeToggle?.setAttribute('aria-expanded', String(!collapsed));
+        edgeToggle?.setAttribute('aria-label', text);
+        edgeToggle?.setAttribute('title', text);
     };
     const setCollapsed = (collapsed) => {
         if (collapsed) root.dataset.sidebar = 'collapsed';
@@ -64,8 +61,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     setSidebar(false, false);
+    syncCollapsed();
+    edgeToggle?.addEventListener('click', () => setCollapsed(root.dataset.sidebar !== 'collapsed'));
     menuToggle?.addEventListener('click', () => {
-        if (!mobile.matches) { setCollapsed(root.dataset.sidebar !== 'collapsed'); return; }
         setAssistant(false, false);
         setSidebar(!sidebar.classList.contains('open'));
     });

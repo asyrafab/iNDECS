@@ -67,6 +67,7 @@
             </nav>
             <div class="sidebar-note"><x-mark class="mark-reversed mark-small" /><div><strong>Persekitaran iNDECS</strong><small>Majlis Bandaraya Seberang Perai</small></div></div>
         </aside>
+        <button type="button" class="sidebar-edge-toggle" data-sidebar-collapse aria-controls="sidebar" aria-expanded="true" aria-label="Sembunyi menu" title="Sembunyi menu"><x-icon name="chevron-left" /></button>
         <div class="page-shell">
             <header class="topbar">
                 <button class="menu-button icon-button" type="button" data-menu-toggle aria-label="Buka menu" aria-expanded="false" aria-controls="sidebar"><x-icon name="menu" /></button>
