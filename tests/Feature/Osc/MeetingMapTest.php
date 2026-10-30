@@ -6,12 +6,14 @@ namespace Tests\Feature\Osc;
 
 use App\Enums\Osc\TablingPurpose;
 use App\Models\Application;
+use App\Models\ApplicationType;
 use App\Models\Gis\GisLayer;
 use App\Models\Gis\GisLayerSnapshot;
 use App\Models\Lot;
 use App\Models\Osc\AgendaItem;
 use App\Models\Osc\AgendaItemPaper;
 use App\Models\Osc\Meeting;
+use App\Models\Party;
 use App\Models\Site;
 use App\Models\User;
 use App\Services\Osc\AgendaService;
@@ -135,10 +137,29 @@ final class MeetingMapTest extends TestCase
         $this->assertSame('JBANG', $props['department_id']);
         $this->assertSame('accepted', $props['status']);
         $this->assertSame(1, $props['position']);
+        $this->assertSame('Penamaan Jalan & Taman', $props['type_label']);
+        $this->assertNull($props['developer']);
         $this->assertSame(route('osc.papers.show', AgendaItemPaper::query()->first()), $props['paper_url']);
         $this->assertNull($props['layout_url']);
         $this->assertSame('item', $props['geometry_source']);
         $this->assertSame('MultiPolygon', $items[0]['geometry']['type']);
+    }
+
+    public function test_item_carries_application_type_and_primary_applicant_as_developer(): void
+    {
+        $this->members();
+        $application = $this->application('OSC/9');
+        $consultant = Party::query()->create(['name' => 'Arkitek Contoh']);
+        $developer = Party::query()->create(['name' => 'Pemaju Contoh Sdn Bhd']);
+        $application->applicationParties()->create(['party_id' => $consultant->id, 'role' => 'consultant', 'is_primary' => false, 'submitted_snapshot' => []]);
+        $application->applicationParties()->create(['party_id' => $developer->id, 'role' => 'applicant', 'is_primary' => true, 'submitted_snapshot' => []]);
+        $item = $this->propose('C', 'JBANG', $application->id);
+        $this->boundary($item, $this->square(100.40, 5.40));
+        $this->accept($item);
+
+        $props = $this->items($this->mapData($this->member)->assertOk()->json())[0]['properties'];
+        $this->assertSame(ApplicationType::query()->find('PKM')->name, $props['type_label']);
+        $this->assertSame('Pemaju Contoh Sdn Bhd', $props['developer']);
     }
 
     public function test_user_without_access_to_the_meeting_gets_403(): void

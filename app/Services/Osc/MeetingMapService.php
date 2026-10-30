@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Osc;
 
 use App\Enums\Osc\AgendaItemStatus;
+use App\Models\ApplicationType;
 use App\Models\Gis\GisLayer;
 use App\Models\Osc\AgendaItem;
 use App\Models\Osc\Meeting;
@@ -39,6 +40,10 @@ final class MeetingMapService
 
         $items = $meeting->items()->with('application')->get();
         $layouts = $this->layouts('agenda_item', $items->pluck('id')->all());
+        $typeNames = ApplicationType::query()
+            ->whereIn('id', $items->map(fn (AgendaItem $item) => $item->application_type_id ?? $item->application?->application_type_id)->filter()->unique()->values())
+            ->pluck('name', 'id');
+        $developers = $this->developers($items->pluck('application_id')->filter()->unique()->values()->all());
         foreach ($items as $item) {
             $item->setRelation('meeting', $meeting);
             // Returned items have left the agenda; they are not shown at all.
@@ -62,6 +67,8 @@ final class MeetingMapService
                     'id' => $item->id,
                     'title' => $item->title,
                     'reference' => $item->reference,
+                    'type_label' => $typeNames[$item->application_type_id ?? $item->application?->application_type_id] ?? $item->standalone_type,
+                    'developer' => $developers[$item->application_id] ?? null,
                     'purpose' => $item->purpose->label(),
                     'department_id' => $item->department_id,
                     'status' => $item->status->value,
@@ -296,6 +303,28 @@ final class MeetingMapService
         }
 
         return $result;
+    }
+
+    /**
+     * Name of each application's primary applicant (the developer), keyed by application id.
+     *
+     * @param  array<int, string>  $applicationIds
+     * @return array<string, string>
+     */
+    private function developers(array $applicationIds): array
+    {
+        if ($applicationIds === []) {
+            return [];
+        }
+
+        return DB::table('application_parties')->join('parties', 'parties.id', '=', 'application_parties.party_id')
+            ->whereIn('application_parties.application_id', $applicationIds)
+            ->where('application_parties.role', 'applicant')
+            ->orderByDesc('application_parties.is_primary')->orderBy('application_parties.id')
+            ->get(['application_parties.application_id', 'parties.name'])
+            ->unique('application_id')
+            ->pluck('name', 'application_id')
+            ->all();
     }
 
     private function paperUrl(AgendaItem $item): ?string

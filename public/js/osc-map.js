@@ -207,9 +207,13 @@
         popupBody.replaceChildren();
         if (feature) {
             const p = feature.getProperties();
-            popupBody.append(line(p.title || '', 'strong'));
-            if (p.kind === 'item' && p.status_label) popupBody.append(statusBadge(p.status_label));
-            if (p.reference || p.rujukan) popupBody.append(line(p.reference || p.rujukan));
+            if (p.kind === 'item') {
+                popupBody.append(...itemLines(feature).map(el => el.tagName === 'SPAN' ? line(el.textContent) : el));
+                if (p.status_label) popupBody.append(statusBadge(p.status_label));
+            } else {
+                popupBody.append(line(p.title || '', 'strong'));
+                if (p.reference || p.rujukan) popupBody.append(line(p.reference || p.rujukan));
+            }
             if (p.purpose) popupBody.append(line(p.purpose));
             if (p.kind === 'legacy') {
                 if (p.decision) popupBody.append(line(p.decision));
@@ -252,19 +256,33 @@
             setSheet(false);
         }
     }
+    /* Item heading lines: "[type] | [paper no.]", the title, then the developer. */
+    function itemLines(f) {
+        return [
+            line([f.get('type_label'), f.get('reference')].filter(Boolean).join(' | '), 'span'),
+            line(f.get('title') || '', 'strong'),
+            f.get('developer') ? line(f.get('developer'), 'span') : null,
+        ].filter(Boolean);
+    }
     function renderList(features, unmapped) {
         listEl.replaceChildren();
-        features.forEach(f => {
+        const ordered = features.slice().sort((a, b) => (a.get('position') || Infinity) - (b.get('position') || Infinity));
+        ordered.forEach(f => {
             const li = document.createElement('li');
             const button = document.createElement('button');
             button.type = 'button';
             button.className = 'map-item-button';
             button.dataset.id = f.get('id');
-            button.append(line(f.get('title') || '', 'strong'), line([f.get('reference'), f.get('purpose')].filter(Boolean).join(' · '), 'span'));
-            if (f.get('status_label')) { button.classList.add('map-item-muted'); button.append(statusBadge(f.get('status_label'))); }
+            const bil = line(f.get('position') ? String(f.get('position')) : '–', 'span');
+            bil.className = 'map-item-bil';
+            bil.setAttribute('aria-label', 'Bil. ' + (f.get('position') || '–'));
+            const body = document.createElement('span');
+            body.className = 'map-item-body';
+            body.append(...itemLines(f));
+            if (f.get('status_label')) { button.classList.add('map-item-muted'); body.append(statusBadge(f.get('status_label'))); }
+            button.append(bil, body);
             button.addEventListener('click', () => select(f.get('id'), true));
             li.append(button);
-            if (hasLayout(f)) li.append(layoutButton(f));
             listEl.append(li);
         });
         if (!features.length) listEl.append(Object.assign(document.createElement('li'), { className: 'muted', textContent: '—' }));

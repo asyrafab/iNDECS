@@ -36,9 +36,8 @@
             </div>
         </div>
         <aside class="map-panel map-sheet" id="osc-map-panel" role="dialog" aria-labelledby="osc-map-panel-title">
-            <h2 class="map-panel-title map-panel-heading" id="osc-map-panel-title" tabindex="-1">Peta</h2>
             <section class="map-panel-section">
-                <h2 class="map-panel-title">Permohonan</h2>
+                <h2 class="map-panel-title" id="osc-map-panel-title" tabindex="-1">Permohonan</h2>
                 <ol class="map-item-list" data-map-items><li class="muted">Memuatkan…</li></ol>
                 <div data-map-unmapped hidden></div>
             </section>
