@@ -21,7 +21,8 @@ final class BangunanDocumentCatalogueController extends Controller
         $items = DocumentRequirement::query()->with('documentType')->where('application_type_id', $type)
             ->where('is_active', true)->whereNull('permission_category')->whereNull('permission_type')->orderBy('sort_order')->get()
             ->map(fn ($item) => ['code' => preg_replace('/^bina_'.strtolower($type).'_/', '', $item->documentType->code),
-                'name' => $item->documentType->name, 'is_required' => $item->is_required])->all();
+                'name' => $item->documentType->name, 'is_required' => $item->is_required,
+                'guidance' => $item->guidance, 'conditions' => $item->conditions ?? []])->all();
 
         return view('bangunan.document-catalogue', compact('type', 'catalogue', 'items'));
     }

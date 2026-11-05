@@ -70,6 +70,26 @@ final class ChecklistRuleEvaluator
             ])->values();
     }
 
+    /** Plain Malay summary, e.g. "Wajib jika: Tambahan / pembesaran · 3 tingkat ke atas". */
+    public static function describe(?array $conditions): string
+    {
+        $parts = [];
+        foreach (array_keys(self::LIST_KEYS) as $key) {
+            if (! empty($conditions[$key])) {
+                $labels = array_map(fn ($value) => config("kaunter.{$key}.{$value}", $value), (array) $conditions[$key]);
+                $parts[] = implode(' / ', $labels);
+            }
+        }
+        if (! empty($conditions['storeys_min'])) {
+            $parts[] = (int) $conditions['storeys_min'].' tingkat ke atas';
+        }
+        if (! empty($conditions['floor_area_min'])) {
+            $parts[] = rtrim(rtrim(number_format((float) $conditions['floor_area_min'], 2, '.', ''), '0'), '.').' m² ke atas';
+        }
+
+        return $parts === [] ? 'Sentiasa diperlukan' : 'Wajib jika: '.implode(' · ', $parts);
+    }
+
     public static function matches(?array $conditions, array $particulars): bool
     {
         foreach ($conditions ?? [] as $key => $expected) {
