@@ -80,3 +80,21 @@
         else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
     });
 })();
+
+/* ADR-363: refresh the draft checklist while free pre-checks run (stops after five minutes). */
+(function () {
+    const started = Date.now();
+    const poll = () => {
+        const section = document.querySelector('[data-precheck-pending][data-precheck-url]');
+        if (!section || Date.now() - started > 300000) return;
+        fetch(section.dataset.precheckUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' })
+            .then(response => response.ok ? response.text() : Promise.reject(response.status))
+            .then(html => {
+                const fresh = new DOMParser().parseFromString(html, 'text/html').querySelector('[data-precheck-url]');
+                if (fresh) section.replaceWith(fresh);
+            })
+            .catch(() => {})
+            .finally(() => setTimeout(poll, 4000));
+    };
+    setTimeout(poll, 4000);
+})();

@@ -2,9 +2,9 @@
 @section('title', $draft->exists ? 'Sambung draf' : 'Mulakan draf')
 @section('counter', '1')
 @section('content')
-    <x-portal-counter :board="$board" guide="Lengkapkan jenis permohonan dan tajuk cadangan, kemudian simpan draf. Draf belum dihantar kepada MBSP; muat naik dokumen, semakan awal, bayaran dan penghantaran rasmi belum dibuka."><x-slot:file>
+    <x-portal-counter :board="$board" guide="Lengkapkan jenis permohonan, tajuk dan butiran projek, kemudian simpan draf. Senarai dokumen mengikut butiran projek anda; muat naik setiap dokumen untuk semakan awal percuma. Bayaran dan penghantaran rasmi belum dibuka."><x-slot:file>
     <div class="page-heading"><a class="back-link" href="{{ route('portal.home') }}"><x-icon name="arrow-left" />Kembali ke Fail saya</a><span class="eyebrow">Persediaan permohonan</span><h1>{{ $draft->exists ? 'Sambung draf' : 'Mulakan draf baharu' }}</h1><p>Simpan maklumat awal cadangan anda. Maklumat boleh dikemas kini kemudian.</p></div>
-    <div class="alert alert-info"><x-icon name="circle-alert" /><div><strong>Draf belum dihantar kepada MBSP.</strong> Muat naik dokumen, semakan awal, fi, bayaran dan penghantaran rasmi belum dibuka.</div></div>
+    <div class="alert alert-info"><x-icon name="circle-alert" /><div><strong>Draf belum dihantar kepada MBSP.</strong> Semakan awal dokumen adalah percuma. Fi, bayaran dan penghantaran rasmi belum dibuka.</div></div>
     <form class="application-form" method="POST" action="{{ $draft->exists ? route('portal.drafts.update', $draft) : route('portal.drafts.store') }}">
         @csrf
         @if($draft->exists)@method('PUT')<input type="hidden" name="version" value="{{ old('version', $draft->version) }}">@endif
@@ -22,7 +22,13 @@
                 <label class="field field-span-2"><span>Catatan persediaan</span><textarea name="notes" rows="4" maxlength="5000" @error('notes') aria-invalid="true" @enderror>{{ old('notes', $draft->notes) }}</textarea><small>Catatan peribadi untuk membantu anda menyambung persediaan.</small></label>
             </div>
         </section>
+        @if (in_array(old('application_type_id', $draft->application_type_id), \App\Models\BangunanApplication::TYPES, true))
+            @include('public.drafts.partials.particulars')
+        @endif
         <div class="form-actions"><div><button class="button button-primary" type="submit"><x-icon name="check" />Simpan draf</button><a class="button button-secondary" href="{{ route('portal.home') }}">Kembali ke Fail saya</a></div><small>@if($draft->exists)Versi {{ $draft->version }} · @endif Simpanan manual. Simpan sebelum meninggalkan halaman.</small></div>
     </form>
+    @if ($draft->exists)
+        @include('public.drafts.partials.checklist')
+    @endif
     </x-slot:file></x-portal-counter>
 @endsection

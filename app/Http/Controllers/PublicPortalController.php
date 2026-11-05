@@ -9,6 +9,7 @@ use App\Models\ApplicationType;
 use App\Models\LibraryDocument;
 use App\Models\User;
 use App\Services\Portal\PortalBoard;
+use App\Services\Precheck\DraftChecklist;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -92,6 +93,7 @@ final class PublicPortalController extends Controller
             'draft' => $draft,
             'types' => $this->types()->get(),
             'board' => $this->board->for($request->user(), justSaved: $request->session()->has('status')),
+            'checklist' => app(DraftChecklist::class)->for($draft),
         ]);
     }
 

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\GoogleLoginController;
 use App\Http\Controllers\Auth\PublicAccessController;
+use App\Http\Controllers\PortalDraftDocumentController;
 use App\Http\Controllers\PublicPortalController;
 use Illuminate\Support\Facades\Route;
 
@@ -29,6 +30,11 @@ Route::prefix('portal')->name('portal.')->group(function (): void {
         Route::get('/drafts/create', [PublicPortalController::class, 'create'])->name('drafts.create');
         Route::post('/drafts', [PublicPortalController::class, 'store'])->middleware('throttle:20,1')->name('drafts.store');
         Route::get('/drafts/{draft}/edit', [PublicPortalController::class, 'edit'])->whereUlid('draft')->name('drafts.edit');
+        // ADR-363: owner-only uploads and free pre-check on a draft.
+        Route::post('/drafts/{draft}/documents/{code}', [PortalDraftDocumentController::class, 'store'])->whereUlid('draft')->where('code', '[a-z][a-z0-9_]{0,35}')->middleware('throttle:20,1')->name('drafts.documents.store');
+        Route::post('/drafts/{draft}/documents/{document}/confirm', [PortalDraftDocumentController::class, 'confirm'])->whereUlid(['draft', 'document'])->middleware('throttle:30,1')->name('drafts.documents.confirm');
+        Route::get('/drafts/{draft}/documents/{document}', [PortalDraftDocumentController::class, 'download'])->whereUlid(['draft', 'document'])->name('drafts.documents.download');
+        Route::get('/drafts/{draft}/checklist', [PortalDraftDocumentController::class, 'checklist'])->whereUlid('draft')->middleware('throttle:60,1')->name('drafts.checklist');
         Route::put('/drafts/{draft}', [PublicPortalController::class, 'update'])->whereUlid('draft')->middleware('throttle:20,1')->name('drafts.update');
         Route::post('/account', [PublicAccessController::class, 'claim'])->middleware('throttle:5,1')->name('claim');
         Route::get('/account/google', [GoogleLoginController::class, 'redirect'])->name('google.link');
