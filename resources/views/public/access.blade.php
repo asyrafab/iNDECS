@@ -28,9 +28,9 @@
         <a href="{{ route('portal.forgot') }}">Lupa kata laluan?</a>
         <div class="public-section">
             @if (config('services.google.client_id') && config('services.google.client_secret'))
-                <a class="button button-secondary" href="{{ route('portal.google') }}">Teruskan dengan Google</a>
+                <a class="button button-google" href="{{ route('portal.google') }}"><img src="{{ asset('img/google-g.png') }}" width="20" height="20" alt="" aria-hidden="true"><span>Teruskan dengan Google</span></a>
             @else
-                <button class="button button-secondary" disabled>Google belum diaktifkan</button>
+                <button class="button button-google" type="button" disabled><img src="{{ asset('img/google-g.png') }}" width="20" height="20" alt="" aria-hidden="true"><span>Google belum diaktifkan</span></button>
             @endif
         </div>
     @endif

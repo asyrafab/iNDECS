@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const focusable = (element) => [...element.querySelectorAll('a[href], button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), summary')]
         .filter(node => node.getClientRects().length && !node.closest('[hidden], [inert]'));
-    const assistantIsModal = () => mobile.matches || document.body.matches('.public-page, .auth-page');
+    const assistantIsModal = () => mobile.matches || document.body.matches('.public-page, .auth-page, .portal-page');
     const setSidebar = (open, returnFocus = true) => {
         if (!sidebar) return;
         const showing = mobile.matches && open;
@@ -121,42 +121,48 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Local, evidence-grounded page help. No model call, external request or workflow mutation.
-    const showGuidance = (kind, question) => {
-        if (!assistant) return;
+    const showGuidance = (root, kind, question) => {
+        if (!root) return;
         const main = document.querySelector('#main-content');
-        const title = assistant.querySelector('[data-amira-answer-title]');
-        const copy = assistant.querySelector('[data-amira-answer-copy]');
-        const user = assistant.querySelector('[data-amira-user]');
+        const title = root.querySelector('[data-amira-answer-title]');
+        const copy = root.querySelector('[data-amira-answer-copy]');
+        const user = root.querySelector('[data-amira-user]');
         user.hidden = !question;
         user.textContent = question || '';
         let heading = 'Panduan halaman ini';
-        let content = assistant.dataset.guide;
+        let content = root.dataset.guide;
         if (kind === 'fields') {
             const labels = [...new Set([...main.querySelectorAll('form .field > span')].map(label => label.textContent.trim()))].slice(0, 12);
             heading = 'Medan yang tersedia';
             content = labels.length ? `Semak medan berikut pada borang: ${labels.join('; ')}. Medan bertanda * perlu dilengkapkan. Saya tidak mengisi atau menghantar borang bagi pihak anda.` : 'Tiada borang maklumat pada halaman ini. Buka halaman pendaftaran atau tindakan permohonan yang tersedia untuk peranan anda.';
         } else if (kind === 'next') {
             heading = 'Langkah seterusnya';
-            const actions = [...new Set([...main.querySelectorAll('form button[type="submit"], form button:not([type])')].map(button => button.textContent.trim()))].slice(0, 4);
-            content = assistant.dataset.reference ? `Rekod ${assistant.dataset.reference}${assistant.dataset.stage ? ` berada pada peringkat ${assistant.dataset.stage}` : ''}. ${content}` : content;
+            // AMIRA's own composer sits inside #main-content on Kaunter Maya pages; never list it as a page action.
+            const actions = [...new Set([...main.querySelectorAll('form button[type="submit"], form button:not([type])')].filter(button => !button.closest('[data-amira-form]')).map(button => button.textContent.trim()).filter(Boolean))].slice(0, 4);
+            content = root.dataset.reference ? `Rekod ${root.dataset.reference}${root.dataset.stage ? ` berada pada peringkat ${root.dataset.stage}` : ''}. ${content}` : content;
             if (actions.length) content += ` Tindakan pada halaman: ${actions.join('; ')}. Semak maklumat sebelum membuat keputusan.`;
         } else if (kind === 'unavailable') {
             heading = 'Panduan sistem setempat';
-            content = 'Saya belum disambungkan kepada perbualan AI AIRS. Pilih panduan halaman, bantuan borang atau langkah seterusnya untuk panduan berdasarkan halaman ini. Semakan dokumen dan jawapan AI langsung belum tersedia.';
+            content = 'Perbualan AI AMIRA belum tersedia. Pilih panduan halaman, bantuan borang atau langkah seterusnya untuk panduan berdasarkan halaman ini. Semakan dokumen melalui AIRS dan jawapan AI langsung belum disambungkan.';
         }
         title.textContent = heading;
         copy.textContent = content;
-        assistant.querySelector('[data-amira-answer]').hidden = false;
+        root.querySelector('[data-amira-answer]').hidden = false;
     };
-    assistant?.querySelectorAll('[data-amira-prompt]').forEach(button => button.addEventListener('click', () => showGuidance(button.dataset.amiraPrompt, button.textContent.trim())));
-    assistant?.querySelector('[data-amira-form]')?.addEventListener('submit', event => {
+    // The drawer (#amira-panel) and the inline Kaunter Maya panel ([data-amira-guidance]) share one guidance engine.
+    [assistant, ...document.querySelectorAll('[data-amira-guidance]')].filter(Boolean).forEach(root => {
+    // Inline AMIRA controls ship hidden so they stay inert without JavaScript.
+    root.querySelectorAll('[data-amira-interactive][hidden]').forEach(node => { node.hidden = false; });
+    root.querySelectorAll('[data-amira-prompt]').forEach(button => button.addEventListener('click', () => showGuidance(root, button.dataset.amiraPrompt, button.textContent.trim())));
+    root.querySelector('[data-amira-form]')?.addEventListener('submit', event => {
         event.preventDefault();
-        const input = assistant.querySelector('#amira-question');
+        const input = root.querySelector('[data-amira-input], #amira-question');
         const question = input.value.trim();
         if (!question) return;
         const kind = /borang|medan|isi/i.test(question) ? 'fields' : /seterusnya|teruskan|tindakan|peringkat/i.test(question) ? 'next' : /halaman|dokumen|panduan/i.test(question) ? 'page' : 'unavailable';
-        showGuidance(kind, question);
+        showGuidance(root, kind, question);
         input.value = '';
+    });
     });
     assistant?.querySelector('[data-amira-source]')?.addEventListener('click', () => {
         if (assistantIsModal()) setAssistant(false, false);

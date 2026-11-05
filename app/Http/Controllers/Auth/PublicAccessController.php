@@ -64,7 +64,7 @@ class PublicAccessController extends Controller
         Auth::login($user, false);
         $request->session()->regenerate();
 
-        return redirect()->route('portal.home');
+        return redirect()->route($request->input('_welcome_login') === '1' ? 'home' : 'portal.home');
     }
 
     public function requestLink(Request $request, PublicIdentityService $identity, string $purpose)
@@ -109,9 +109,9 @@ class PublicAccessController extends Controller
         return redirect()->route('portal.home')->with('status', 'Akses emel telah disahkan.');
     }
 
-    public function home(Request $request)
+    public function account(Request $request)
     {
-        return view('public.home', ['user' => $request->user()]);
+        return view('public.account', ['user' => $request->user()]);
     }
 
     public function claim(Request $request)

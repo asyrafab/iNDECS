@@ -1,34 +1,44 @@
-@extends('layouts.public')
-@section('title', 'Akaun Awam')
+@extends('layouts.portal')
+@section('title', 'Portal Awam')
+@section('counter', '1')
 @section('content')
-    <h1>Akaun awam</h1>
-    <dl class="public-details">
-        <dt>Nama</dt><dd>{{ $user->name }}</dd>
-        <dt>Emel</dt><dd>{{ $user->email }}</dd>
-        <dt>Status emel</dt><dd>{{ $user->email_verified_at ? 'Disahkan' : 'Belum disahkan' }}</dd>
-        <dt>Kaedah akses</dt><dd>{{ $user->account_type === 'guest' ? 'Akses emel tanpa pendaftaran' : 'Akaun berdaftar' }}</dd>
-    </dl>
-    @if (! $user->email_verified_at)
-        <form method="POST" action="{{ route('portal.email.send', 'verify') }}">@csrf<input type="hidden" name="email" value="{{ $user->email }}"><button class="button button-primary">Hantar semula pengesahan emel</button></form>
+    <x-portal-counter :board="$board"><x-slot:file>
+        @include('public.partials.file-board')
+    </x-slot:file></x-portal-counter>
+    <dialog class="portal-dialog" id="portal-new" aria-labelledby="portal-new-title" aria-describedby="portal-new-description">
+        <div class="portal-dialog-head"><span class="eyebrow">Permohonan baru</span><button class="icon-button" type="button" data-portal-close aria-label="Tutup pilihan permohonan"><x-icon name="x" /></button></div>
+        <h2 id="portal-new-title">Apakah urusan anda?</h2>
+        <p id="portal-new-description">Pilih jenis permohonan untuk menyediakan draf maklumat awal. Penghantaran rasmi belum dibuka.</p>
+        @if(! $user->email_verified_at)
+            <div class="alert alert-info"><x-icon name="circle-alert" /><div>Sahkan emel anda sebelum memulakan draf. <a href="{{ route('portal.account') }}">Buka Akaun saya</a>.</div></div>
+        @else
+            <div class="portal-type-groups">
+                @forelse($types->groupBy('primaryDepartment.name') as $department => $departmentTypes)
+                    <section><h3>{{ $department }}</h3><div class="portal-type-list">
+                        @foreach($departmentTypes as $type)
+                            <div class="portal-type-row">
+                                <a href="{{ route('portal.drafts.create', ['type' => $type->id]) }}"><span class="portal-type-code">{{ $type->id }}</span><span>{{ $type->name }}</span><x-icon name="arrow-right" /></a>
+                                <a class="icon-button portal-type-download" href="#portal-download-{{ $type->id }}" data-portal-open="portal-download-{{ $type->id }}" aria-haspopup="dialog" aria-controls="portal-download-{{ $type->id }}" aria-label="Muat turun dokumen {{ $type->id }} · {{ $type->name }}" title="Muat turun dokumen {{ $type->id }}"><x-icon name="download" /></a>
+                            </div>
+                        @endforeach
+                    </div></section>
+                @empty
+                    <p>Tiada jenis permohonan tersedia buat masa ini.</p>
+                @endforelse
+            </div>
+        @endif
+    </dialog>
+    @if($user->email_verified_at)
+        @foreach($types as $type)
+            <dialog class="portal-dialog portal-download-dialog" id="portal-download-{{ $type->id }}" data-portal-parent="portal-new" aria-labelledby="portal-download-title-{{ $type->id }}" aria-describedby="portal-download-description-{{ $type->id }}">
+                <div class="portal-dialog-head"><span class="eyebrow">Dokumen rujukan · {{ $type->id }}</span><button class="icon-button" type="button" data-portal-close aria-label="Tutup dokumen {{ $type->id }}"><x-icon name="x" /></button></div>
+                <h2 id="portal-download-title-{{ $type->id }}">{{ $type->name }}</h2>
+                <p id="portal-download-description-{{ $type->id }}">Pilih dokumen untuk dimuat turun. Dokumen akan disediakan kemudian.</p>
+                <div class="portal-download-options">
+                    <button type="button" disabled><x-icon name="file-text" /><span><strong>Senarai semak (Checklist)</strong><small>Belum tersedia</small></span><x-icon name="download" /></button>
+                    <button type="button" disabled><x-icon name="file-text" /><span><strong>Garis panduan</strong><small>Belum tersedia</small></span><x-icon name="download" /></button>
+                </div>
+            </dialog>
+        @endforeach
     @endif
-    <section class="public-section">
-        <h2>Permohonan</h2>
-        <p>Penghantaran permohonan dalam talian belum dibuka.</p>
-    </section>
-    @if ($user->email_verified_at && ! $user->has_password)
-        <section class="public-section">
-            <h2>Daftar akaun tetap</h2>
-            <form method="POST" class="public-form" action="{{ route('portal.claim') }}">
-                @csrf
-                <label class="field"><span>Nama penuh</span><input name="name" value="{{ old('name', $user->name) }}" maxlength="255" autocomplete="name" required></label>
-                <label class="field"><span>Kata laluan (minimum 12 aksara)</span><input type="password" name="password" minlength="12" autocomplete="new-password" required></label>
-                <label class="field"><span>Sahkan kata laluan</span><input type="password" name="password_confirmation" minlength="12" autocomplete="new-password" required></label>
-                <button class="button button-primary">Simpan akaun</button>
-            </form>
-        </section>
-    @endif
-    @if ($user->email_verified_at && ! $user->google_subject && config('services.google.client_id') && config('services.google.client_secret'))
-        <a class="button button-secondary" href="{{ route('portal.google.link') }}">Pautkan akaun Google</a>
-    @endif
-    <form method="POST" action="{{ route('portal.logout') }}">@csrf<button class="button button-secondary">Log keluar</button></form>
 @endsection

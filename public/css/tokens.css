@@ -1,5 +1,6 @@
 /* iNDECS — Calm Intelligence. Shared appearance, type, spacing and motion. */
 @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@500&display=swap');
 :root {
   color-scheme: light;
   --color-navy: #102a43; --color-slate: #334e68;
@@ -24,6 +25,10 @@
   --color-divider: var(--color-border); --color-rule-soft: var(--color-border-soft);
   --color-on-accent: #ffffff; --color-focus: var(--color-accent);
   --color-action: #197c80; --color-action-hover: #14676b; --color-action-pressed: #105256;
+  --color-google-bg: #ffffff; --color-google-text: #1f1f1f; --color-google-border: #747775;
+  --color-google-hover: #f2f2f2; --color-google-pressed: #e8e8e8;
+  --size-google-logo: 20px; --space-google-icon-gap: 10px;
+  --font-weight-google: 500; --line-height-google: 20px;
   --color-sidebar-bg: #102a43; --color-sidebar-text: #edf5fa; --color-sidebar-muted: #bdcfdf;
   --color-sidebar-border: #29465e; --color-sidebar-hover: #1a3a53;
   --color-sidebar-active: #17464f; --color-sidebar-active-text: #bcf0ed;
@@ -32,6 +37,9 @@
   --status-info: #3f7cac; --status-ai: #7a68c9; --status-pending: #8a99a8;
   --font-heading: 'Google Sans', 'Segoe UI', system-ui, sans-serif;
   --font-body: 'Google Sans', 'Segoe UI', system-ui, sans-serif;
+  --font-handwriting: 'Caveat', cursive;
+  --font-size-welcome: 72px;
+  --font-size-invitation: 38px;
   --font-heading-weight: 600;
   --font-size-label: 11px; --font-size-xs: 12px; --font-size-sm: 13px; --font-size-base: 14px;
   --font-size-body: 15px; --font-size-lg: 16px; --font-size-xl: 18px; --font-size-title: 20px;
@@ -41,16 +49,84 @@
   --space-6: 24px; --space-8: 32px; --space-10: 40px; --space-12: 48px; --space-16: 64px;
   --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px; --radius-full: 999px;
   --rule-strong: 1px; --rule-hair: 1px;
+  --rule-brand-divider: 3px;
+  --font-weight-welcome-brand: 700;
+  --scale-welcome-brand: 1.12;
   --shadow-raised: 0 8px 28px #102a4314;
   --shadow-sm: var(--shadow-raised); --shadow-md: var(--shadow-raised); --shadow-lg: var(--shadow-raised);
   --sidebar-width: 248px; --assistant-width: 360px; --icon-size: 18px; --control-height: 44px;
   --duration-fast: 160ms; --duration-normal: 280ms; --duration-slow: 600ms;
   --ease-standard: cubic-bezier(.2, .7, .2, 1);
+  --duration-mark-story: 8000ms;
+  --duration-mark-complete: 6080ms;
+  --duration-welcome-swipe: 900ms;
+  --carousel-pointer-speed: 1.2;
+  --carousel-speed-1: .35;
+  --carousel-speed-2: .75;
+  --carousel-speed-3: 1.2;
+  --carousel-speed-4: 2.4;
+  --duration-carousel-settle: 480ms;
+  --duration-carousel-settle-max: 1440ms;
+  --carousel-settle-speed: .65;
+  --carousel-drag-gain: 1.32;
+  --carousel-spin-max: 6;
+  --carousel-spin-friction: 1.2;
+  --carousel-hover-takeover-ratio: .2;
+  --color-welcome-contour: var(--color-accent-300);
+  --opacity-welcome-contour: .38;
+  --shadow-welcome-photo: 0 12px 32px var(--color-material-shadow);
+  --duration-login-open: 500ms;
+  --size-login-portrait-width: 224px;
+  --size-login-portrait-height: 560px;
+  --scale-login-overshoot: 1.035;
+  --scale-application-hover: 1.025;
+  --blur-login-backdrop: 8px;
+  --color-login-staff-bg: var(--color-sidebar-bg);
+  --color-login-staff-text: var(--color-sidebar-text);
+  --color-login-staff-muted: var(--color-sidebar-muted);
+  --color-login-staff-border: var(--color-sidebar-border);
+  --color-login-staff-field: var(--color-sidebar-hover);
+  --color-login-staff-link: var(--color-sidebar-active-text);
+  --color-login-staff-track: var(--color-sidebar-hover);
+  --color-login-staff-thumb: var(--color-sidebar-text);
+  --color-login-staff-thumb-text: var(--color-sidebar-bg);
+  --color-login-staff-button-hover: var(--color-sidebar-active-text);
+  --duration-roof-tile: 850ms; --duration-roof-stagger: 38ms;
+  --duration-tile-dust: 700ms; --duration-building-dust: 1400ms;
+  --duration-plant-bloom: 700ms; --duration-plant-sequence: 1000ms;
+  --color-material-dust: var(--color-neutral-400);
+  --color-material-shadow: #102a4340;
+  --shadow-building-roof: 0 1.6px 1px var(--color-material-shadow);
+  --shadow-building-wall: 0 1px .65px var(--color-material-shadow);
+  --shadow-building-plant: 0 .6px .4px var(--color-material-shadow);
+  --color-mask-keep: #ffffff; --color-mask-cut: #000000;
+  --ease-material-settle: cubic-bezier(.16, .8, .3, 1);
   --asset-mark-reversed: url('../img/indecs-mark-reversed.svg');
+  /* Kaunter Maya / AMIRA (ADR-361). The panel stays navy in both themes. */
+  --color-amira-panel-bg: var(--color-sidebar-bg);
+  --color-amira-panel-text: var(--color-sidebar-text);
+  --color-amira-panel-muted: var(--color-sidebar-muted);
+  --color-amira-panel-raised: var(--color-sidebar-hover);
+  --color-amira-panel-border: var(--color-sidebar-border);
+  --color-amira-panel-link: var(--color-sidebar-active-text);
+  --color-amira-highlight: #ffffff;
+  --size-amira-bubble: 160px;
+  --size-amira-bubble-small: 40px;
+  --width-counter-amira: 360px;
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
+  --color-login-staff-bg: var(--color-sidebar-text);
+  --color-login-staff-text: var(--color-sidebar-bg);
+  --color-login-staff-muted: var(--color-sidebar-border);
+  --color-login-staff-border: var(--color-sidebar-muted);
+  --color-login-staff-field: var(--color-sidebar-text);
+  --color-login-staff-link: var(--color-action-hover);
+  --color-login-staff-track: var(--color-sidebar-muted);
+  --color-login-staff-thumb: var(--color-sidebar-bg);
+  --color-login-staff-thumb-text: var(--color-sidebar-text);
+  --color-login-staff-button-hover: var(--color-sidebar-hover);
   --color-navy: #dceaf5; --color-slate: #b7ccdd;
   --color-bg: #0b1927; --color-bg-soft: #133536; --color-surface: #122538;
   --color-text: #e4edf4; --color-text-muted: #adbfce;
@@ -68,11 +144,22 @@
   --status-ai-bg: #302d50; --status-ai-text: #c5baf5;
   --status-pending-bg: #2b3d4b; --status-pending-text: #c2d1dc;
   --asset-mark: var(--asset-mark-reversed);
+  --color-amira-highlight: #dceaf5;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
+    --color-login-staff-bg: var(--color-sidebar-text);
+    --color-login-staff-text: var(--color-sidebar-bg);
+    --color-login-staff-muted: var(--color-sidebar-border);
+    --color-login-staff-border: var(--color-sidebar-muted);
+    --color-login-staff-field: var(--color-sidebar-text);
+    --color-login-staff-link: var(--color-action-hover);
+    --color-login-staff-track: var(--color-sidebar-muted);
+    --color-login-staff-thumb: var(--color-sidebar-bg);
+    --color-login-staff-thumb-text: var(--color-sidebar-text);
+    --color-login-staff-button-hover: var(--color-sidebar-hover);
     --color-navy: #dceaf5; --color-slate: #b7ccdd;
     --color-bg: #0b1927; --color-bg-soft: #133536; --color-surface: #122538;
     --color-text: #e4edf4; --color-text-muted: #adbfce;
@@ -90,9 +177,10 @@
     --status-ai-bg: #302d50; --status-ai-text: #c5baf5;
     --status-pending-bg: #2b3d4b; --status-pending-text: #c2d1dc;
     --asset-mark: var(--asset-mark-reversed);
+    --color-amira-highlight: #dceaf5;
   }
 }
-:root[data-motion="reduced"] { --duration-fast: 0ms; --duration-normal: 0ms; --duration-slow: 0ms; }
+:root[data-motion="reduced"] { --duration-fast: 0ms; --duration-normal: 0ms; --duration-slow: 0ms; --scale-application-hover: 1; }
 @media (prefers-reduced-motion: reduce) {
-  :root { --duration-fast: 0ms; --duration-normal: 0ms; --duration-slow: 0ms; }
+  :root { --duration-fast: 0ms; --duration-normal: 0ms; --duration-slow: 0ms; --scale-application-hover: 1; }
 }
