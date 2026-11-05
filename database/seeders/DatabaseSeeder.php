@@ -70,7 +70,6 @@ class DatabaseSeeder extends Seeder
         $this->seedCorePermissions();
         $this->call(BangunanWorkflowSeeder::class);
         $this->call(BangunanDocumentWorkflowSeeder::class);
-        $this->call(LibrarySeeder::class);
 
         $officer = User::query()->firstOrNew(['email' => 'pegawai@indecs.test']);
         $officer->fill([
@@ -142,6 +141,8 @@ class DatabaseSeeder extends Seeder
 
         $this->call(OscSeeder::class);
         $this->call(GisLayerSeeder::class);
+        // After module seeders so Penolong Pengarah mirrors every department access grant (ADR-362).
+        $this->call(LibrarySeeder::class);
     }
 
     private function seedCorePermissions(): void

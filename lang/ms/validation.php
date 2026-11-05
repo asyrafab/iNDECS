@@ -9,6 +9,14 @@ return [
     'numeric' => ':attribute mesti merupakan nombor.',
     'string' => ':attribute mesti merupakan teks.',
     'in' => ':attribute yang dipilih tidak sah.',
+    'file' => ':attribute mesti merupakan fail.',
+    'uploaded' => ':attribute gagal dimuat naik. Pastikan saiz fail tidak melebihi had dan cuba lagi.',
+    'mimes' => ':attribute mesti berjenis fail: :values.',
+    'mimetypes' => ':attribute mesti berjenis fail: :values.',
+    'exists' => ':attribute yang dipilih tidak sah.',
+    'distinct' => ':attribute mempunyai nilai berulang.',
+    'boolean' => ':attribute mesti ya atau tidak.',
+    'regex' => 'Format :attribute tidak sah.',
     'gt' => [
         'numeric' => ':attribute mesti lebih besar daripada :value.',
     ],
@@ -21,5 +29,6 @@ return [
         'array' => ':attribute tidak boleh mengandungi lebih daripada :max item.',
         'numeric' => ':attribute tidak boleh melebihi :max.',
         'string' => ':attribute tidak boleh melebihi :max aksara.',
+        'file' => ':attribute tidak boleh melebihi :max kilobait.',
     ],
 ];

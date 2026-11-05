@@ -98,6 +98,21 @@ class LibraryServiceTest extends TestCase
         $this->assertDatabaseCount('core.library_documents', 0);
     }
 
+    public function test_file_errors_are_in_malay(): void
+    {
+        foreach ([
+            [UploadedFile::fake()->create('nota.pdf', 10, 'text/plain'), 'fail dokumen mesti berjenis fail: pdf.'],
+            [UploadedFile::fake()->create('besar.pdf', 51201, 'application/pdf'), 'fail dokumen tidak boleh melebihi 51200 kilobait.'],
+        ] as [$file, $expected]) {
+            try {
+                app(LibraryService::class)->create($this->pp, $this->meta(), $file);
+                $this->fail('File must be rejected.');
+            } catch (ValidationException $e) {
+                $this->assertContains($expected, $e->errors()['file']);
+            }
+        }
+    }
+
     public function test_metadata_is_validated(): void
     {
         try {

@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\DB;
  */
 final class LibrarySeeder extends Seeder
 {
+    /** Read/workspace permissions a Penolong Pengarah mirrors from their department's senior officer. */
+    private const PP_ACCESS = ['bangunan.application.access', 'bangunan.legacy.view', 'perancang.pkm.access', 'osc.meeting.view'];
+
     public function run(): void
     {
         DB::transaction(function (): void {
@@ -26,10 +29,13 @@ final class LibrarySeeder extends Seeder
             // System admin holds every permission (superadmin invariant); User::canManageLibrary still
             // requires the Penolong Pengarah role, so the owner's "only Penolong Pengarah" rule stands.
             $this->grant('system_admin', 'library.manage');
-            // A Penolong Pengarah works in their department like its senior officer (minus rule publishing),
-            // so they can sign in to the staff workspace and reach the library.
+            // A Penolong Pengarah needs to sign in and see their department's workspace, but the owner
+            // only decided library authority: grant workspace/read access, never decision powers
+            // (register, review, verify, propose, endorse, configure). Earlier wider copies are removed.
+            DB::table('core.role_permissions')->where('role_id', 'penolong_pengarah')
+                ->whereNotIn('permission_name', array_merge(self::PP_ACCESS, ['library.manage', 'library.view']))->delete();
             DB::table('core.role_permissions')->whereIn('role_id', ['senior_building_officer', 'senior_planning_officer'])
-                ->where('permission_name', '!=', 'bangunan.application.documents.configure')->get()
+                ->whereIn('permission_name', self::PP_ACCESS)->get()
                 ->each(function (object $row): void {
                     $scope = ['role_id' => 'penolong_pengarah', 'permission_name' => $row->permission_name,
                         'department_id' => $row->department_id, 'application_type_id' => $row->application_type_id];
