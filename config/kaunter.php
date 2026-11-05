@@ -33,6 +33,8 @@ return [
     'precheck' => [
         'ocr_max_pages' => (int) env('KAUNTER_PRECHECK_OCR_MAX_PAGES', 10),
         'process_timeout' => (int) env('KAUNTER_PRECHECK_PROCESS_TIMEOUT', 60),
+        // All tool runs for one file share this budget; it must stay below the job timeout (300 s).
+        'total_budget' => (int) env('KAUNTER_PRECHECK_TOTAL_BUDGET', 240),
         'min_text_chars' => (int) env('KAUNTER_PRECHECK_MIN_TEXT_CHARS', 30),
         'max_documents_per_draft' => (int) env('KAUNTER_PRECHECK_MAX_DOCUMENTS', 60),
         'pdftotext' => env('KAUNTER_PDFTOTEXT_BINARY', 'pdftotext'),

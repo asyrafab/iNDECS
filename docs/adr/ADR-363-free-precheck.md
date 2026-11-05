@@ -49,17 +49,24 @@ for AIRS review ([spec](../superpowers/specs/2026-11-05-public-portal-kaunter-ma
     a cloud fallback.
   - The extracted text is never stored. Only the character count, matched
     keywords and flags are kept.
-- **Job.** `App\Jobs\PrecheckDraftDocument` runs on the `precheck` queue. It
-  is `ShouldBeUnique` per draft, with `tries = 1`, and skips superseded
-  uploads.
+- **Job.** `App\Jobs\PrecheckDraftDocument` runs on the `precheck` queue.
+  - One active check per draft is enforced by `WithoutOverlapping(draft)`:
+    a second job waits and is released for a retry, and is never discarded.
+  - Superseded uploads are skipped.
+  - `failed()` turns a killed or timed-out check into "Perlu pengesahan
+    pemohon", so a file never stays on "Sedang disemak".
+  - All tool runs for one file share `total_budget` (240 s), which is shorter
+    than the job's 300 s timeout.
 - **Labels.** `App\Enums\PrecheckLabel` defines:
   - **Belum dilampirkan**: no file.
   - **Sedang disemak**: the check is running (a progress state, not a
     result).
-  - **Tidak dapat dibaca**: corrupt, or too little text. The file must be
-    replaced and cannot be confirmed.
-  - **Perlu pengesahan pemohon**: OCR was unavailable, or keywords are set and
-    none matched. The PSP may confirm with "Saya sahkan dokumen ini betul".
+  - **Tidak dapat dibaca**: only when pdftotext rejects the PDF itself. The
+    file must be replaced and cannot be confirmed. A missing tool never
+    counts as damage.
+  - **Perlu pengesahan pemohon**: OCR was unavailable, too little text was
+    found (photos, stamps), or keywords are set and none matched. The PSP
+    may confirm with "Saya sahkan dokumen ini betul".
   - **Dilampirkan**: otherwise, or after confirmation.
 
   Every view shows the contract sentence, and never uses pass, fail or score

@@ -16,6 +16,8 @@ The budgets use these env keys:
 
 - `KAUNTER_PRECHECK_OCR_MAX_PAGES` (default 10)
 - `KAUNTER_PRECHECK_PROCESS_TIMEOUT` (default 60 seconds per tool run)
+- `KAUNTER_PRECHECK_TOTAL_BUDGET` (default 240 seconds per file; keep it
+  below the job's 300 s timeout)
 - `KAUNTER_PRECHECK_MIN_TEXT_CHARS` (default 30)
 - `KAUNTER_PRECHECK_MAX_DOCUMENTS` (default 60 per draft)
 
@@ -33,7 +35,7 @@ pemohon" and the PSP confirms it manually. No cloud service is ever called.
 ## Run the worker
 
 ```bash
-php artisan queue:work --queue=precheck --timeout=300 --tries=1
+php artisan queue:work --queue=precheck --timeout=300
 ```
 
 Keep it separate from the default queue workers, so that public traffic

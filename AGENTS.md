@@ -388,7 +388,9 @@ or repurpose internal catalogue files. Closing returns focus to the download ico
   `App\Services\Precheck\DraftDocumentService`, which checks the owner, the
   checklist item, the document-type limits and a `finfo` content sniff, then
   runs the ClamAV scan (fail closed), dedupes by SHA-256, and dispatches
-  `PrecheckDraftDocument` to the `precheck` queue (unique per draft).
+  `PrecheckDraftDocument` to the `precheck` queue. Overlapping checks of one
+  draft wait (`WithoutOverlapping`) and are never dropped, and a failed check
+  falls back to "Perlu pengesahan pemohon".
 - **Text and OCR.** Use only `App\Contracts\TextExtractor` (`LocalTextExtractor`:
   pdftotext, then Ghostscript plus Tesseract `msa+eng`). Never add a cloud or
   AI path here. Missing tools mean "Perlu pengesahan pemohon". Never store

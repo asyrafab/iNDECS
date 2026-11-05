@@ -51,6 +51,7 @@ final class DraftChecklist
             $document->readable === false => PrecheckLabel::Unreadable,
             $document->confirmed_at !== null => PrecheckLabel::Attached,
             $document->ocr_unavailable => PrecheckLabel::NeedsConfirmation,
+            $document->text_chars !== null && $document->text_chars < (int) config('kaunter.precheck.min_text_chars', 30) => PrecheckLabel::NeedsConfirmation,
             $keywords !== [] && empty($document->matched_keywords) => PrecheckLabel::NeedsConfirmation,
             default => PrecheckLabel::Attached,
         };

@@ -87,6 +87,10 @@
     const poll = () => {
         const section = document.querySelector('[data-precheck-pending][data-precheck-url]');
         if (!section || Date.now() - started > 300000) return;
+        // Never throw away the applicant's work: wait while a file is picked or focus is inside the list.
+        const busy = [...section.querySelectorAll('input[type="file"]')].some(input => input.files && input.files.length > 0)
+            || section.contains(document.activeElement);
+        if (busy) { setTimeout(poll, 4000); return; }
         fetch(section.dataset.precheckUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' })
             .then(response => response.ok ? response.text() : Promise.reject(response.status))
             .then(html => {

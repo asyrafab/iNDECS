@@ -49,10 +49,33 @@ class PrecheckJobTest extends TestCase
         $this->assertSame(PrecheckLabel::Unreadable, $this->label('pelan_lantai'));
     }
 
-    public function test_too_little_text_is_unreadable(): void
+    public function test_too_little_text_needs_confirmation_not_unreadable(): void
     {
-        $this->runCheck('pelan_lantai', new ExtractedText('ab', ocrUsed: true));
-        $this->assertSame(PrecheckLabel::Unreadable, $this->label('pelan_lantai'));
+        // A site photo or stamp OCRs to little text; it must stay confirmable, never a dead end.
+        $doc = $this->runCheck('pelan_lantai', new ExtractedText('ab', ocrUsed: true));
+        $this->assertTrue($doc->readable);
+        $this->assertSame(PrecheckLabel::NeedsConfirmation, $this->label('pelan_lantai'));
+    }
+
+    public function test_failed_job_leaves_a_confirmable_label_not_pending(): void
+    {
+        $doc = $this->draftDocument($this->draft, 'geran', ['precheck_status' => 'pending', 'readable' => null, 'matched_keywords' => null]);
+        (new PrecheckDraftDocument($doc->id))->failed(new \RuntimeException('worker killed'));
+        $this->assertSame('done', $doc->fresh()->precheck_status);
+        $this->assertTrue($doc->fresh()->ocr_unavailable);
+        $this->assertSame(PrecheckLabel::NeedsConfirmation, $this->label('geran'));
+    }
+
+    public function test_a_second_upload_in_the_same_draft_is_not_dropped(): void
+    {
+        // One active check per draft is enforced by waiting (WithoutOverlapping), never by discarding.
+        $doc = $this->draftDocument($this->draft, 'geran', ['precheck_status' => 'pending', 'readable' => null]);
+        $job = new PrecheckDraftDocument($doc->id);
+        $this->assertNotInstanceOf(ShouldBeUnique::class, $job);
+        $overlap = collect($job->middleware())->first(fn ($m) => $m instanceof \Illuminate\Queue\Middleware\WithoutOverlapping);
+        $this->assertNotNull($overlap);
+        $this->assertSame($this->draft->id, $overlap->key);
+        $this->assertGreaterThan(1, $job->tries);
     }
 
     public function test_ocr_unavailable_gives_needs_confirmation_not_error(): void
@@ -73,14 +96,10 @@ class PrecheckJobTest extends TestCase
         $this->assertNull($old->fresh()->matched_keywords);
     }
 
-    public function test_job_is_unique_per_draft_and_on_precheck_queue(): void
+    public function test_job_runs_on_precheck_queue(): void
     {
         $doc = $this->draftDocument($this->draft, 'geran', ['precheck_status' => 'pending', 'readable' => null]);
-        $job = new PrecheckDraftDocument($doc->id);
-        $this->assertInstanceOf(ShouldBeUnique::class, $job);
-        $this->assertSame('precheck', $job->queue);
-        $this->assertSame($this->draft->id, $job->uniqueId());
-        $this->assertSame(1, $job->tries);
+        $this->assertSame('precheck', (new PrecheckDraftDocument($doc->id))->queue);
     }
 
     private function runCheck(string $code, ExtractedText $result): ApplicantDraftDocument

@@ -66,6 +66,26 @@ class LocalTextExtractorTest extends TestCase
         $this->assertFalse($result->corrupt);
     }
 
+    public function test_missing_pdftotext_is_not_reported_as_corrupt(): void
+    {
+        config(['kaunter.precheck.pdftotext' => $this->dir.'/no-such-pdftotext', 'kaunter.precheck.ghostscript' => $this->dir.'/no-such-gs']);
+        $path = $this->dir.'/geran.pdf';
+        file_put_contents($path, $this->textPdf('SURAT HAKMILIK'));
+        $result = app(LocalTextExtractor::class)->extract($path, 'application/pdf');
+        $this->assertFalse($result->corrupt, 'A missing tool must never make a valid PDF unreadable.');
+        $this->assertTrue($result->ocrUnavailable);
+    }
+
+    public function test_exhausted_time_budget_reports_ocr_unavailable_without_running_tools(): void
+    {
+        config(['kaunter.precheck.total_budget' => 0]);
+        $path = $this->dir.'/x.png';
+        file_put_contents($path, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII='));
+        $result = app(LocalTextExtractor::class)->extract($path, 'image/png');
+        $this->assertTrue($result->ocrUnavailable);
+        $this->assertSame('', trim($result->text));
+    }
+
     private function requireTool(string $binary): void
     {
         if (! is_file($binary) && (new ExecutableFinder)->find($binary) === null) {
