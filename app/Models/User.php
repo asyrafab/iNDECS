@@ -55,6 +55,18 @@ class User extends Authenticatable
             && app(CorePermissionService::class)->userCan($this, 'bangunan.application.'.$action, $this->department_id, $type);
     }
 
+    /** ADR-362: only a Penolong Pengarah changes their own department's library. */
+    public function canManageLibrary(string $departmentId): bool
+    {
+        return $this->department_id === $departmentId
+            && app(CorePermissionService::class)->userCan($this, 'library.manage');
+    }
+
+    public function canViewLibrary(): bool
+    {
+        return app(CorePermissionService::class)->userCan($this, 'library.view');
+    }
+
     public function canAccessBangunan(): bool
     {
         foreach (BangunanApplication::TYPES as $type) {

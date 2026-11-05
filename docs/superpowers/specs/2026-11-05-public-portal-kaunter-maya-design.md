@@ -273,6 +273,16 @@ documents: guidelines, standards, by-laws, checklists, sample plans.
   variants stays a **structured rule list** (my call). The library explains
   the rules; it does not replace them, because the payment gate must be
   deterministic. **Only admins** can set up and change these rules.
+- **Step 2 decisions (owner, 2026-11-05):**
+  - "Admin" means **system admin (Pentadbir Sistem) only**. Senior building
+    officers lose their current permission to publish the Bangunan document
+    catalogue.
+  - A rule can depend on the application type plus four inputs: **type of
+    work**, **building category**, **size or storeys** (thresholds) and
+    **site conditions**.
+  - The rules extend the existing versioned Bangunan document catalogue
+    (`core.document_catalogues` / `document_requirements`) rather than
+    living in a parallel system (my call).
 
 ### 8.7 Deadlines
 For Pindaan Kecil and Pindaan, AMIRA reminds the PSP 3 days before the

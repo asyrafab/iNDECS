@@ -70,6 +70,7 @@ class DatabaseSeeder extends Seeder
         $this->seedCorePermissions();
         $this->call(BangunanWorkflowSeeder::class);
         $this->call(BangunanDocumentWorkflowSeeder::class);
+        $this->call(LibrarySeeder::class);
 
         $officer = User::query()->firstOrNew(['email' => 'pegawai@indecs.test']);
         $officer->fill([

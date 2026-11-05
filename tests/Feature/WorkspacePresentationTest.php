@@ -81,8 +81,8 @@ final class WorkspacePresentationTest extends TestCase
         $this->assertDatabaseCount('stage_histories', $historyCount);
         $this->assertDatabaseCount('audit_logs', $auditCount);
         $this->assertSame(1, $application->fresh()->row_version);
-        $senior = User::factory()->create(['department_id' => 'JBANG', 'role' => 'senior_building_officer']);
-        $this->capture('bangunan-catalogue', $this->actingAs($senior)->get(route('bangunan.document-catalogue.edit', 'TEL'))->assertOk());
+        $ruleAdmin = User::factory()->create(['department_id' => 'JBANG', 'role' => 'system_admin']);
+        $this->capture('bangunan-catalogue', $this->actingAs($ruleAdmin)->get(route('bangunan.document-catalogue.edit', 'TEL'))->assertOk());
     }
 
     public function test_multi_department_navigation_keeps_both_authorised_workspaces_reachable(): void

@@ -16,7 +16,8 @@ final class BangunanDocumentWorkflowSeeder extends Seeder
             foreach (['upload' => 'Muat naik dokumen Bangunan', 'verify' => 'Sahkan dokumen Bangunan', 'configure' => 'Sahkan katalog dokumen Bangunan'] as $action => $label) {
                 $name = 'bangunan.application.documents.'.$action;
                 DB::table('core.permissions')->insertOrIgnore(['name' => $name, 'label' => $label, 'created_at' => now(), 'updated_at' => now()]);
-                $roles = $action === 'configure' ? ['senior_building_officer', 'system_admin'] : ['building_officer', 'senior_building_officer', 'system_admin'];
+                // ADR-362: checklist rules (catalogue) are published by system admin only.
+                $roles = $action === 'configure' ? ['system_admin'] : ['building_officer', 'senior_building_officer', 'system_admin'];
                 foreach ($roles as $role) {
                     $scope = ['role_id' => $role, 'permission_name' => $name, 'department_id' => $role === 'system_admin' ? null : 'JBANG', 'application_type_id' => null];
                     if (! DB::table('core.role_permissions')->where($scope)->exists()) {

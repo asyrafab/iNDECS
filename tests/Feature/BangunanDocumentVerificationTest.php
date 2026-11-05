@@ -35,6 +35,8 @@ final class BangunanDocumentVerificationTest extends TestCase
 
     private User $senior;
 
+    private User $ruleAdmin;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -42,6 +44,7 @@ final class BangunanDocumentVerificationTest extends TestCase
         Storage::fake('local');
         $this->officer = User::factory()->create(['department_id' => 'JBANG', 'role' => 'building_officer']);
         $this->senior = User::factory()->create(['department_id' => 'JBANG', 'role' => 'senior_building_officer']);
+        $this->ruleAdmin = User::factory()->create(['department_id' => 'JBANG', 'role' => 'system_admin']);
         $this->actingAs($this->officer);
         $this->app->instance(DocumentScanner::class, new class implements DocumentScanner
         {
@@ -58,14 +61,17 @@ final class BangunanDocumentVerificationTest extends TestCase
         $this->assertDatabaseCount('stage_histories', 1);
     }
 
-    public function test_only_authorised_seniors_can_publish_a_family_catalogue_with_a_source(): void
+    public function test_only_system_admin_can_publish_a_family_catalogue_with_a_source(): void
     {
         $this->post(route('bangunan.document-catalogue.publish', 'TEL'), $this->catalogue())->assertForbidden();
-        $this->actingAs($this->senior)->get(route('bangunan.document-catalogue.edit', 'TEL'))->assertOk();
+        // ADR-362: senior officers no longer publish checklist rules.
+        $this->actingAs($this->senior)->get(route('bangunan.document-catalogue.edit', 'TEL'))->assertForbidden();
+        $this->post(route('bangunan.document-catalogue.publish', 'TEL'), $this->catalogue())->assertForbidden();
+        $this->actingAs($this->ruleAdmin)->get(route('bangunan.document-catalogue.edit', 'TEL'))->assertOk();
         $this->post(route('bangunan.document-catalogue.publish', 'TEL'), $this->catalogue())->assertSessionHasNoErrors()->assertRedirect();
-        $this->assertDatabaseHas('core.document_catalogues', ['application_type_id' => 'TEL', 'source_reference' => 'Rujukan jabatan untuk ujian', 'version' => 1, 'confirmed_by' => $this->senior->id]);
+        $this->assertDatabaseHas('core.document_catalogues', ['application_type_id' => 'TEL', 'source_reference' => 'Rujukan jabatan untuk ujian', 'version' => 1, 'confirmed_by' => $this->ruleAdmin->id]);
         $this->assertDatabaseHas('document_types', ['code' => 'bina_tel_pelan', 'name' => 'Pelan ujian']);
-        $this->assertDatabaseHas('audit_logs', ['event' => 'document_catalogue_published', 'actor_id' => $this->senior->id]);
+        $this->assertDatabaseHas('audit_logs', ['event' => 'document_catalogue_published', 'actor_id' => $this->ruleAdmin->id]);
         $this->post(route('bangunan.document-catalogue.publish', 'TEL'), $this->catalogue())->assertSessionHasErrors('version');
         $data = $this->catalogue();
         $data['version'] = 1;
@@ -78,7 +84,8 @@ final class BangunanDocumentVerificationTest extends TestCase
 
     public function test_start_snapshots_requirements_and_later_catalogue_edits_do_not_change_the_case(): void
     {
-        $this->actingAs($this->senior)->post(route('bangunan.document-catalogue.publish', 'TEL'), $this->catalogue())->assertSessionHasNoErrors();
+        $this->actingAs($this->ruleAdmin)->post(route('bangunan.document-catalogue.publish', 'TEL'), $this->catalogue())->assertSessionHasNoErrors();
+        $this->actingAs($this->senior);
         $record = $this->registerCase();
         $this->step($record, 'start_document_verification')->assertSessionHasNoErrors();
         $checklist = DocumentChecklist::query()->firstOrFail();
@@ -86,7 +93,8 @@ final class BangunanDocumentVerificationTest extends TestCase
         $data = $this->catalogue();
         $data['version'] = 1;
         $data['items'][0]['name'] = 'Pelan versi baharu';
-        $this->post(route('bangunan.document-catalogue.publish', 'TEL'), $data)->assertSessionHasNoErrors();
+        $this->actingAs($this->ruleAdmin)->post(route('bangunan.document-catalogue.publish', 'TEL'), $data)->assertSessionHasNoErrors();
+        $this->actingAs($this->senior);
         $this->assertSame('Pelan ujian', $checklist->fresh()->items->first()->document_name);
         $this->assertSame(1, $checklist->catalogue_version);
         $this->get(route('bangunan.documents.index', $record))->assertOk()->assertSee('Pelan ujian');
@@ -119,7 +127,7 @@ final class BangunanDocumentVerificationTest extends TestCase
             }
             file_put_contents($directory.'/documents.html', $this->get(route('bangunan.documents.index', $record))->assertOk()->getContent());
             file_put_contents($directory.'/application.html', $this->get(route('bangunan.show', $record))->assertOk()->getContent());
-            $this->actingAs($this->senior);
+            $this->actingAs($this->ruleAdmin);
             file_put_contents($directory.'/catalogue.html', $this->get(route('bangunan.document-catalogue.edit', 'TEL'))->assertOk()->getContent());
             $this->actingAs($this->officer);
         }
