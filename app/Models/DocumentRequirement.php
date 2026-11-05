@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'is_active',
     'conditions',
     'guidance',
+    'precheck_keywords',
 ])]
 class DocumentRequirement extends Model
 {
@@ -36,6 +37,7 @@ class DocumentRequirement extends Model
             'sort_order' => 'integer',
             'is_active' => 'boolean',
             'conditions' => 'array',
+            'precheck_keywords' => 'array',
         ];
     }
 }

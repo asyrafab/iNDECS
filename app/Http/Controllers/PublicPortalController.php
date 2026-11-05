@@ -125,12 +125,24 @@ final class PublicPortalController extends Controller
 
     private function validated(Request $request): array
     {
-        return $request->validate([
+        $data = $request->validate([
             'application_type_id' => ['required', Rule::in($this->types()->pluck('id')->all())],
             'title' => ['required', 'string', 'max:500'],
             'site_address' => ['nullable', 'string', 'max:2000'],
             'notes' => ['nullable', 'string', 'max:5000'],
-        ], [], ['application_type_id' => 'jenis permohonan', 'title' => 'tajuk cadangan', 'site_address' => 'alamat tapak', 'notes' => 'catatan']);
+            // Project particulars (ADR-363) drive the checklist rules; values come only from config/kaunter.php.
+            'work_type' => ['nullable', Rule::in(array_keys(config('kaunter.work_types')))],
+            'building_category' => ['nullable', Rule::in(array_keys(config('kaunter.building_categories')))],
+            'storeys' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'floor_area' => ['nullable', 'numeric', 'min:1', 'max:1000000'],
+            'site_conditions' => ['nullable', 'array'],
+            'site_conditions.*' => ['string', 'distinct', Rule::in(array_keys(config('kaunter.site_conditions')))],
+        ], [], ['application_type_id' => 'jenis permohonan', 'title' => 'tajuk cadangan', 'site_address' => 'alamat tapak', 'notes' => 'catatan',
+            'work_type' => 'jenis kerja', 'building_category' => 'kategori bangunan', 'storeys' => 'bilangan tingkat',
+            'floor_area' => 'keluasan lantai', 'site_conditions' => 'keadaan tapak', 'site_conditions.*' => 'keadaan tapak']);
+
+        // A particular left blank is cleared, so the checklist always reflects what the form shows.
+        return $data + array_fill_keys(ApplicantDraft::PARTICULARS, null);
     }
 
     private function requireVerified(Request $request): void
@@ -142,7 +154,7 @@ final class PublicPortalController extends Controller
     {
         DB::table('core.applicant_draft_revisions')->insert([
             'draft_id' => $draft->id, 'actor_id' => $actor->id, 'version' => $draft->version,
-            'snapshot' => json_encode($draft->only(['application_type_id', 'title', 'site_address', 'notes']), JSON_THROW_ON_ERROR),
+            'snapshot' => json_encode($draft->only(['application_type_id', 'title', 'site_address', 'notes', ...ApplicantDraft::PARTICULARS]), JSON_THROW_ON_ERROR),
             'created_at' => now(),
         ]);
     }

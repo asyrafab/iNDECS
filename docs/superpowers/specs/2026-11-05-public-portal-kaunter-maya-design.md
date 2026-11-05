@@ -284,6 +284,44 @@ documents: guidelines, standards, by-laws, checklists, sample plans.
     (`core.document_catalogues` / `document_requirements`) rather than
     living in a parallel system (my call).
 
+### 8.6a Step 3: upload and free pre-check (implementer's calls, 2026-11-05)
+- **Project particulars.** Until the AMIRA chat exists (step 4), the draft
+  editor gets a "Butiran projek" form for type of work, building category,
+  storeys, floor area and site conditions. These feed
+  `ChecklistRuleEvaluator`. Types without a published catalogue (PKM today)
+  show "Senarai semak belum tersedia".
+- **"Simple OCR checking".** Each catalogue item gains optional **check
+  keywords** (for example "HAKMILIK", "NO. LOT"), which system admin sets on
+  the catalogue page. The pre-check uses the PDF's embedded text first, then
+  local OCR (Tesseract `msa+eng`) for image pages and photos, and looks for
+  any of those keywords. No AI and no cloud services are involved.
+- **Item labels (contract §3):**
+  - **Belum dilampirkan**: no file uploaded.
+  - **Tidak dapat dibaca**: the file is unreadable or corrupt, and must be
+    replaced.
+  - **Perlu pengesahan pemohon**: the file is readable, but none of the
+    keywords were found, or local OCR was unavailable or over budget. The
+    PSP can confirm it with "Saya sahkan".
+  - **Dilampirkan**: the file is readable and either a keyword matched or the
+    item has no keywords, or the PSP confirmed it.
+  - "Sedang disemak" is shown while the check runs. It is a progress state,
+    not a result.
+- **Gate.** "Sedia untuk semakan AIRS" shows when every required item that
+  applies is Dilampirkan. The pay button stays disabled and labelled until
+  step 5.
+- **Safety and budgets.**
+  - Every upload passes the existing virus scanner (ClamAV). If the scanner
+    is missing, uploads fail closed.
+  - Each item uses its document type's existing allowed extensions and size
+    limit.
+  - At most 10 OCR pages per file, 60 s per tool run, and one active check
+    per draft. Checks run on a separate `precheck` queue.
+  - An unchanged file (same SHA-256) is never re-processed.
+  - Uploading is desktop only: below 901px the upload controls are replaced
+    by "Muat naik dokumen menggunakan komputer".
+- **Ownership.** Only the draft owner, until step 7 adds groups. Files and
+  checks belong to the draft and are not an official application.
+
 ### 8.7 Deadlines
 For Pindaan Kecil and Pindaan, AMIRA reminds the PSP 3 days before the
 deadline. If the deadline passes, the file closes as Tolak, and the PSP

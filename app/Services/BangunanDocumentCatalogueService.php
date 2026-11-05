@@ -17,13 +17,24 @@ use Illuminate\Validation\ValidationException;
 
 final class BangunanDocumentCatalogueService
 {
+    /** Pre-check keywords (ADR-363): trimmed, upper-cased, de-duplicated, at least 2 characters; null when none. */
+    public static function keywords(?array $keywords): ?array
+    {
+        $clean = collect($keywords ?? [])->map(fn ($word) => mb_strtoupper(trim((string) $word)))
+            ->filter(fn (string $word) => mb_strlen($word) >= 2)->unique()->values()->all();
+
+        return $clean === [] ? null : $clean;
+    }
+
     public function publish(string $type, array $data, User $actor): void
     {
         abort_unless(in_array($type, BangunanApplication::TYPES, true), 404);
         abort_unless($actor->canPerformBangunan('access', $type) && $actor->canPerformBangunan('documents.configure', $type), 403);
         $data = Validator::make($data, [
             'version' => ['required', 'integer', 'min:0'], 'source_reference' => ['required', 'string', 'max:500'],
-            'items' => ['required', 'array', 'min:1', 'max:50'], 'items.*' => ['array:code,name,is_required,guidance,conditions'],
+            'items' => ['required', 'array', 'min:1', 'max:50'], 'items.*' => ['array:code,name,is_required,guidance,conditions,precheck_keywords'],
+            'items.*.precheck_keywords' => ['nullable', 'array', 'max:10'],
+            'items.*.precheck_keywords.*' => ['nullable', 'string', 'max:60'],
             'items.*.code' => ['required', 'regex:/^[a-z][a-z0-9_]{0,35}$/', 'distinct'],
             'items.*.name' => ['required', 'string', 'max:255'], 'items.*.is_required' => ['required', 'boolean'],
             'items.*.guidance' => ['nullable', 'string', 'max:2000'],
@@ -45,7 +56,8 @@ final class BangunanDocumentCatalogueService
                 DocumentRequirement::query()->updateOrCreate(['application_type_id' => $type, 'permission_category' => null,
                     'permission_type' => null, 'document_type_id' => $documentType->id],
                     ['is_required' => $item['is_required'], 'sort_order' => $index + 1, 'is_active' => true,
-                        'guidance' => $item['guidance'] ?? null, 'conditions' => ChecklistRuleEvaluator::normalise($item['conditions'] ?? null)]);
+                        'guidance' => $item['guidance'] ?? null, 'conditions' => ChecklistRuleEvaluator::normalise($item['conditions'] ?? null),
+                        'precheck_keywords' => self::keywords($item['precheck_keywords'] ?? null)]);
             }
             $version = (int) ($catalogue?->version ?? 0) + 1;
             DB::table('core.document_catalogues')->updateOrInsert(['application_type_id' => $type], [
