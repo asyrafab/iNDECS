@@ -14,6 +14,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'is_required',
     'sort_order',
     'is_active',
+    'conditions',
+    'guidance',
 ])]
 class DocumentRequirement extends Model
 {
@@ -33,6 +35,7 @@ class DocumentRequirement extends Model
             'is_required' => 'boolean',
             'sort_order' => 'integer',
             'is_active' => 'boolean',
+            'conditions' => 'array',
         ];
     }
 }

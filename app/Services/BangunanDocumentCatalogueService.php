@@ -10,6 +10,7 @@ use App\Models\BangunanApplication;
 use App\Models\DocumentRequirement;
 use App\Models\DocumentType;
 use App\Models\User;
+use App\Services\Checklist\ChecklistRuleEvaluator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -22,10 +23,11 @@ final class BangunanDocumentCatalogueService
         abort_unless($actor->canPerformBangunan('access', $type) && $actor->canPerformBangunan('documents.configure', $type), 403);
         $data = Validator::make($data, [
             'version' => ['required', 'integer', 'min:0'], 'source_reference' => ['required', 'string', 'max:500'],
-            'items' => ['required', 'array', 'min:1', 'max:50'], 'items.*' => ['array:code,name,is_required'],
+            'items' => ['required', 'array', 'min:1', 'max:50'], 'items.*' => ['array:code,name,is_required,guidance,conditions'],
             'items.*.code' => ['required', 'regex:/^[a-z][a-z0-9_]{0,35}$/', 'distinct'],
             'items.*.name' => ['required', 'string', 'max:255'], 'items.*.is_required' => ['required', 'boolean'],
-        ])->validate();
+            'items.*.guidance' => ['nullable', 'string', 'max:2000'],
+        ] + ChecklistRuleEvaluator::conditionRules('items.*.conditions'))->validate();
         if (! collect($data['items'])->contains(fn ($item) => (bool) $item['is_required'])) {
             throw ValidationException::withMessages(['items' => 'Sekurang-kurangnya satu dokumen wajib diperlukan.']);
         }
@@ -42,7 +44,8 @@ final class BangunanDocumentCatalogueService
                 ]);
                 DocumentRequirement::query()->updateOrCreate(['application_type_id' => $type, 'permission_category' => null,
                     'permission_type' => null, 'document_type_id' => $documentType->id],
-                    ['is_required' => $item['is_required'], 'sort_order' => $index + 1, 'is_active' => true]);
+                    ['is_required' => $item['is_required'], 'sort_order' => $index + 1, 'is_active' => true,
+                        'guidance' => $item['guidance'] ?? null, 'conditions' => ChecklistRuleEvaluator::normalise($item['conditions'] ?? null)]);
             }
             $version = (int) ($catalogue?->version ?? 0) + 1;
             DB::table('core.document_catalogues')->updateOrInsert(['application_type_id' => $type], [
