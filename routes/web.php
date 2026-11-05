@@ -8,6 +8,7 @@ use App\Http\Controllers\BangunanLegacyController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Gis\BoundaryController;
 use App\Http\Controllers\Gis\TileController;
+use App\Http\Controllers\LibraryController;
 use App\Http\Controllers\Osc\AgendaItemController;
 use App\Http\Controllers\Osc\AgendaPaperController;
 use App\Http\Controllers\Osc\GisRefreshController;
@@ -82,6 +83,17 @@ Route::middleware(['auth', 'perancang.access'])->group(function (): void {
             ->middleware('perancang.permission:perancang.pkm.register')
             ->name('resubmit');
     });
+});
+
+// ADR-362: department reference library. Every staff role reads; a Penolong Pengarah changes own department.
+Route::middleware('auth')->prefix('library')->name('library.')->group(function (): void {
+    Route::get('/', [LibraryController::class, 'index'])->name('index');
+    Route::get('/create', [LibraryController::class, 'create'])->name('create');
+    Route::post('/', [LibraryController::class, 'store'])->middleware('throttle:20,1')->name('store');
+    Route::get('/{document}', [LibraryController::class, 'show'])->whereUlid('document')->name('show');
+    Route::post('/{document}/versions', [LibraryController::class, 'storeVersion'])->whereUlid('document')->middleware('throttle:20,1')->name('versions.store');
+    Route::post('/{document}/retire', [LibraryController::class, 'retire'])->whereUlid('document')->name('retire');
+    Route::get('/{document}/versions/{version}', [LibraryController::class, 'download'])->whereUlid('document')->whereNumber('version')->name('download');
 });
 
 Route::middleware(['auth', 'bangunan.access'])->prefix('bangunan')->name('bangunan.')->group(function (): void {

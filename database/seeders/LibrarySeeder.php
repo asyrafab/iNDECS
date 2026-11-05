@@ -23,6 +23,20 @@ final class LibrarySeeder extends Seeder
                 DB::table('core.permissions')->updateOrInsert(['name' => $name], ['label' => $label, 'created_at' => $now, 'updated_at' => $now]);
             }
             $this->grant('penolong_pengarah', 'library.manage');
+            // System admin holds every permission (superadmin invariant); User::canManageLibrary still
+            // requires the Penolong Pengarah role, so the owner's "only Penolong Pengarah" rule stands.
+            $this->grant('system_admin', 'library.manage');
+            // A Penolong Pengarah works in their department like its senior officer (minus rule publishing),
+            // so they can sign in to the staff workspace and reach the library.
+            DB::table('core.role_permissions')->whereIn('role_id', ['senior_building_officer', 'senior_planning_officer'])
+                ->where('permission_name', '!=', 'bangunan.application.documents.configure')->get()
+                ->each(function (object $row): void {
+                    $scope = ['role_id' => 'penolong_pengarah', 'permission_name' => $row->permission_name,
+                        'department_id' => $row->department_id, 'application_type_id' => $row->application_type_id];
+                    if (! DB::table('core.role_permissions')->where($scope)->exists()) {
+                        DB::table('core.role_permissions')->insert($scope + ['created_at' => now(), 'updated_at' => now()]);
+                    }
+                });
             foreach (DB::table('core.roles')->where('account_type', 'staff')->pluck('id') as $role) {
                 $this->grant($role, 'library.view');
             }
@@ -35,7 +49,8 @@ final class LibrarySeeder extends Seeder
     private function grant(string $role, string $permission): void
     {
         $scope = ['role_id' => $role, 'permission_name' => $permission, 'department_id' => null, 'application_type_id' => null];
-        if (! DB::table('core.role_permissions')->where($scope)->exists()) {
+        // On a fresh database the migration runs before roles are seeded; DatabaseSeeder runs this again.
+        if (DB::table('core.roles')->where('id', $role)->exists() && ! DB::table('core.role_permissions')->where($scope)->exists()) {
             DB::table('core.role_permissions')->insert($scope + ['created_at' => now(), 'updated_at' => now()]);
         }
     }

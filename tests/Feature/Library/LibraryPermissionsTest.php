@@ -29,6 +29,15 @@ class LibraryPermissionsTest extends TestCase
         $this->assertTrue($pp->canViewLibrary());
     }
 
+    public function test_penolong_pengarah_can_sign_in_with_department_access_but_not_rules(): void
+    {
+        $pp = User::factory()->create(['department_id' => 'JBANG', 'role' => 'penolong_pengarah']);
+        $this->assertTrue($pp->canAccessStaffWorkspace());
+        $this->assertTrue($pp->canAccessBangunan());
+        $this->assertFalse($pp->canPerformBangunan('documents.configure', 'TEL'));
+        $this->assertTrue(User::factory()->create(['department_id' => 'JPBD', 'role' => 'penolong_pengarah'])->canAccessStaffWorkspace());
+    }
+
     public function test_public_accounts_cannot_view_library(): void
     {
         $public = app(PublicIdentityService::class)->create('pemohon@example.test', 'Pemohon', 'long-test-password');

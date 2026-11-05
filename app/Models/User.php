@@ -58,7 +58,8 @@ class User extends Authenticatable
     /** ADR-362: only a Penolong Pengarah changes their own department's library. */
     public function canManageLibrary(string $departmentId): bool
     {
-        return $this->department_id === $departmentId
+        return $this->role === 'penolong_pengarah'
+            && $this->department_id === $departmentId
             && app(CorePermissionService::class)->userCan($this, 'library.manage');
     }
 
@@ -135,7 +136,8 @@ class User extends Authenticatable
 
     public function canAccessStaffWorkspace(): bool
     {
-        return $this->canAccessPkm() || $this->canAccessBangunan() || $this->canAccessBangunanLegacy() || $this->canAccessOsc();
+        return $this->canAccessPkm() || $this->canAccessBangunan() || $this->canAccessBangunanLegacy() || $this->canAccessOsc()
+            || $this->canManageLibrary((string) $this->department_id);
     }
 
     /** Default landing route after sign-in or when opening `/`, in workspace priority order. */
@@ -145,6 +147,7 @@ class User extends Authenticatable
             $this->canAccessBangunan() => route('bangunan.index'),
             $this->canAccessPkm() => route('dashboard'),
             $this->canAccessBangunanLegacy() => route('bangunan.legacy.index'),
+            ! $this->canAccessOsc() && $this->canViewLibrary() => route('library.index'),
             default => route('osc.meetings.index'),
         };
     }

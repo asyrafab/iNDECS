@@ -63,6 +63,7 @@
                 @endif
                 @if ($canOsc && ! $isOsc)<a href="{{ route('osc.meetings.index') }}" class="nav-link"><x-icon name="folder-open" />eOSC+</a>@endif
                 <span class="nav-label nav-label-spaced">Bantuan</span>
+                @if ($staff->canViewLibrary())<a href="{{ route('library.index') }}" class="nav-link {{ request()->routeIs('library.*') ? 'active' : '' }}" @if (request()->routeIs('library.*')) aria-current="page" @endif><x-icon name="files" />Perpustakaan jabatan</a>@endif
                 <button class="nav-link" type="button" data-amira-open aria-controls="amira-panel" aria-expanded="false"><x-icon name="messages-square" />Panduan AMIRA</button>
             </nav>
             <div class="sidebar-note"><x-mark class="mark-reversed mark-small" /><div><strong>Persekitaran iNDECS</strong><small>Majlis Bandaraya Seberang Perai</small></div></div>
