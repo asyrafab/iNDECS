@@ -67,6 +67,7 @@ final class ChecklistRuleEvaluator
                 'guidance' => $item->guidance,
                 'is_required' => $item->is_required,
                 'conditional' => $item->conditions !== null && $item->conditions !== [],
+                'keywords' => array_values($item->precheck_keywords ?? []),
             ])->values();
     }
 
