@@ -17,6 +17,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->bind(StaffAuthenticator::class, MbspStaffAuthenticator::class);
         $this->app->bind(DocumentScanner::class, ClamAvDocumentScanner::class);
+        $this->app->bind(\App\Contracts\TextExtractor::class, \App\Services\Precheck\LocalTextExtractor::class);
     }
 
     /**
