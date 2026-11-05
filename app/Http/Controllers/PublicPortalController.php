@@ -92,7 +92,7 @@ final class PublicPortalController extends Controller
         return view('public.drafts.edit', [
             'draft' => $draft,
             'types' => $this->types()->get(),
-            'board' => $this->board->for($request->user(), justSaved: $request->session()->has('status')),
+            'board' => $this->board->for($request->user(), justSaved: $request->session()->has('status'), focus: $draft),
             'checklist' => app(DraftChecklist::class)->for($draft),
         ]);
     }

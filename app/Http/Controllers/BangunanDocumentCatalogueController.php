@@ -22,7 +22,8 @@ final class BangunanDocumentCatalogueController extends Controller
             ->where('is_active', true)->whereNull('permission_category')->whereNull('permission_type')->orderBy('sort_order')->get()
             ->map(fn ($item) => ['code' => preg_replace('/^bina_'.strtolower($type).'_/', '', $item->documentType->code),
                 'name' => $item->documentType->name, 'is_required' => $item->is_required,
-                'guidance' => $item->guidance, 'conditions' => $item->conditions ?? []])->all();
+                'guidance' => $item->guidance, 'conditions' => $item->conditions ?? [],
+                'precheck_keywords_text' => implode(', ', $item->precheck_keywords ?? [])])->all();
 
         return view('bangunan.document-catalogue', compact('type', 'catalogue', 'items'));
     }
@@ -30,7 +31,15 @@ final class BangunanDocumentCatalogueController extends Controller
     public function publish(Request $request, string $type, BangunanDocumentCatalogueService $service): RedirectResponse
     {
         $this->authorizeType($request, $type);
-        $service->publish($type, $request->all(), $request->user());
+        $data = $request->all();
+        // The form edits check keywords as one comma-separated field (ADR-363).
+        foreach ($data['items'] ?? [] as $index => $item) {
+            if (is_array($item) && array_key_exists('precheck_keywords_text', $item)) {
+                $data['items'][$index]['precheck_keywords'] = array_values(array_filter(array_map('trim', explode(',', (string) $item['precheck_keywords_text']))));
+                unset($data['items'][$index]['precheck_keywords_text']);
+            }
+        }
+        $service->publish($type, $data, $request->user());
 
         return to_route('bangunan.document-catalogue.edit', $type)->with('success', 'Versi katalog dokumen disahkan. Senarai semak permohonan sedia ada dikekalkan.');
     }

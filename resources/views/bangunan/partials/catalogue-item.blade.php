@@ -9,6 +9,7 @@
     <label class="field"><span>Keperluan</span><select name="items[{{ $index }}][is_required]"><option value="1" @selected($item['is_required'] ?? true)>Wajib</option><option value="0" @selected(! ($item['is_required'] ?? true))>Pilihan</option></select></label>
     <button class="button button-ghost" type="button" data-repeater-remove>Buang dokumen</button>
     <label class="field field-span-2"><span>Keperluan dokumen</span><textarea name="items[{{ $index }}][guidance]" rows="2" maxlength="2000" placeholder="Apa yang mesti ada dalam dokumen ini, contohnya: dimeterai oleh jurutera profesional, skala 1:100.">{{ $item['guidance'] ?? '' }}</textarea></label>
+    <label class="field field-span-2"><span>Kata kunci semakan (pisahkan dengan koma)</span><input name="items[{{ $index }}][precheck_keywords_text]" value="{{ $item['precheck_keywords_text'] ?? '' }}" maxlength="700" placeholder="Contoh: HAKMILIK, NO. LOT"><small>Semakan awal percuma mencari mana-mana perkataan ini dalam dokumen. Kosongkan jika tidak perlu.</small></label>
     <details class="field-span-2 catalogue-conditions" @if (! $isTemplate && ! empty($conditions)) open @endif>
         <summary><span>Syarat (pilihan)</span><small>{{ $isTemplate ? 'Sentiasa diperlukan' : \App\Services\Checklist\ChecklistRuleEvaluator::describe($conditions ?: null) }}</small></summary>
         <p class="helper-text">Biarkan kosong jika dokumen sentiasa diperlukan. Jika beberapa syarat dipilih, semuanya mesti dipenuhi.</p>

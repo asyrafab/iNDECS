@@ -18,6 +18,7 @@
                             <p>{{ $draft->applicationType->name }}</p>
                             <small>Persediaan · Belum dihantar kepada MBSP · dikemas kini <time datetime="{{ $draft->updated_at->toIso8601String() }}">{{ $draft->updated_at->timezone('Asia/Kuala_Lumpur')->format('d/m/Y H:i') }}</time></small>
                         </div>
+                        @isset($board['progress'][$draft->id])<span class="status-badge {{ $board['progress'][$draft->id]['ready'] === $board['progress'][$draft->id]['total'] && $board['progress'][$draft->id]['total'] > 0 ? 'status-compliant' : 'status-info' }}">Dokumen {{ $board['progress'][$draft->id]['ready'] }}/{{ $board['progress'][$draft->id]['total'] }}</span>@endisset
                         <span class="status-badge status-pending">Draf · {{ $draft->application_type_id }}</span>
                         <a class="button button-secondary button-small" href="{{ route('portal.drafts.edit', $draft) }}" aria-label="Sambung {{ $draft->title }}">Sambung<x-icon name="arrow-right" /></a>
                     </li>
