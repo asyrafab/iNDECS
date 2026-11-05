@@ -24,6 +24,7 @@ Route::prefix('portal')->name('portal.')->group(function (): void {
     Route::middleware('public.access')->group(function (): void {
         Route::get('/', [PublicPortalController::class, 'home'])->name('home');
         Route::get('/account', [PublicAccessController::class, 'account'])->name('account');
+        Route::get('/library/{document}', [PublicPortalController::class, 'download'])->whereUlid('document')->middleware('throttle:30,1')->name('library.download');
         Route::get('/drafts', [PublicPortalController::class, 'index'])->name('drafts.index');
         Route::get('/drafts/create', [PublicPortalController::class, 'create'])->name('drafts.create');
         Route::post('/drafts', [PublicPortalController::class, 'store'])->middleware('throttle:20,1')->name('drafts.store');

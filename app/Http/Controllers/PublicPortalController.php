@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ApplicantDraft;
 use App\Models\ApplicationType;
+use App\Models\LibraryDocument;
 use App\Models\User;
 use App\Services\Portal\PortalBoard;
 use Illuminate\Database\Eloquent\Builder;
@@ -13,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 final class PublicPortalController extends Controller
 {
@@ -22,11 +24,23 @@ final class PublicPortalController extends Controller
 
     public function home(Request $request)
     {
+        $types = $this->types()->get();
+
         return view('public.home', [
             'user' => $request->user(),
-            'types' => $this->types()->get(),
+            'types' => $types,
             'board' => $this->board->for($request->user()),
+            // ADR-362: public, active department library documents offered per application type.
+            'libraryByType' => $types->mapWithKeys(fn ($type) => [$type->id => LibraryDocument::query()->publicFor($type->id)->get()])->all(),
         ]);
+    }
+
+    /** Current version of an active public library document. Anything else is 404. */
+    public function download(string $document): StreamedResponse
+    {
+        $record = LibraryDocument::query()->where('status', 'active')->where('visibility', 'public')->findOrFail($document);
+
+        return LibraryController::stream($record->currentVersion() ?? abort(404));
     }
 
     public function index(Request $request)

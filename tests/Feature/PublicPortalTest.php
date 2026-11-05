@@ -114,6 +114,31 @@ class PublicPortalTest extends TestCase
             ->assertSee('class="counter"', false)->assertSee('data-mood="happy"', false);
     }
 
+    public function test_public_library_documents_appear_for_their_type_and_download(): void
+    {
+        $doc = $this->libraryDocument('Garis panduan PKM', 'public');
+        $this->actingAs($this->applicant())->get(route('portal.home'))->assertOk()
+            ->assertSee('Garis panduan PKM')->assertSee(route('portal.library.download', $doc), false)->assertSee('PDF · v1');
+        $response = $this->get(route('portal.library.download', $doc))->assertOk();
+        $this->assertStringContainsString('attachment', $response->headers->get('Content-Disposition'));
+    }
+
+    public function test_internal_or_retired_documents_are_hidden_and_404(): void
+    {
+        $internal = $this->libraryDocument('Nota dalaman', 'internal');
+        $retired = $this->libraryDocument('Garis lama', 'public');
+        app(\App\Services\Library\LibraryService::class)->retire($this->libraryAuthor(), $retired);
+        $this->actingAs($this->applicant())->get(route('portal.home'))->assertOk()
+            ->assertDontSee('Nota dalaman')->assertDontSee('Garis lama');
+        $this->get(route('portal.library.download', $internal))->assertNotFound();
+        $this->get(route('portal.library.download', $retired))->assertNotFound();
+    }
+
+    public function test_type_without_documents_keeps_belum_tersedia(): void
+    {
+        $this->actingAs($this->applicant())->get(route('portal.home'))->assertOk()->assertSee('Belum tersedia');
+    }
+
     public function test_revision_snapshots_cannot_be_updated_or_deleted(): void
     {
         $this->actingAs($this->applicant())->post(route('portal.drafts.store'), $this->data());
@@ -191,6 +216,22 @@ class PublicPortalTest extends TestCase
         Department::query()->whereKey('JPBD')->update(['is_active' => false]);
         $this->post(route('portal.drafts.store'), $this->data())->assertSessionHasErrors('application_type_id');
         $this->assertDatabaseCount('core.applicant_drafts', 0);
+    }
+
+    private ?User $libraryAuthor = null;
+
+    private function libraryAuthor(): User
+    {
+        return $this->libraryAuthor ??= User::factory()->create(['department_id' => 'JPBD', 'role' => 'penolong_pengarah']);
+    }
+
+    private function libraryDocument(string $title, string $visibility): \App\Models\LibraryDocument
+    {
+        \Illuminate\Support\Facades\Storage::fake('local');
+
+        return app(\App\Services\Library\LibraryService::class)->create($this->libraryAuthor(), [
+            'title' => $title, 'category' => 'garis_panduan', 'visibility' => $visibility, 'application_type_ids' => ['PKM'],
+        ], \Illuminate\Http\UploadedFile::fake()->createWithContent('dokumen.pdf', "%PDF-1.4\n%%EOF\n"));
     }
 
     public function test_draft_quota_is_per_owner_and_list_is_paginated(): void
