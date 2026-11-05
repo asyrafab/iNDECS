@@ -29,4 +29,15 @@ return [
         'warisan' => 'Zon warisan',
         'strata' => 'Hakmilik strata',
     ],
+    // Free pre-check budgets and local tools (ADR-363). No AI, no network.
+    'precheck' => [
+        'ocr_max_pages' => (int) env('KAUNTER_PRECHECK_OCR_MAX_PAGES', 10),
+        'process_timeout' => (int) env('KAUNTER_PRECHECK_PROCESS_TIMEOUT', 60),
+        'min_text_chars' => (int) env('KAUNTER_PRECHECK_MIN_TEXT_CHARS', 30),
+        'max_documents_per_draft' => (int) env('KAUNTER_PRECHECK_MAX_DOCUMENTS', 60),
+        'pdftotext' => env('KAUNTER_PDFTOTEXT_BINARY', 'pdftotext'),
+        'ghostscript' => env('KAUNTER_GHOSTSCRIPT_BINARY', PHP_OS_FAMILY === 'Windows' ? 'gswin64c' : 'gs'),
+        'tesseract' => env('KAUNTER_TESSERACT_BINARY', 'tesseract'),
+        'tesseract_langs' => env('KAUNTER_TESSERACT_LANGS', 'msa+eng'),
+    ],
 ];
