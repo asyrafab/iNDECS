@@ -357,6 +357,28 @@ disabled `.portal-download-options` (Senarai semak / Garis panduan), marked
 Belum tersedia. Documents will be configured later; do not invent download URLs
 or repurpose internal catalogue files. Closing returns focus to the download icon.
 
+## Department library and checklist rules (2026-11-05)
+
+[ADR-362](docs/adr/ADR-362-department-library-and-checklist-rules.md); see the
+[runbook](docs/runbooks/department-library.md).
+
+- **Library.** All staff read `/library`. Only a `penolong_pengarah` of the
+  same department changes it, checked by `User::canManageLibrary`, which also
+  requires the role. Write only through `App\Services\Library\LibraryService`:
+  PDF, at most 50 MB, private `local` disk, audited. Versions are append-only
+  by trigger. Retiring is final.
+- **Portal.** It offers only `LibraryDocument::publicFor($type)` and serves only
+  the current version of a public, active document. Anything else returns 404.
+  Never expose internal documents.
+- **Checklist rules.** Rules are the Bangunan catalogue (`document_requirements`
+  plus `conditions`/`guidance`), published by `system_admin` only. Option keys
+  live in `config/kaunter.php`; never rename or remove a key that published
+  rules use. `ChecklistRuleEvaluator` is deterministic: a set condition must
+  match and an unknown particular never matches. The payment gate in later
+  steps must use it, never AI output.
+- `LibraryDocument::forReference($dept, $type)` is the sanctioned input for
+  AIRS and AMIRA reference.
+
 ## AIRS connector (2026-11-04)
 
 The shared service connector, review workspace and payment/version guards are implemented under [ADR-354](docs/adr/ADR-354-airs-review-connector.md); see the [integration runbook](docs/runbooks/airs-integration.md). No public paid intake or departmental review rule pack is activated by this increment. AMIRA remains separate.

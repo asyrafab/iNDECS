@@ -96,3 +96,5 @@ Date: YYYY-MM-DD. Status: Proposed | Accepted | Superseded by ADR-MMM.
 - [ADR-360: Application document download choices](ADR-360-public-application-download-options.md)
 
 - [ADR-361: Kaunter Maya portal shell and AMIRA bubble avatar](ADR-361-kaunter-maya-portal-and-amira-avatar.md)
+
+- [ADR-362: Department library and conditional checklist rules](ADR-362-department-library-and-checklist-rules.md)

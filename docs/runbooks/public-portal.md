@@ -27,6 +27,11 @@ is seeded by this increment.
 - Simple public header and gear menu for account, drafts, helpdesk availability,
   themes and local AMIRA guidance (ADR-359). No public sidebar.
 
+Each type's download icon lists that type's **public, active** department library
+documents (ADR-362, `portal.library.download`). It falls back to "Belum tersedia"
+when there are none. Internal or retired documents are never listed, and their
+URLs return 404.
+
 Permohonan baharu lists active available types and prefills the draft form without
 creating a record. Owned drafts appear only as Draf belum dihantar, never as received
 applications, because public formal intake is unavailable. Do not match staff applications by applicant email. Dialogs
