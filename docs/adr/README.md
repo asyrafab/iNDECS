@@ -98,3 +98,5 @@ Date: YYYY-MM-DD. Status: Proposed | Accepted | Superseded by ADR-MMM.
 - [ADR-361: Kaunter Maya portal shell and AMIRA bubble avatar](ADR-361-kaunter-maya-portal-and-amira-avatar.md)
 
 - [ADR-362: Department library and conditional checklist rules](ADR-362-department-library-and-checklist-rules.md)
+
+- [ADR-363: Free applicant pre-check](ADR-363-free-precheck.md)

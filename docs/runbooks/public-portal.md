@@ -50,8 +50,14 @@ or official-submit action.
 
 Drafts have no official application reference or operational workflow. They never
 write `applications`, accepted-submission proof, fees, payments or AIRS jobs.
-Document upload, checklist/precheck, local OCR, applicant tracking, departmental
-forms, payment and official submission remain subsequent increments. No paid AI
+
+Document upload, the checklist and the free local-OCR pre-check now run on drafts
+(ADR-363; worker setup is in [precheck-worker.md](precheck-worker.md)). To see
+check results locally, run `php artisan queue:work --queue=precheck` alongside the
+server. ClamAV must be installed, or uploads are refused.
+
+Applicant tracking, departmental forms, payment and official submission remain
+subsequent increments. No paid AI
 is called. Kejuruteraan and Landskap preparation types remain unavailable pending
 their intake definitions. No migration of staff or legacy applications occurs.
 

@@ -379,6 +379,25 @@ or repurpose internal catalogue files. Closing returns focus to the download ico
 - `LibraryDocument::forReference($dept, $type)` is the sanctioned input for
   AIRS and AMIRA reference.
 
+## Free applicant pre-check (2026-11-05)
+
+[ADR-363](docs/adr/ADR-363-free-precheck.md); see the
+[worker runbook](docs/runbooks/precheck-worker.md).
+
+- **Uploads.** Draft uploads go only through
+  `App\Services\Precheck\DraftDocumentService`, which checks the owner, the
+  checklist item, the document-type limits and a `finfo` content sniff, then
+  runs the ClamAV scan (fail closed), dedupes by SHA-256, and dispatches
+  `PrecheckDraftDocument` to the `precheck` queue (unique per draft).
+- **Text and OCR.** Use only `App\Contracts\TextExtractor` (`LocalTextExtractor`:
+  pdftotext, then Ghostscript plus Tesseract `msa+eng`). Never add a cloud or
+  AI path here. Missing tools mean "Perlu pengesahan pemohon". Never store
+  extracted text.
+- **Labels.** Use only `App\Enums\PrecheckLabel` and show the contract
+  sentence. No pass, fail or score wording.
+- **Readiness.** `DraftChecklist::for($draft)['ready']` is the single
+  readiness signal that payment (step 5) must use.
+
 ## AIRS connector (2026-11-04)
 
 The shared service connector, review workspace and payment/version guards are implemented under [ADR-354](docs/adr/ADR-354-airs-review-connector.md); see the [integration runbook](docs/runbooks/airs-integration.md). No public paid intake or departmental review rule pack is activated by this increment. AMIRA remains separate.
