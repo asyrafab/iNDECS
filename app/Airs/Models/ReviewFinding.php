@@ -45,4 +45,10 @@ final class ReviewFinding extends Model
     {
         return $this->belongsTo(ReviewVersion::class);
     }
+
+    /** Officer comments, oldest first; the last one is the current officer status. */
+    public function feedbacks(): HasMany
+    {
+        return $this->hasMany(ReviewFindingFeedback::class)->orderBy('created_at')->orderBy('id');
+    }
 }

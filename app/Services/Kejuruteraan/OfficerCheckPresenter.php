@@ -6,6 +6,8 @@ namespace App\Services\Kejuruteraan;
 
 use App\Airs\Models\GeneratedReport;
 use App\Airs\Models\ReviewCase;
+use App\Airs\Models\ReviewFindingFeedback;
+use App\Airs\Review\LiveReportScorer;
 use App\Airs\Models\ReviewVersion;
 use App\Airs\Review\MatrixUsageReport;
 use App\Models\Application;
@@ -18,7 +20,11 @@ use App\Services\PaidCheck\ApplicantCheckPresenter;
  */
 final class OfficerCheckPresenter
 {
-    public function __construct(private readonly ApplicantCheckPresenter $applicantView, private readonly MatrixUsageReport $usage) {}
+    public function __construct(
+        private readonly ApplicantCheckPresenter $applicantView,
+        private readonly MatrixUsageReport $usage,
+        private readonly LiveReportScorer $scorer,
+    ) {}
 
     public function for(Application $application): array
     {
@@ -66,16 +72,43 @@ final class OfficerCheckPresenter
 
     private function check(ReviewCase $case, ReviewVersion $version): array
     {
+        $completed = $version->status === 'COMPLETED';
+        $feedback = $completed ? $this->feedbackFor($version) : collect();
+        $officerScore = $version->score;
+        if ($completed && $feedback->isNotEmpty()) {
+            $report = GeneratedReport::query()->where('review_version_id', $version->id)->latest()->first()?->report_json ?? [];
+            $officerScore = data_get($this->scorer->apply($report, $feedback), 'application_score.score', $version->score);
+        }
+        $items = $completed ? array_map(function (array $item) use ($feedback): array {
+            $history = $feedback->get($item['finding_id']) ?? collect();
+            $latest = $history->last();
+
+            return $item + [
+                'officer_status' => $latest?->status->value,
+                'officer_comment' => $latest?->comment,
+                'feedback_history' => $history->map(fn ($entry) => ['status' => $entry->status->value, 'comment' => $entry->comment,
+                    'officer' => $entry->actor?->name, 'at' => $entry->created_at])->values()->all(),
+            ];
+        }, $this->itemsFor($version)) : [];
+
         return [
             'version' => $version,
             'number' => (int) $version->check_number,
             'status' => $version->status,
             'error_code' => $version->status === 'FAILED' ? $case->error_code : null,
             'score' => $version->score,
-            'officer_score' => $version->score,
+            'officer_score' => $officerScore,
             'shadow_outcome' => $version->shadow_outcome,
-            'items' => $version->status === 'COMPLETED' ? $this->itemsFor($version) : [],
+            'items' => $items,
             'usage' => $this->usage->forVersion($version),
         ];
+    }
+
+    /** @return \Illuminate\Support\Collection<string, \Illuminate\Support\Collection<int, ReviewFindingFeedback>> */
+    private function feedbackFor(ReviewVersion $version): \Illuminate\Support\Collection
+    {
+        return ReviewFindingFeedback::query()->with('actor')
+            ->whereHas('finding', fn ($query) => $query->where('review_version_id', $version->id))
+            ->orderBy('created_at')->orderBy('id')->get()->groupBy('review_finding_id');
     }
 }

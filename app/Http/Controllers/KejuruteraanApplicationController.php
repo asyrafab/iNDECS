@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Airs\Models\ReviewFinding;
+use App\Airs\Review\FindingFeedbackService;
 use App\Models\Application;
+use Illuminate\Http\RedirectResponse;
 use App\Models\ApplicationDocument;
 use App\Models\PaidCheckJourney;
 use App\Services\Kejuruteraan\OfficerCheckPresenter;
@@ -40,6 +43,18 @@ final class KejuruteraanApplicationController extends Controller
         $file = ApplicationDocument::query()->where('application_id', $record->id)->findOrFail($document);
 
         return Storage::disk('local')->response($file->storage_path, $file->original_name, ['Content-Type' => $file->mime_type], 'inline');
+    }
+
+    public function storeFeedback(Request $request, string $application, string $finding, FindingFeedbackService $feedback): RedirectResponse
+    {
+        abort_unless($request->user()->canPerformLjup('review'), 403);
+        $record = $this->application($request, $application);
+        $found = ReviewFinding::query()->whereKey($finding)
+            ->whereHas('reviewVersion.reviewCase', fn ($query) => $query->where('application_id', $record->id))->firstOrFail();
+        $data = $request->validate(['officer_status' => ['required', 'string'], 'officer_comment' => ['nullable', 'string', 'max:2000']]);
+        $feedback->record($request->user(), $found, $data['officer_status'], $data['officer_comment'] ?? null);
+
+        return redirect(route('kejuruteraan.show', $record).'#finding-'.$found->id)->with('status', 'Ulasan pegawai bagi '.$found->rule_id.' disimpan.');
     }
 
     private function application(Request $request, string $id): Application

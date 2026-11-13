@@ -133,6 +133,8 @@ Route::middleware(['auth', 'kejuruteraan.access'])->prefix('kejuruteraan')->name
     Route::get('/', [\App\Http\Controllers\KejuruteraanApplicationController::class, 'index'])->name('index');
     Route::get('/applications/{application}', [\App\Http\Controllers\KejuruteraanApplicationController::class, 'show'])->whereUlid('application')->name('show');
     Route::get('/applications/{application}/documents/{document}', [\App\Http\Controllers\KejuruteraanApplicationController::class, 'document'])->whereUlid(['application', 'document'])->name('documents.show');
+    Route::post('/applications/{application}/findings/{finding}/feedback', [\App\Http\Controllers\KejuruteraanApplicationController::class, 'storeFeedback'])
+        ->whereUlid(['application', 'finding'])->middleware('throttle:30,1')->name('findings.feedback');
 });
 
 Route::middleware(['auth', 'osc.access'])->prefix('osc')->name('osc.')->group(function (): void {
