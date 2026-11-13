@@ -117,7 +117,9 @@ AMIRA backend ownership was moved to C:\Users\Asyra\Documents\AMIRA under ADR-35
 
 ## AIRS review module (in-process, 2026-11-14)
 
-The AIRS review engine now lives inside iNDECS under `app/Airs` (tables in schema `airs`), replacing the earlier HTTP connector of ADR-354. Design: [AIRS module merge](docs/superpowers/specs/2026-11-13-airs-module-merge-design.md); engine plan: [Plan 1](docs/superpowers/plans/2026-11-13-airs-engine-module.md). `App\Airs\CheckService` is the only entry point: it needs a payment `CheckClearance`, allows at most two completed checks per application (a failed check is rerun without being counted) and only enables the LJUP (Jabatan Kejuruteraan) module. Scores are advisory; the configured threshold only records a shadow outcome. The applicant journey (Plan 2) and officer workspace (Plan 3) are not built yet.
+The AIRS review engine now lives inside iNDECS under `app/Airs` (tables in schema `airs`), replacing the earlier HTTP connector of ADR-354. Design: [AIRS module merge](docs/superpowers/specs/2026-11-13-airs-module-merge-design.md); engine plan: [Plan 1](docs/superpowers/plans/2026-11-13-airs-engine-module.md). `App\Airs\CheckService` is the only entry point: it needs a payment `CheckClearance`, allows at most two completed checks per application (a failed check is rerun without being counted) and only enables the LJUP (Jabatan Kejuruteraan) module. Scores are advisory; the configured threshold only records a shadow outcome.
+
+Applicant journey ([Plan 2](docs/superpowers/plans/2026-11-14-airs-applicant-check-journey.md)): an LJUP draft (Jabatan Kejuruteraan) declares its lighting types, uses the free precheck, then pays. Payment creates the formal application and runs check 1; the applicant sees an applicant-safe result and may amend once within 5 working days (extendable once by 5) to run check 2, or submit as-is. The application then hands over to JKEJ (`core.accepted_submissions`, with missing required documents flagged, never rejected). The officer workspace (Plan 3) is not built yet.
 
 Setup:
 
@@ -126,3 +128,7 @@ Setup:
 - `AIRS_AI_PROVIDER` = `fake` (default), `openai` or `matrix`. MATRIX also needs `AIRS_MATRIX_ENABLED=true`, Node and the `../MATRIX/runtime` worker; check with `php artisan matrix:status`. Budgets: `AIRS_MATRIX_REQUEST_BUDGET_USD` (0.25) and `AIRS_MATRIX_REVIEW_BUDGET_USD` (5).
 - The real Green Camour acceptance test: `PLAN_REVIEW_GREEN_CAMOUR_PATH="<folder of the 12 PDFs>" php artisan test --filter=GreenCamourAcceptanceTest` (skipped when unset; the package is not committed).
 - The local `iNDECS` database may still hold the old standalone AIRS tables in schema `airs`; they must be removed before `php artisan migrate` can create the module tables.
+- Fee: `AIRS_CHECK_FEE_SEN` (unset disables payment; the amount is not yet decided). `AIRS_PAYMENT_DRIVER=staging` is the only driver and is refused in production until the MBSP payment gateway is integrated.
+- LJUP checklist: JKEJ supplies it; publish with `php artisan catalogue:publish LJUP <file.json> --actor=<officer e-mail>` (a `senior_engineering_officer`).
+- Scheduler also runs `paid-check:hand-over-expired` every five minutes. Public holidays for working-day deadlines go in `core.public_holidays`.
+- The database session timezone is pinned to UTC (`DB_TIMEZONE`, ADR-314); rows written earlier under a Malaysia-time session read back 8 hours off.
