@@ -24,6 +24,7 @@ final class OfficerCheckPresenter
         private readonly ApplicantCheckPresenter $applicantView,
         private readonly MatrixUsageReport $usage,
         private readonly LiveReportScorer $scorer,
+        private readonly \App\Airs\Review\MatrixProfileProjection $projection,
     ) {}
 
     public function for(Application $application): array
@@ -75,9 +76,16 @@ final class OfficerCheckPresenter
         $completed = $version->status === 'COMPLETED';
         $feedback = $completed ? $this->feedbackFor($version) : collect();
         $officerScore = $version->score;
-        if ($completed && $feedback->isNotEmpty()) {
+        $profileStale = false;
+        if ($completed) {
             $report = GeneratedReport::query()->where('review_version_id', $version->id)->latest()->first()?->report_json ?? [];
-            $officerScore = data_get($this->scorer->apply($report, $feedback), 'application_score.score', $version->score);
+            // A corrected profile field can change rule applicability: the officer score is then deferred.
+            $profileStale = (bool) ($this->projection->apply($report)['profile_dependencies_stale'] ?? false);
+            if ($profileStale) {
+                $officerScore = null;
+            } elseif ($feedback->isNotEmpty()) {
+                $officerScore = data_get($this->scorer->apply($report, $feedback), 'application_score.score', $version->score);
+            }
         }
         $items = $completed ? array_map(function (array $item) use ($feedback): array {
             $history = $feedback->get($item['finding_id']) ?? collect();
@@ -98,6 +106,7 @@ final class OfficerCheckPresenter
             'error_code' => $version->status === 'FAILED' ? $case->error_code : null,
             'score' => $version->score,
             'officer_score' => $officerScore,
+            'profile_stale' => $profileStale,
             'shadow_outcome' => $version->shadow_outcome,
             'items' => $items,
             'fields' => $completed ? $this->fieldsFor($version) : [],

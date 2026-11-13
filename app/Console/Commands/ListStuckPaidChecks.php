@@ -12,12 +12,15 @@ final class ListStuckPaidChecks extends Command
 {
     protected $signature = 'paid-check:stuck';
 
-    protected $description = 'List paid AIRS check journeys whose check never started or failed permanently';
+    protected $description = 'List paid AIRS checks whose journey never started, whose check never started, or which failed permanently';
 
     public function handle(PaidCheckJourneyService $journeys): int
     {
         $rows = array_map(fn (array $item) => [$item['journey']->application->application_reference, $item['journey']->state->value,
             $item['reason'], $item['journey']->updated_at?->toIso8601String()], $journeys->stuck());
+        foreach ($journeys->stuckPayments() as $payment) {
+            $rows[] = [$payment->reference, 'PAID_WITHOUT_JOURNEY', 'Bayaran/pengecualian direkodkan tetapi permohonan tidak dicipta', $payment->updated_at?->toIso8601String()];
+        }
         if ($rows === []) {
             $this->info('Tiada semakan tersekat.');
 

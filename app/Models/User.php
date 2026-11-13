@@ -53,7 +53,8 @@ class User extends Authenticatable
     public function canPerformLjup(string $action): bool
     {
         return $this->is_active && $this->account_type === 'staff'
-            && app(CorePermissionService::class)->userCan($this, 'kejuruteraan.ljup.'.$action, 'JKEJ', 'LJUP');
+            // Scoped by the officer's own department (ADR-307), like PKM and Bangunan.
+            && app(CorePermissionService::class)->userCan($this, 'kejuruteraan.ljup.'.$action, $this->department_id, 'LJUP');
     }
 
     public function canAccessKejuruteraan(): bool

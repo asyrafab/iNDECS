@@ -21,6 +21,9 @@ use Illuminate\Support\Str;
  */
 final class LessonExporter
 {
+    /** Profile fields whose values carry no applicant identity and may be exported. All others are redacted. */
+    private const VALUE_FIELDS = ['drawing_revision', 'phase', 'submission_date'];
+
     /** @return array{file: ?string, count: int} */
     public function export(?CarbonImmutable $since = null): array
     {
@@ -60,7 +63,7 @@ final class LessonExporter
             $version = $finding->reviewVersion;
             $lessons[] = ['source_type' => 'finding_feedback', 'source_id' => $entry->id, 'record' => $this->base($version, 'finding_correction', $entry->created_at) + [
                 'rule_id' => $finding->rule_id, 'ai_status' => $aiStatus, 'officer_status' => $entry->status->value, 'officer_comment' => $entry->comment,
-                'field' => null, 'ai_value' => null, 'officer_value' => null, 'evidence' => $this->evidence($finding->id, $version->id),
+                'field' => null, 'ai_value' => null, 'officer_value' => null, 'value_redacted' => false, 'evidence' => $this->evidence($finding->id, $version->id),
             ]];
         }
 
@@ -77,9 +80,12 @@ final class LessonExporter
             $version = ReviewVersion::query()->with('reviewCase')->findOrFail($review->review_version_id);
             $profile = ApplicationProfile::query()->where('review_version_id', $version->id)->value('profile_json') ?? [];
             $aiValue = $profile[$review->field] ?? null;
+            // Identity-bearing fields (names, titles, references, lots) are redacted: only non-identifying values leave iNDECS.
+            $keep = in_array($review->field, self::VALUE_FIELDS, true);
             $lessons[] = ['source_type' => 'field_review', 'source_id' => $review->id, 'record' => $this->base($version, 'field_correction', $review->created_at) + [
                 'rule_id' => null, 'ai_status' => null, 'officer_status' => $review->disposition, 'officer_comment' => $review->reason,
-                'field' => $review->field, 'ai_value' => is_scalar($aiValue) ? (string) $aiValue : null, 'officer_value' => $review->value,
+                'field' => $review->field, 'ai_value' => $keep && is_scalar($aiValue) ? (string) $aiValue : null,
+                'officer_value' => $keep ? $review->value : null, 'value_redacted' => ! $keep,
                 'evidence' => collect($profile['field_evidence'] ?? [])->where('field', $review->field)->map(fn ($item) => ['document_type' => null, 'page' => $item['page'] ?? null])->values()->all(),
             ]];
         }

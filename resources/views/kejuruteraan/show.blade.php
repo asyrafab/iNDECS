@@ -23,7 +23,9 @@
     <div class="card-heading"><h2>Semakan {{ $check['number'] }}@if ($view['final_check_number'] === $check['number']) · muktamad @endif</h2>
         <span class="muted">{{ $check['status'] }}</span></div>
     @if ($check['status'] === 'COMPLETED')
-        <p>Skor kesediaan dokumen: <strong>{{ $check['score'] }}</strong>/100 @if ($check['officer_score'] !== $check['score']) · selepas ulasan pegawai: <strong>{{ $check['officer_score'] }}</strong>/100 @endif</p>
+        <p>Skor kesediaan dokumen: <strong>{{ $check['score'] }}</strong>/100
+            @if ($check['profile_stale']) · <strong>Skor ditangguhkan: profil dibetulkan</strong> — dapatan dan kebolehgunaan perlu disemak semula.
+            @elseif ($check['officer_score'] !== $check['score']) · selepas ulasan pegawai: <strong>{{ $check['officer_score'] }}</strong>/100 @endif</p>
         <p class="muted">Keputusan bayangan — tidak dikuatkuasakan: {{ $check['shadow_outcome'] === 'BELOW_THRESHOLD' ? 'di bawah ambang' : 'mencapai ambang' }} (ambang {{ config('airs.score_threshold') }})</p>
         @foreach ($check['items'] as $item)
             <article class="precheck-item" id="finding-{{ $item['finding_id'] }}">

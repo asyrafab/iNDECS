@@ -47,7 +47,7 @@ final class DocumentCatalogueService
     {
         return match (self::scope($type)['department'] ?? null) {
             'JBANG' => $actor->canPerformBangunan('access', $type) && $actor->canPerformBangunan('documents.configure', $type),
-            'JKEJ' => app(CorePermissionService::class)->userCan($actor, 'kejuruteraan.ljup.documents.configure', 'JKEJ', $type),
+            'JKEJ' => $actor->canPerformLjup('documents.configure'),
             default => false,
         };
     }

@@ -32,7 +32,7 @@ An LJUP draft (Jabatan Kejuruteraan) declares its lighting types and uses the fr
 |---|---|
 | `php artisan paid-check:stuck` | Journeys whose check never started or failed permanently for over an hour. Rerun a failed check with `CheckService::rerun()` or contact the applicant. |
 | `php artisan paid-check:waive <draft> --actor=<email> --reason="<policy ref>"` | Audited fee waiver by an officer holding `kejuruteraan.ljup.fee_waive`. |
-| `php artisan airs:export-lessons [--since=]` | Export new officer corrections as de-identified MATRIX candidate lessons (JSONL). Officer comments are free text and may mention names: share files only with the MATRIX evaluation team. |
+| `php artisan airs:export-lessons [--since=]` | Export new officer corrections as de-identified MATRIX candidate lessons (JSONL). Values of identity-bearing profile fields (developer, consultant, project title, references, lot/mukim, district) are redacted; officer comments and field-review reasons are free text and may mention names, so share files only with the MATRIX evaluation team. |
 | `php artisan matrix:status` / `matrix:usage` | MATRIX runtime check and per-check usage (client estimate, not invoice). |
 
 ## Officer workspace

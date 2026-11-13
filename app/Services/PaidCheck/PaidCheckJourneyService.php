@@ -314,6 +314,18 @@ final class PaidCheckJourneyService
      *
      * @return list<array{journey: PaidCheckJourney, reason: string}>
      */
+    /**
+     * Paid or waived payments older than an hour whose draft never got a journey (the listener failed and no
+     * gateway retry arrived). Staff can re-run paid() after fixing the cause.
+     *
+     * @return list<CheckPayment>
+     */
+    public function stuckPayments(): array
+    {
+        return CheckPayment::query()->where('status', 'paid')->where('updated_at', '<', now()->subHour())
+            ->whereNotIn('draft_id', PaidCheckJourney::query()->select('draft_id'))->orderBy('updated_at')->get()->all();
+    }
+
     public function stuck(): array
     {
         $stuck = [];

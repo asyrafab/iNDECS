@@ -37,21 +37,10 @@ final class CheckPaymentService
         if ($draft->user_id !== $owner->id) {
             throw (new ModelNotFoundException)->setModel(ApplicantDraft::class, [$draft->id]);
         }
-        $module = config('airs.modules.'.$draft->application_type_id);
-        if (! is_array($module) || ($module['enabled'] ?? false) !== true) {
-            throw ValidationException::withMessages(['payment' => 'Semakan AIRS berbayar belum dibuka untuk jenis permohonan ini.']);
-        }
+        $checklist = $this->assertReadyForCheck($draft);
         $fee = self::feeSen();
         if ($fee === null) {
             throw ValidationException::withMessages(['payment' => 'Fi semakan belum ditetapkan.']);
-        }
-        $checklist = $this->checklists->for($draft);
-        $withDocuments = array_filter($checklist['items'], fn (array $item) => $item['document'] !== null);
-        if ($withDocuments === []) {
-            throw ValidationException::withMessages(['payment' => 'Muat naik sekurang-kurangnya satu dokumen sebelum membayar.']);
-        }
-        if (collect($withDocuments)->contains(fn (array $item) => in_array($item['label'], [PrecheckLabel::Pending, PrecheckLabel::Unreadable], true))) {
-            throw ValidationException::withMessages(['payment' => 'Gantikan dokumen yang tidak dapat dibaca dan tunggu semakan awal selesai sebelum membayar.']);
         }
         if (! $checklist['ready'] && ! $acknowledgedMissing) {
             throw ValidationException::withMessages(['acknowledge_missing' => 'Sahkan bahawa anda faham dokumen wajib belum lengkap sebelum membayar.']);
@@ -76,6 +65,31 @@ final class CheckPaymentService
         });
     }
 
+    /**
+     * A draft is ready for a paid (or waived) check: enabled AIRS module, lighting types declared, at least
+     * one uploaded document and none still being prechecked or unreadable. Returns the draft checklist.
+     */
+    public function assertReadyForCheck(ApplicantDraft $draft): array
+    {
+        $module = config('airs.modules.'.$draft->application_type_id);
+        if (! is_array($module) || ($module['enabled'] ?? false) !== true) {
+            throw ValidationException::withMessages(['payment' => 'Semakan AIRS berbayar belum dibuka untuk jenis permohonan ini.']);
+        }
+        if ($draft->lightingTypes() === []) {
+            throw ValidationException::withMessages(['payment' => 'Pilih jenis lampu sebelum semakan AIRS.']);
+        }
+        $checklist = $this->checklists->for($draft);
+        $withDocuments = array_filter($checklist['items'], fn (array $item) => $item['document'] !== null);
+        if ($withDocuments === []) {
+            throw ValidationException::withMessages(['payment' => 'Muat naik sekurang-kurangnya satu dokumen sebelum membayar.']);
+        }
+        if (collect($withDocuments)->contains(fn (array $item) => in_array($item['label'], [PrecheckLabel::Pending, PrecheckLabel::Unreadable], true))) {
+            throw ValidationException::withMessages(['payment' => 'Gantikan dokumen yang tidak dapat dibaca dan tunggu semakan awal selesai sebelum membayar.']);
+        }
+
+        return $checklist;
+    }
+
     public function checkoutUrl(CheckPayment $payment): string
     {
         return $this->gateway->checkoutUrl($payment);
@@ -85,6 +99,9 @@ final class CheckPaymentService
     public function confirm(string $reference, string $gatewayEventId, CarbonImmutable $paidAt): CheckPayment
     {
         [$payment, $newlyPaid] = DB::transaction(function () use ($reference, $gatewayEventId, $paidAt): array {
+            // Same lock order as start()/waive() (draft, then payments) so confirmations and waivers serialise.
+            $draftId = CheckPayment::query()->where('reference', $reference)->value('draft_id') ?? abort(404);
+            ApplicantDraft::query()->whereKey($draftId)->lockForUpdate()->firstOrFail();
             $payment = CheckPayment::query()->where('reference', $reference)->lockForUpdate()->firstOrFail();
             if ($payment->status === 'paid') {
                 if ($payment->gateway_event_id !== $gatewayEventId) {
@@ -127,13 +144,12 @@ final class CheckPaymentService
         if (mb_strlen(trim($reason)) < 10) {
             throw ValidationException::withMessages(['reason' => 'Nyatakan sebab dan rujukan dasar pengecualian.']);
         }
-        $module = config('airs.modules.'.$draft->application_type_id);
-        if (! is_array($module) || ($module['enabled'] ?? false) !== true) {
-            throw ValidationException::withMessages(['payment' => 'Semakan AIRS berbayar belum dibuka untuk jenis permohonan ini.']);
-        }
+        $this->assertReadyForCheck($draft);
 
         $payment = DB::transaction(function () use ($officer, $draft, $reason): CheckPayment {
             ApplicantDraft::query()->whereKey($draft->id)->lockForUpdate()->firstOrFail();
+            // Lock every payment of the draft too, so a concurrent gateway confirmation is seen, not raced.
+            CheckPayment::query()->where('draft_id', $draft->id)->lockForUpdate()->get();
             if (CheckPayment::query()->where('draft_id', $draft->id)->where('status', 'paid')->exists()
                 || \App\Models\PaidCheckJourney::query()->where('draft_id', $draft->id)->exists()) {
                 throw ValidationException::withMessages(['payment' => 'Semakan AIRS bagi draf ini telah dibayar atau dikecualikan.']);
