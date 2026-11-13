@@ -235,7 +235,7 @@ class DatabaseSeeder extends Seeder
         }
 
         foreach (['perancang.pkm.access', 'perancang.pkm.register', 'perancang.pkm.review', 'bangunan.legacy.view',
-            'kejuruteraan.ljup.access', 'kejuruteraan.ljup.review', 'kejuruteraan.ljup.documents.configure'] as $permissionName) {
+            'kejuruteraan.ljup.access', 'kejuruteraan.ljup.review', 'kejuruteraan.ljup.documents.configure', 'kejuruteraan.ljup.fee_waive'] as $permissionName) {
             DB::table('core.role_permissions')->updateOrInsert(
                 [
                     'role_id' => 'system_admin',

@@ -94,6 +94,13 @@ final class CheckPaymentService
 
                 return [$payment, false];
             }
+            if ($payment->status === 'cancelled') {
+                // e.g. superseded by a waiver: a late gateway event is recorded but changes nothing (refund is a manual matter).
+                AuditLog::query()->create(['auditable_type' => CheckPayment::class, 'auditable_id' => $payment->id, 'event' => 'check_payment_event_on_cancelled',
+                    'actor_id' => null, 'before_values' => null, 'after_values' => ['gateway_event_id' => $gatewayEventId], 'ip_address' => request()?->ip()]);
+
+                return [$payment, false];
+            }
             $payment->forceFill(['status' => 'paid', 'gateway_event_id' => $gatewayEventId, 'paid_at' => $paidAt])->save();
             AuditLog::query()->create(['auditable_type' => CheckPayment::class, 'auditable_id' => $payment->id, 'event' => 'check_payment_confirmed',
                 'actor_id' => null, 'before_values' => ['status' => 'pending'], 'after_values' => ['status' => 'paid', 'gateway_event_id' => $gatewayEventId],
@@ -103,9 +110,46 @@ final class CheckPaymentService
         });
         // A retried callback re-dispatches when an earlier attempt was paid but its journey was never created
         // (the listener failed after the payment committed). The journey service is idempotent.
-        if ($newlyPaid || ! \App\Models\PaidCheckJourney::query()->where('draft_id', $payment->draft_id)->exists()) {
+        if ($payment->status === 'paid' && ($newlyPaid || ! \App\Models\PaidCheckJourney::query()->where('draft_id', $payment->draft_id)->exists())) {
             CheckPaymentConfirmed::dispatch($payment->id);
         }
+
+        return $payment->fresh();
+    }
+
+    /**
+     * Audited fee waiver by an authorised JKEJ officer under an approved policy (cited in the reason).
+     * Cancels any pending payment and clears the check exactly as a paid fee would.
+     */
+    public function waive(User $officer, ApplicantDraft $draft, string $reason): CheckPayment
+    {
+        abort_unless($officer->canPerformLjup('fee_waive'), 403, 'Kebenaran pengecualian fi diperlukan.');
+        if (mb_strlen(trim($reason)) < 10) {
+            throw ValidationException::withMessages(['reason' => 'Nyatakan sebab dan rujukan dasar pengecualian.']);
+        }
+        $module = config('airs.modules.'.$draft->application_type_id);
+        if (! is_array($module) || ($module['enabled'] ?? false) !== true) {
+            throw ValidationException::withMessages(['payment' => 'Semakan AIRS berbayar belum dibuka untuk jenis permohonan ini.']);
+        }
+
+        $payment = DB::transaction(function () use ($officer, $draft, $reason): CheckPayment {
+            ApplicantDraft::query()->whereKey($draft->id)->lockForUpdate()->firstOrFail();
+            if (CheckPayment::query()->where('draft_id', $draft->id)->where('status', 'paid')->exists()
+                || \App\Models\PaidCheckJourney::query()->where('draft_id', $draft->id)->exists()) {
+                throw ValidationException::withMessages(['payment' => 'Semakan AIRS bagi draf ini telah dibayar atau dikecualikan.']);
+            }
+            CheckPayment::query()->where('draft_id', $draft->id)->where('status', 'pending')->update(['status' => 'cancelled', 'updated_at' => now()]);
+            $payment = new CheckPayment;
+            $payment->forceFill(['draft_id' => $draft->id, 'user_id' => $draft->user_id, 'amount_sen' => 0,
+                'reference' => 'WAIVE-'.$draft->application_type_id.'-'.Str::ulid(), 'status' => 'paid', 'gateway' => 'waiver',
+                'gateway_event_id' => 'waiver-'.Str::ulid(), 'paid_at' => now(), 'clearance_kind' => 'waived',
+                'waived_by' => $officer->id, 'waiver_reason' => trim($reason)])->save();
+            AuditLog::query()->create(['auditable_type' => CheckPayment::class, 'auditable_id' => $payment->id, 'event' => 'check_payment_waived',
+                'actor_id' => $officer->id, 'before_values' => null, 'after_values' => ['draft_id' => $draft->id, 'reason' => trim($reason)], 'ip_address' => request()?->ip()]);
+
+            return $payment;
+        });
+        CheckPaymentConfirmed::dispatch($payment->id);
 
         return $payment->fresh();
     }

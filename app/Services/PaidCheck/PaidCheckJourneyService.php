@@ -197,8 +197,8 @@ final class PaidCheckJourneyService
         $payment = $locked->payment;
         AcceptedSubmission::query()->create([
             'application_id' => $locked->application_id, 'document_manifest' => $manifest, 'document_set_hash' => $version->document_set_hash,
-            'clearance_kind' => 'paid', 'payment_clearance_reference' => $payment->reference, 'payment_cleared_at' => $payment->paid_at,
-            'accepted_at' => now(), 'missing_required_documents' => $missing,
+            'clearance_kind' => $payment->clearance_kind ?? 'paid', 'payment_clearance_reference' => $payment->reference, 'payment_cleared_at' => $payment->paid_at,
+            'cleared_by' => $payment->waived_by, 'accepted_at' => now(), 'missing_required_documents' => $missing,
         ]);
         $locked->application->update(['current_stage' => ApplicationStage::TechnicalCirculation, 'current_status' => ApplicationStatus::Submitted]);
         $locked->forceFill(['state' => PaidCheckState::HandedOver, 'final_check_number' => $finalCheckNumber, 'handed_over_at' => now()])->save();
@@ -288,7 +288,7 @@ final class PaidCheckJourneyService
         $payment = $journey->payment;
         $application = $journey->application;
         try {
-            $this->checks->start($application, new CheckClearance('paid', $payment->reference, $payment->paid_at),
+            $this->checks->start($application, new CheckClearance($payment->clearance_kind ?? 'paid', $payment->reference, $payment->paid_at),
                 $journey->lighting_types, $application->currentDocuments()->get());
         } catch (Throwable $exception) {
             // The payment and application stand; staff rerun the check (it never consumes a paid check).

@@ -29,6 +29,6 @@ class CheckPayment extends Model
 
     protected function casts(): array
     {
-        return ['amount_sen' => 'integer', 'paid_at' => 'immutable_datetime'];
+        return ['amount_sen' => 'integer', 'paid_at' => 'immutable_datetime', 'waived_by' => 'integer'];
     }
 }
