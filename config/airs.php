@@ -10,6 +10,7 @@ return [
     'provider' => env('AIRS_AI_PROVIDER', 'fake'),
     'text_model' => env('AIRS_TEXT_MODEL', 'gpt-5.6-luna'),
     'vision_model' => env('AIRS_VISION_MODEL', 'gpt-5.6-luna'),
+    'rule_pack' => env('AIRS_RULE_PACK', 'ljup'),
     'rule_version' => env('AIRS_RULE_VERSION', 'v2'),
     'prompt_version' => env('AIRS_PROMPT_VERSION', 'v1'),
     'report_version' => env('AIRS_REPORT_VERSION', 'v1'),

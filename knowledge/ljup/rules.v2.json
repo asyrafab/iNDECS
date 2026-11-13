@@ -1,0 +1,166 @@
+{
+  "manifest": {
+    "rule_pack": "ljup",
+    "rule_version": "v2",
+    "status": "officer_review_calibrated_pilot",
+    "lifecycle_status": "DITERBITKAN",
+    "effective_from": "2026-07-27",
+    "published_at": "2026-07-27 00:00:00",
+    "change_reason": "Phase 1 beta Rule Registry: applicant LJUP form upload removed and Besi/Konkrit/Solar applicability activated.",
+    "source": "LJUP Umum, LJUP Khusus and SOP 4 LJUP/KJT Lamp.2 Keluaran No.3 (01.01.2025)"
+  },
+  "extends": "v1",
+  "overrides": [
+    {
+      "rule_id": "LJUP-SUB-006",
+      "active": false,
+      "standard_comment": "Item LJUP Umum/Khusus kini dikawal melalui Rule Registry dalaman sistem dan tidak perlu dimuat naik oleh pemohon."
+    },
+    {
+      "rule_id": "LJUP-GEN-GAL-OTH-004",
+      "applies_when": {
+        "any_of": [
+          {"selected_lighting_types": {"contains_any": ["BESI", "SOLAR"]}},
+          {"lighting_system": {"not_contains": "TNB"}}
+        ]
+      }
+    },
+    {
+      "rule_id": "LJUP-SPC-C-004",
+      "evaluation_method": "AI_VISION",
+      "manual_confirmation_required": false,
+      "standard_comment": "Semak reka bentuk pemasangan dan tiang pada pelan. Keputusan rasmi kekal di bawah pertimbangan pegawai."
+    },
+    {
+      "rule_id": "LJUP-SPC-C-005",
+      "evaluation_method": "AI_VISION",
+      "manual_confirmation_required": false,
+      "standard_comment": "Semak kedudukan lampu berbanding had kerja yang ditunjukkan pada pelan."
+    },
+    {
+      "rule_id": "LJUP-SPC-C-007",
+      "evaluation_method": "AI_VISION",
+      "manual_confirmation_required": false,
+      "standard_comment": "Semak lampu di persimpangan, selekoh dan lokasi tumpuan yang ditunjukkan pada pelan."
+    },
+    {
+      "rule_id": "LJUP-SPC-C-008",
+      "evaluation_method": "AI_VISION",
+      "manual_confirmation_required": false,
+      "standard_comment": "Semak ofset dua kaki dari bahu jalan dan kelegaan laluan Universal Design pada pelan."
+    },
+    {
+      "rule_id": "LJUP-SPC-C-009",
+      "applies_when": {
+        "any_of": [
+          {"selected_lighting_types": {"contains_any": ["BESI", "SOLAR"]}},
+          {"lighting_system": {"not_contains": "TNB"}}
+        ]
+      }
+    },
+    {
+      "rule_id": "LJUP-XDOC-001",
+      "applies_when": {
+        "any_of": [
+          {"selected_lighting_types": {"contains_any": ["BESI", "SOLAR"]}},
+          {"lighting_system": {"not_contains": "TNB"}}
+        ]
+      }
+    },
+    {
+      "rule_id": "LJUP-XDOC-008",
+      "active": false,
+      "standard_comment": "Padanan borang LJUP pemohon tidak lagi diperlukan kerana item semakan dipilih daripada Rule Registry dalaman."
+    }
+  ],
+  "rules": [
+    {
+      "rule_id": "LJUP-SPC-D-TNB-001",
+      "title": "Larangan pemasangan lampu pada dinding",
+      "section": "Special LJUP review",
+      "source_document": "ljup-khusus.pdf",
+      "source_page": 2,
+      "source_section": "D(i)",
+      "stage": "PLAN",
+      "requirement": "Lampu tidak dibenarkan dipasang pada dinding bagi cadangan tiang konkrit TNB.",
+      "applies_when": {
+        "any_of": [
+          {"selected_lighting_types": {"contains": "KONKRIT"}},
+          {"lighting_system": {"contains": "TNB"}}
+        ]
+      },
+      "evaluation_method": "AI_VISION",
+      "required_evidence_types": ["LJUP_PLAN"],
+      "severity": "MEDIUM",
+      "manual_confirmation_required": false,
+      "standard_comment": "Pastikan cadangan tidak menggunakan pemasangan lampu pada dinding.",
+      "active": true
+    },
+    {
+      "rule_id": "LJUP-SPC-D-TNB-002",
+      "title": "Kedudukan tiang baharu dan sedia ada",
+      "section": "Special LJUP review",
+      "source_document": "ljup-khusus.pdf",
+      "source_page": 2,
+      "source_section": "D(i)",
+      "stage": "PLAN",
+      "requirement": "Kedudukan tiang lampu baharu bersama tiang bekalan elektrik ke rumah dan tiang lampu jalan sedia ada hendaklah ditunjukkan dengan jelas.",
+      "applies_when": {
+        "any_of": [
+          {"selected_lighting_types": {"contains": "KONKRIT"}},
+          {"lighting_system": {"contains": "TNB"}}
+        ]
+      },
+      "evaluation_method": "AI_VISION",
+      "required_evidence_types": ["LJUP_PLAN"],
+      "severity": "HIGH",
+      "manual_confirmation_required": false,
+      "standard_comment": "Tunjukkan dan bezakan tiang lampu baharu, tiang bekalan serta tiang lampu sedia ada.",
+      "active": true
+    },
+    {
+      "rule_id": "LJUP-SPC-D-TNB-003",
+      "title": "Jarak dan susunan tiang TNB",
+      "section": "Special LJUP review",
+      "source_document": "ljup-khusus.pdf",
+      "source_page": 2,
+      "source_section": "D(i)",
+      "stage": "PLAN",
+      "requirement": "Jarak lampu pada tiang TNB hendaklah dicadangkan antara 30 hingga 35 meter; jalan tiga atau empat lorong hendaklah menggunakan susunan bertentangan atau zig-zag bagi kedua-dua bahagian jalan.",
+      "applies_when": {
+        "any_of": [
+          {"selected_lighting_types": {"contains": "KONKRIT"}},
+          {"lighting_system": {"contains": "TNB"}}
+        ]
+      },
+      "evaluation_method": "AI_VISION",
+      "required_evidence_types": ["LJUP_PLAN"],
+      "severity": "HIGH",
+      "manual_confirmation_required": false,
+      "standard_comment": "Semak jarak 30–35 meter dan susunan tiang mengikut bilangan lorong.",
+      "active": true
+    },
+    {
+      "rule_id": "LJUP-SPC-D-GAL-001",
+      "title": "Perincian tiang galvani, solar, feeder pillar dan kabel",
+      "section": "Special LJUP review",
+      "source_document": "ljup-khusus.pdf",
+      "source_page": 2,
+      "source_section": "D(ii)-D(iii)",
+      "stage": "PLAN",
+      "requirement": "Perincian tiang galvani atau solar, feeder pillar, kabel, lantern dan kelengkapan berkaitan hendaklah disemak apabila sistem tersebut dicadangkan.",
+      "applies_when": {
+        "any_of": [
+          {"selected_lighting_types": {"contains_any": ["BESI", "SOLAR"]}},
+          {"lighting_system": {"not_contains": "TNB"}}
+        ]
+      },
+      "evaluation_method": "AI_VISION",
+      "required_evidence_types": ["LJUP_PLAN"],
+      "severity": "HIGH",
+      "manual_confirmation_required": false,
+      "standard_comment": "Gunakan seksyen ini hanya untuk sistem tiang galvani, solar atau feeder pillar berkaitan.",
+      "active": true
+    }
+  ]
+}

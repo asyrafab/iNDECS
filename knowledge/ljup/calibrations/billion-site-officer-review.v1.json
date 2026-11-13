@@ -1,0 +1,110 @@
+{
+  "calibration_id": "BILLION-SITE-OFFICER-REVIEW-2025-V1",
+  "description": "Kalibrasi terkawal berdasarkan enam muka surat semakan manual pegawai bagi Billion Site Sdn. Bhd.",
+  "reference": {
+    "form": "SOP 4 – LJUP/KJT Lamp.2, Keluaran No.3 (01.01.2025)",
+    "pages": 6,
+    "image_sha256": [
+      "398ac3135d2fbc4993e02a8ab1992d03a31f794f3918d33e5de4245a4afd7534",
+      "b2ef4e0542706f9d4fdc43274435c46233546d812378dd0f75f5e3224ded8125",
+      "ed6092c559d9b376e2beb505561edd9bc30de60339a1c576d4fa178fc3b1e8f3",
+      "708999fa903ed850d4dad29c081725eb6eeba334f3daa2a6b0ca2be823520982",
+      "98b320580ca8eedfa3c4afa776ad922beeef46787e6f6ae6fe44fa85fe461987",
+      "1004fda97809ee3c4caaaab471bda232a91f90c47cfc99d8ed24f6b6ec2f42f1"
+    ]
+  },
+  "match": {
+    "review_file_sha256": "317e46553958b465d7596882b289c6c4b03c5ab8e2456588fe58d41f639cc1ea",
+    "profile_contains": {
+      "developer": "BILLION SITE"
+    }
+  },
+  "rules": {
+    "LJUP-SPC-C-001": {
+      "status": "DITUNAIKAN",
+      "finding": "Kedudukan tiang lampu jalan sedia ada di jalan utama pada hadapan lot telah diterima dalam semakan akhir pegawai.",
+      "first_officer_status": "DITUNAIKAN",
+      "final_officer_status": "DITUNAIKAN"
+    },
+    "LJUP-SPC-C-002": {
+      "status": "DITUNAIKAN",
+      "finding": "Lampu sedia ada di kawasan bersebelahan berserta butiran berkaitan telah diterima dalam semakan akhir pegawai.",
+      "first_officer_status": "DITUNAIKAN",
+      "final_officer_status": "DITUNAIKAN"
+    },
+    "LJUP-SPC-C-003": {
+      "status": "DITUNAIKAN",
+      "finding": "Jalan masuk utama dan lampu jalan sedia ada telah diterima dalam semakan akhir pegawai.",
+      "first_officer_status": "DITUNAIKAN",
+      "final_officer_status": "DITUNAIKAN"
+    },
+    "LJUP-SPC-C-004": {
+      "status": "DITUNAIKAN",
+      "finding": "Cadangan pemasangan lampu dan reka bentuk tiang telah diterima dalam semakan akhir pegawai.",
+      "first_officer_status": "DITUNAIKAN",
+      "final_officer_status": "DITUNAIKAN"
+    },
+    "LJUP-SPC-C-005": {
+      "status": "DITUNAIKAN",
+      "finding": "Kedudukan lampu dalam had kerja dan susunan bekalan telah diterima dalam semakan akhir pegawai.",
+      "first_officer_status": "DITUNAIKAN",
+      "final_officer_status": "DITUNAIKAN"
+    },
+    "LJUP-SPC-C-006": {
+      "status": "TIDAK_BERKAITAN",
+      "finding": "Perkara pindaan kedudukan tiang bagi pengemukaan semula ditanda tidak berkaitan oleh pegawai.",
+      "first_officer_status": "TIDAK_BERKAITAN",
+      "final_officer_status": "TIDAK_BERKAITAN"
+    },
+    "LJUP-SPC-C-007": {
+      "status": "DITUNAIKAN",
+      "finding": "Pencahayaan di lokasi bahaya dan tumpuan ditanda belum ditunaikan pada semakan pertama, kemudian diterima pada semakan akhir selepas pembetulan pelan.",
+      "first_officer_status": "BELUM_DITUNAIKAN",
+      "final_officer_status": "DITUNAIKAN",
+      "officer_comment": "Sila tunjukkan lampu dan jarak di hadapan Blok C (luar limit)."
+    },
+    "LJUP-SPC-C-008": {
+      "status": "DITUNAIKAN",
+      "finding": "Kedudukan feeder pillar dan tiang lampu berbanding bahu jalan serta laluan Universal Design diterima dalam semakan akhir pegawai.",
+      "first_officer_status": "TIDAK_BERKAITAN",
+      "final_officer_status": "DITUNAIKAN"
+    },
+    "LJUP-SPC-C-009": {
+      "status": "TIDAK_BERKAITAN",
+      "finding": "Keperluan laporan fotometrik ditanda tidak berkaitan bagi cadangan sistem tiang konkrit TNB ini.",
+      "first_officer_status": "TIDAK_BERKAITAN",
+      "final_officer_status": "TIDAK_BERKAITAN"
+    },
+    "LJUP-SPC-D-TNB-001": {
+      "status": "TIDAK_BERKAITAN",
+      "finding": "Pemasangan lampu pada dinding tidak dicadangkan dan ditanda tidak berkaitan oleh pegawai.",
+      "first_officer_status": "TIDAK_BERKAITAN",
+      "final_officer_status": "TIDAK_BERKAITAN"
+    },
+    "LJUP-SPC-D-TNB-002": {
+      "status": "DITUNAIKAN",
+      "finding": "Kedudukan tiang baharu, tiang bekalan dan tiang lampu sedia ada belum diterima pada semakan pertama tetapi diterima selepas pembetulan.",
+      "first_officer_status": "BELUM_DITUNAIKAN",
+      "final_officer_status": "DITUNAIKAN",
+      "officer_comment": "Perjelas perbezaan kedudukan tiang di jalan dalaman dan jalan utama."
+    },
+    "LJUP-SPC-D-TNB-003": {
+      "status": "DITUNAIKAN",
+      "finding": "Jarak dan susunan tiang TNB belum diterima pada semakan pertama tetapi diterima dalam semakan akhir pegawai.",
+      "first_officer_status": "BELUM_DITUNAIKAN",
+      "final_officer_status": "DITUNAIKAN"
+    },
+    "LJUP-XDOC-001": {
+      "status": "TIDAK_BERKAITAN",
+      "finding": "Padanan laporan fotometrik tidak digunakan kerana perkara fotometrik ditanda tidak berkaitan bagi sistem tiang konkrit TNB ini.",
+      "first_officer_status": "TIDAK_BERKAITAN",
+      "final_officer_status": "TIDAK_BERKAITAN"
+    },
+    "LJUP-XDOC-008": {
+      "status": "DITUNAIKAN",
+      "finding": "Pilihan kebolehgunaan borang adalah selaras dengan sistem tiang konkrit TNB yang dicadangkan.",
+      "first_officer_status": "DITUNAIKAN",
+      "final_officer_status": "DITUNAIKAN"
+    }
+  }
+}
