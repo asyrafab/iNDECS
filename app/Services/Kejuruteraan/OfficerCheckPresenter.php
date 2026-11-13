@@ -100,8 +100,25 @@ final class OfficerCheckPresenter
             'officer_score' => $officerScore,
             'shadow_outcome' => $version->shadow_outcome,
             'items' => $items,
+            'fields' => $completed ? $this->fieldsFor($version) : [],
             'usage' => $this->usage->forVersion($version),
         ];
+    }
+
+    /** MATRIX-extracted profile fields with the latest officer disposition and the next expected revision. */
+    private function fieldsFor(ReviewVersion $version): array
+    {
+        $profile = $version->profile()->first()?->profile_json ?? [];
+        $reviews = \App\Airs\Models\ProfileFieldReview::query()->with('actor')->where('review_version_id', $version->id)->orderBy('revision')->get()->groupBy('field');
+
+        return array_map(function (string $field) use ($profile, $reviews): array {
+            $latest = $reviews->get($field)?->last();
+            $evidence = collect($profile['field_evidence'] ?? [])->firstWhere('field', $field);
+
+            return ['field' => $field, 'extracted' => is_scalar($profile[$field] ?? null) ? (string) $profile[$field] : null,
+                'page' => $evidence['page'] ?? null, 'disposition' => $latest?->disposition, 'value' => $latest?->value,
+                'reason' => $latest?->reason, 'officer' => $latest?->actor?->name, 'revision' => (int) ($latest?->revision ?? 0)];
+        }, \App\Airs\Review\MatrixProfileProjection::FIELDS);
     }
 
     /** @return \Illuminate\Support\Collection<string, \Illuminate\Support\Collection<int, ReviewFindingFeedback>> */

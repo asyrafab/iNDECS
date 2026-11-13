@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Airs\Models\ReviewFinding;
 use App\Airs\Review\FindingFeedbackService;
+use App\Airs\Review\ProfileFieldReviewService;
 use App\Models\Application;
 use Illuminate\Http\RedirectResponse;
 use App\Models\ApplicationDocument;
@@ -55,6 +56,24 @@ final class KejuruteraanApplicationController extends Controller
         $feedback->record($request->user(), $found, $data['officer_status'], $data['officer_comment'] ?? null);
 
         return redirect(route('kejuruteraan.show', $record).'#finding-'.$found->id)->with('status', 'Ulasan pegawai bagi '.$found->rule_id.' disimpan.');
+    }
+
+    public function storeFieldReview(Request $request, string $application, ProfileFieldReviewService $fields): RedirectResponse
+    {
+        abort_unless($request->user()->canPerformLjup('review'), 403);
+        $record = $this->application($request, $application);
+        $data = $request->validate([
+            'review_version_id' => ['required', 'string'],
+            'field' => ['required', \Illuminate\Validation\Rule::in(\App\Airs\Review\MatrixProfileProjection::FIELDS)],
+            'disposition' => ['required', \Illuminate\Validation\Rule::in(['ACCEPTED', 'CORRECTED', 'REJECTED'])],
+            'value' => ['nullable', 'string', 'max:2000'], 'reason' => ['required', 'string', 'max:2000'],
+            'expected_revision' => ['required', 'integer', 'min:0'],
+        ]);
+        $version = \App\Airs\Models\ReviewVersion::query()->whereKey($data['review_version_id'])
+            ->whereHas('reviewCase', fn ($query) => $query->where('application_id', $record->id))->firstOrFail();
+        $fields->record($request->user(), $version, $data['field'], $data['disposition'], $data['value'] ?? null, $data['reason'], (int) $data['expected_revision']);
+
+        return redirect(route('kejuruteraan.show', $record).'#profil')->with('status', 'Semakan medan disimpan. Rekod rasmi iNDECS tidak diubah.');
     }
 
     private function application(Request $request, string $id): Application

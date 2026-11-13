@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Airs\Review;
 
-use App\Models\ProfileFieldReview;
+use App\Airs\Models\ProfileFieldReview;
 
 final class MatrixProfileProjection
 {
@@ -19,7 +19,7 @@ final class MatrixProfileProjection
         $changed = false;
         foreach ($reviews as $field => $entries) {
             $latest = $entries->last();
-            $report['profile_field_reviews'][$field] = ['disposition' => $latest->disposition, 'value' => $latest->value, 'revision' => $latest->revision, 'reason' => $latest->reason, 'actor_user_id' => $latest->actor_user_id];
+            $report['profile_field_reviews'][$field] = ['disposition' => $latest->disposition, 'value' => $latest->value, 'revision' => $latest->revision, 'reason' => $latest->reason, 'actor_id' => $latest->actor_id];
             $original = $report['application_profile'][$field] ?? null;
             $value = $latest->disposition === 'REJECTED' ? null : $latest->value;
             $report['application_profile'][$field] = $value;

@@ -135,6 +135,8 @@ Route::middleware(['auth', 'kejuruteraan.access'])->prefix('kejuruteraan')->name
     Route::get('/applications/{application}/documents/{document}', [\App\Http\Controllers\KejuruteraanApplicationController::class, 'document'])->whereUlid(['application', 'document'])->name('documents.show');
     Route::post('/applications/{application}/findings/{finding}/feedback', [\App\Http\Controllers\KejuruteraanApplicationController::class, 'storeFeedback'])
         ->whereUlid(['application', 'finding'])->middleware('throttle:30,1')->name('findings.feedback');
+    Route::post('/applications/{application}/fields', [\App\Http\Controllers\KejuruteraanApplicationController::class, 'storeFieldReview'])
+        ->whereUlid('application')->middleware('throttle:30,1')->name('fields.review');
 });
 
 Route::middleware(['auth', 'osc.access'])->prefix('osc')->name('osc.')->group(function (): void {
