@@ -1,7 +1,6 @@
 @extends('layouts.app')
 @section('title', $application->application_reference)
 @section('content')
-<p><a class="button button-secondary button-small" href="{{ route('airs.application', $application) }}">Semakan AIRS</a></p>
 <div class="record-heading"><div><a href="{{ route('bangunan.index') }}" class="back-link">Kembali ke senarai</a><div class="record-reference-row"><span class="record-type">{{ $application->application_type_id }}</span><span class="record-reference">{{ $application->application_reference }}</span><span class="status-badge status-{{ $application->current_status->value }}">{{ $application->current_status->label() }}</span></div><h1>{{ $application->title }}</h1><p>{{ $application->description }}</p></div>@include('partials.osc-propose-button')</div>
 @if ($errors->any())<div class="alert alert-error" role="alert"><div>@foreach ($errors->all() as $error)<p>{{ $error }}</p>@endforeach</div></div>@endif
 @include('partials.record-navigation', ['recordNavigation' => ['Ringkasan' => '#ringkasan', 'Borang Jabatan' => '#borang-jabatan', 'Dokumen' => route('bangunan.documents.index', $application), 'Pemohon & Perunding' => '#pihak', 'Tapak & Lot' => '#tapak', 'Garis Masa' => '#garis-masa', 'Sejarah Audit' => '#audit']])

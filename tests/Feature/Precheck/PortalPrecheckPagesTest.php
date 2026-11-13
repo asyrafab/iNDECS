@@ -120,7 +120,6 @@ class PortalPrecheckPagesTest extends TestCase
         $this->actingAs($owner)->post(route('portal.drafts.documents.store', [$draft, 'geran']), ['file' => $this->pdf()]);
         $this->assertDatabaseCount('applications', 0);
         $this->assertDatabaseCount('core.accepted_submissions', 0);
-        $this->assertDatabaseCount('integration.airs_reviews', 0);
     }
 
     public function test_labels_never_use_pass_fail_wording(): void

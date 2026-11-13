@@ -35,7 +35,7 @@ final class ApplicationLauncher
             $applications[] = ['name' => 'eOSC+', 'brand' => 'eosc', 'icon' => 'folder-open', 'description' => 'Agenda dan mesyuarat OSC', 'url' => route('osc.meetings.index')];
         }
         if ($administrator) {
-            $applications[] = ['name' => 'AIRS', 'brand' => 'airs', 'icon' => 'search', 'description' => 'AI Review Studio · Semakan pelan', 'url' => route('airs.index')];
+            $applications[] = ['name' => 'AIRS', 'brand' => 'airs', 'icon' => 'search', 'description' => 'AI Review Studio · Semakan pelan', 'url' => null];
             $applications[] = ['name' => 'E-Plan Submission', 'brand' => 'esri', 'icon' => 'square-dashed', 'description' => 'Penghantaran data spatial', 'url' => 'https://spgis.mbsp.gov.my/ePlanSubmission'];
         }
 

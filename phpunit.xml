@@ -19,7 +19,6 @@
     </source>
     <php>
         <env name="APP_ENV" value="testing"/>
-        <env name="AIRS_ENABLED" value="false" force="true"/>
         <env name="AMIRA_ENABLED" value="false" force="true"/>
         <env name="AMIRA_SERVICE_TOKEN" value="amira_phpunit_token_0123456789abcdef0123456789abcdef" force="true"/>
         <env name="INDECS_STAFF_AUTH_DRIVER" value="local" force="true"/>
