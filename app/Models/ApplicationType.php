@@ -15,7 +15,7 @@ class ApplicationType extends Model
     protected $keyType = 'string';
 
     /** Application types a PSP can prepare on the public portal (ADR-358/364). */
-    public const PORTAL_TYPES = ['PKM', 'PB', 'PBK', 'PBS', 'PMT', 'TEL'];
+    public const PORTAL_TYPES = ['PKM', 'PB', 'PBK', 'PBS', 'PMT', 'TEL', 'LJUP'];
 
     public function primaryDepartment(): BelongsTo
     {

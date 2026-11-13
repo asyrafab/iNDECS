@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['application_type_id', 'title', 'site_address', 'notes', 'work_type', 'building_category', 'storeys', 'floor_area', 'site_conditions'])]
+#[Fillable(['application_type_id', 'title', 'site_address', 'notes', 'work_type', 'building_category', 'storeys', 'floor_area', 'site_conditions', 'lighting_types'])]
 class ApplicantDraft extends Model
 {
     use HasUlids;
@@ -48,8 +48,14 @@ class ApplicantDraft extends Model
         ];
     }
 
+    /** Lighting types an LJUP draft declares (keys of config('airs.lighting_types')); empty for other types. */
+    public function lightingTypes(): array
+    {
+        return array_values($this->lighting_types ?? []);
+    }
+
     protected function casts(): array
     {
-        return ['version' => 'integer', 'storeys' => 'integer', 'floor_area' => 'float', 'site_conditions' => 'array'];
+        return ['version' => 'integer', 'storeys' => 'integer', 'floor_area' => 'float', 'site_conditions' => 'array', 'lighting_types' => 'array'];
     }
 }

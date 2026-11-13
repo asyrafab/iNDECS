@@ -159,12 +159,16 @@ final class PublicPortalController extends Controller
             'floor_area' => ['nullable', 'numeric', 'min:1', 'max:1000000'],
             'site_conditions' => ['nullable', 'array'],
             'site_conditions.*' => ['string', 'distinct', Rule::in(array_keys(config('kaunter.site_conditions')))],
+            // LJUP drafts declare the proposed lighting types; AIRS applies the matching rules.
+            'lighting_types' => ['exclude_unless:application_type_id,LJUP', 'required', 'array', 'min:1'],
+            'lighting_types.*' => ['exclude_unless:application_type_id,LJUP', 'string', 'distinct', Rule::in(array_keys(config('airs.lighting_types')))],
         ], [], ['application_type_id' => 'jenis permohonan', 'title' => 'tajuk cadangan', 'site_address' => 'alamat tapak', 'notes' => 'catatan',
             'work_type' => 'jenis kerja', 'building_category' => 'kategori bangunan', 'storeys' => 'bilangan tingkat',
-            'floor_area' => 'keluasan lantai', 'site_conditions' => 'keadaan tapak', 'site_conditions.*' => 'keadaan tapak']);
+            'floor_area' => 'keluasan lantai', 'site_conditions' => 'keadaan tapak', 'site_conditions.*' => 'keadaan tapak',
+            'lighting_types' => 'jenis lampu', 'lighting_types.*' => 'jenis lampu']);
 
         // A particular left blank is cleared, so the checklist always reflects what the form shows.
-        return $data + array_fill_keys(ApplicantDraft::PARTICULARS, null);
+        return $data + array_fill_keys(ApplicantDraft::PARTICULARS, null) + ['lighting_types' => null];
     }
 
     private function requireVerified(Request $request): void
@@ -176,7 +180,7 @@ final class PublicPortalController extends Controller
     {
         DB::table('core.applicant_draft_revisions')->insert([
             'draft_id' => $draft->id, 'actor_id' => $actor->id, 'version' => $draft->version,
-            'snapshot' => json_encode($draft->only(['application_type_id', 'title', 'site_address', 'notes', ...ApplicantDraft::PARTICULARS]), JSON_THROW_ON_ERROR),
+            'snapshot' => json_encode($draft->only(['application_type_id', 'title', 'site_address', 'notes', ...ApplicantDraft::PARTICULARS, 'lighting_types']), JSON_THROW_ON_ERROR),
             'created_at' => now(),
         ]);
     }

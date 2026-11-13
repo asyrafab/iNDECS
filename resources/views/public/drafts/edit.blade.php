@@ -25,6 +25,9 @@
         @if (in_array(old('application_type_id', $draft->application_type_id), \App\Models\BangunanApplication::TYPES, true))
             @include('public.drafts.partials.particulars')
         @endif
+        @if (old('application_type_id', $draft->application_type_id) === 'LJUP')
+            @include('public.drafts.partials.lighting-types')
+        @endif
         <div class="form-actions"><div><button class="button button-primary" type="submit"><x-icon name="check" />Simpan draf</button><a class="button button-secondary" href="{{ route('portal.home') }}">Kembali ke Fail saya</a></div><small>@if($draft->exists)Versi {{ $draft->version }} · @endif Simpanan manual. Simpan sebelum meninggalkan halaman.</small></div>
     </form>
     @if ($draft->exists)
