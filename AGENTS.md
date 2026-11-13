@@ -6,6 +6,8 @@
 > **AI ecosystem alignment — 9 November 2026:** [Current roles and integration boundaries](docs/integration/ai-ecosystem.md). AMIRA remains application assistance; MATRIX is the planned document specialist; MINDA is internal intelligence. Existing authority, free-precheck and payment gates remain.
 
 
+> **AIRS merged into iNDECS — 13/14 November 2026:** the standalone AIRS application is retired; its review engine is an in-process module in `app/Airs` (schema `airs`), reached only through `App\Airs\CheckService`. The HTTP connector of ADR-354 is removed. Owner decisions (paid check before final submit, two checks with one amendment, missing documents never auto-close, score threshold shadow-only) are in [the merge design](docs/superpowers/specs/2026-11-13-airs-module-merge-design.md). The applicant journey and officer workspace (Plans 2–3) and the superseding ADR are still to be done; where older text below says AIRS is a separate service with its own API, the design takes precedence.
+
 ## AIRS integration and applicant submission (accepted 2026-11-04)
 
 [ADR-352](docs/adr/ADR-352-indecs-airs-submission-and-precheck.md) and the [shared integration contract](docs/integration/indecs-airs-contract.md) govern the target journey. iNDECS owns identity, drafts, formal submission, authoritative document versions, payments, corrections, assignment/SLA, notifications, official decisions and letters. AIRS is its review subsystem and owns review rules, evidence, findings and AI-run history; AMIRA assists within record permissions.

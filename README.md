@@ -115,6 +115,14 @@ This is an internal pilot slice, not a production release. Local authentication 
 
 AMIRA backend ownership was moved to C:\Users\Asyra\Documents\AMIRA under ADR-353 (2026-11-04). It is an independent prepared-guidance/catalogue service; conversation, model inference and record retrieval remain unimplemented. AIRS retains its review AiProvider and UI/assets. iNDECS keeps local guidance with no new remote dependency. Future assistant APIs belong to AMIRA, with scoped source APIs and iNDECS identity; free applicant guidance stays local and uses no paid AI.
 
-## AIRS connector (2026-11-04)
+## AIRS review module (in-process, 2026-11-14)
 
-The shared service connector, review workspace and payment/version guards are implemented under [ADR-354](docs/adr/ADR-354-airs-review-connector.md); see the [integration runbook](docs/runbooks/airs-integration.md). No public paid intake or departmental review rule pack is activated by this increment. AMIRA remains separate.
+The AIRS review engine now lives inside iNDECS under `app/Airs` (tables in schema `airs`), replacing the earlier HTTP connector of ADR-354. Design: [AIRS module merge](docs/superpowers/specs/2026-11-13-airs-module-merge-design.md); engine plan: [Plan 1](docs/superpowers/plans/2026-11-13-airs-engine-module.md). `App\Airs\CheckService` is the only entry point: it needs a payment `CheckClearance`, allows at most two completed checks per application (a failed check is rerun without being counted) and only enables the LJUP (Jabatan Kejuruteraan) module. Scores are advisory; the configured threshold only records a shadow outcome. The applicant journey (Plan 2) and officer workspace (Plan 3) are not built yet.
+
+Setup:
+
+- Python 3 with `python_worker/requirements.txt` (PyMuPDF, Pillow); set `AIRS_PYTHON_BINARY` if it is not `.venv/Scripts/python.exe`.
+- Run a worker for the `airs` queue: `php artisan queue:work --queue=airs`, and the scheduler (`airs:recover-checks` runs every minute).
+- `AIRS_AI_PROVIDER` = `fake` (default), `openai` or `matrix`. MATRIX also needs `AIRS_MATRIX_ENABLED=true`, Node and the `../MATRIX/runtime` worker; check with `php artisan matrix:status`. Budgets: `AIRS_MATRIX_REQUEST_BUDGET_USD` (0.25) and `AIRS_MATRIX_REVIEW_BUDGET_USD` (5).
+- The real Green Camour acceptance test: `PLAN_REVIEW_GREEN_CAMOUR_PATH="<folder of the 12 PDFs>" php artisan test --filter=GreenCamourAcceptanceTest` (skipped when unset; the package is not committed).
+- The local `iNDECS` database may still hold the old standalone AIRS tables in schema `airs`; they must be removed before `php artisan migrate` can create the module tables.
