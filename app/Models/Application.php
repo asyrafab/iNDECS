@@ -74,6 +74,11 @@ class Application extends Model
         return $this->belongsTo(User::class, 'assigned_to');
     }
 
+    public function airsCase(): HasOne
+    {
+        return $this->hasOne(\App\Airs\Models\ReviewCase::class);
+    }
+
     public function bangunan(): HasOne
     {
         return $this->hasOne(BangunanApplication::class);

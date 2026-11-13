@@ -48,6 +48,7 @@ class PublicPortalTest extends TestCase
         $this->assertSame($user->id, $revisions[1]->actor_id);
         $this->assertDatabaseCount('applications', 0);
         $this->assertDatabaseCount('core.accepted_submissions', 0);
+        $this->assertDatabaseCount('airs.review_versions', 0);
         Bus::assertNothingDispatched();
     }
 
