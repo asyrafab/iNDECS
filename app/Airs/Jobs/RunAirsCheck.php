@@ -139,6 +139,9 @@ final class RunAirsCheck implements ShouldQueue
             $states->fail($case, $code, $message);
             throw $exception;
         }
+
+        // Outside the try: a listener failure must not mark a completed check as failed.
+        \App\Airs\Events\AirsCheckCompleted::dispatch($version->id, (string) $case->application_id, (int) $version->check_number);
     }
 
     private function task(string $versionId, string $name, callable $callback): mixed

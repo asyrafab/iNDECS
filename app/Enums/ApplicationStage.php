@@ -9,6 +9,7 @@ enum ApplicationStage: string
     case CompletenessCheck = 'completeness_check';
     case FeeAssessment = 'fee_assessment';
     case PaymentVerification = 'payment_verification';
+    case TechnicalCheck = 'technical_check';
     case TechnicalCirculation = 'technical_circulation';
     case PlanningAssessment = 'planning_assessment';
     case CommitteeMeeting = 'committee_meeting';
@@ -25,6 +26,7 @@ enum ApplicationStage: string
             self::CompletenessCheck => 'Semakan Lengkap',
             self::FeeAssessment => 'Penilaian Fi',
             self::PaymentVerification => 'Pengesahan Bayaran',
+            self::TechnicalCheck => 'Semakan Teknikal AIRS',
             self::TechnicalCirculation => 'Edaran Teknikal',
             self::PlanningAssessment => 'Penilaian Perancangan',
             self::CommitteeMeeting => 'Mesyuarat Jawatankuasa',

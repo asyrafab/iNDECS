@@ -36,6 +36,12 @@ class ApplicantDraft extends Model
         return $this->hasMany(ApplicantDraftDocument::class, 'draft_id');
     }
 
+    /** The paid AIRS check journey, once the applicant has paid. */
+    public function journey(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(PaidCheckJourney::class, 'draft_id');
+    }
+
     /** @return array{work_type: ?string, building_category: ?string, storeys: ?int, floor_area: ?float, site_conditions: list<string>} */
     public function particulars(): array
     {

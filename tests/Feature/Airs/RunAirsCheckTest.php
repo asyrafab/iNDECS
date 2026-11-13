@@ -44,6 +44,15 @@ final class RunAirsCheckTest extends TestCase
             ['BESI'], $this->application->currentDocuments()->get())->fresh();
     }
 
+    public function test_completed_check_dispatches_event_once(): void
+    {
+        \Illuminate\Support\Facades\Event::fake([\App\Airs\Events\AirsCheckCompleted::class]);
+        $version = $this->runCheck();
+        \Illuminate\Support\Facades\Event::assertDispatchedTimes(\App\Airs\Events\AirsCheckCompleted::class, 1);
+        \Illuminate\Support\Facades\Event::assertDispatched(\App\Airs\Events\AirsCheckCompleted::class,
+            fn ($event) => $event->reviewVersionId === $version->id && $event->checkNumber === 1 && $event->applicationId === $this->application->id);
+    }
+
     public function test_check_runs_to_completed_report_without_touching_application(): void
     {
         [$stage, $status] = [$this->application->current_stage, $this->application->current_status];

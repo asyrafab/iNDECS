@@ -30,6 +30,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Paid AIRS check journey (synchronous listeners keep state changes in order).
+        \Illuminate\Support\Facades\Event::listen(\App\Events\CheckPaymentConfirmed::class, fn ($event) => app(\App\Services\PaidCheck\PaidCheckJourneyService::class)
+            ->paid(\App\Models\CheckPayment::query()->findOrFail($event->paymentId)));
+        \Illuminate\Support\Facades\Event::listen(\App\Airs\Events\AirsCheckCompleted::class, fn ($event) => app(\App\Services\PaidCheck\PaidCheckJourneyService::class)
+            ->checkCompleted($event));
     }
 }
