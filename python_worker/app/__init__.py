@@ -1,0 +1,1 @@
+"""LJUP document-processing worker."""

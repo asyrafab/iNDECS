@@ -32,3 +32,8 @@ Thumbs.db
 
 # Generated runtime/preview output
 /output
+
+# AIRS Python worker
+__pycache__/
+*.py[cod]
+/.venv

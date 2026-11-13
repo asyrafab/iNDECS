@@ -12,6 +12,7 @@ final class AirsServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->bind(\App\Airs\Contracts\DocumentProcessor::class, \App\Airs\DocumentProcessing\PythonDocumentProcessor::class);
         $this->app->singleton(AiProvider::class, function ($app): AiProvider {
             $class = match ((string) config('airs.provider')) {
                 'fake' => \App\Airs\Ai\FakeAiProvider::class,
