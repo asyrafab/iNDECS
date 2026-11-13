@@ -30,8 +30,11 @@ final class RuleEvaluationService
     ) {
     }
 
-    /** MATRIX limits that leave a rule unassessed (manual review) rather than failing the whole check. */
-    private const UNASSESSABLE_MATRIX_CODES = ['MATRIX_REVIEW_BUDGET', 'MATRIX_USAGE_RECONCILIATION_REQUIRED', 'MATRIX_INVALID_WORKER_RESPONSE'];
+    /**
+     * Only an exhausted check budget leaves a rule unassessed (manual review). Worker faults,
+     * timeouts and outages fail the check instead, so it is retried without using up a paid check.
+     */
+    private const UNASSESSABLE_MATRIX_CODES = ['MATRIX_REVIEW_BUDGET'];
 
     public function evaluate(ReviewVersion $version, ApplicationProfile $profile, iterable $rules): void
     {
@@ -238,9 +241,9 @@ final class RuleEvaluationService
             $result['warnings'] = ['AI_RESPONSE_INVALID'];
 
             return $result;
-        } catch (\App\Airs\Exceptions\MatrixTaskException|\Symfony\Component\Process\Exception\ProcessTimedOutException|\Illuminate\Contracts\Cache\LockTimeoutException $exception) {
-            $code = $exception instanceof \App\Airs\Exceptions\MatrixTaskException ? $exception->getMessage() : 'MATRIX_TIMEOUT';
-            if ($exception instanceof \App\Airs\Exceptions\MatrixTaskException && ! in_array($code, self::UNASSESSABLE_MATRIX_CODES, true)) {
+        } catch (\App\Airs\Exceptions\MatrixTaskException $exception) {
+            $code = $exception->getMessage();
+            if (! in_array($code, self::UNASSESSABLE_MATRIX_CODES, true)) {
                 throw $exception;
             }
             $result = $this->base(FindingStatus::ManualReview, 'This rule was not assessed by MATRIX and needs manual checking.', $evidence);

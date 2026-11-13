@@ -77,13 +77,6 @@ final class MatrixGateTest extends TestCase
         $this->assertDenied('MATRIX_REVIEW_BUDGET', $version);
     }
 
-    public function test_unknown_failed_attempt_cost_requires_reconciliation(): void
-    {
-        [, $version] = $this->matrixCheck();
-        $this->aiRun($version, ['status' => 'FAILED', 'estimated_cost' => null]);
-        $this->assertDenied('MATRIX_USAGE_RECONCILIATION_REQUIRED', $version);
-    }
-
     public function test_context_reports_paid_formal_review_and_check_round(): void
     {
         [$case, $one] = $this->matrixCheck();

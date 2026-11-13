@@ -27,11 +27,16 @@ final class MatrixReviewGate
             throw new MatrixTaskException('MATRIX_CLEARANCE_REQUIRED');
         }
         if ($enforceBudget) {
-            $runs = AiRun::query()->where('review_version_id', $version->id)->where('provider', 'matrix')->where('id', '!=', $requestId)->get();
-            if ($runs->contains(fn ($run) => $run->status === 'STARTED' || (in_array($run->status, ['SUCCEEDED', 'FAILED'], true) && $run->estimated_cost === null))) {
+            // Budget is per attempt of this check: a rerun after a failure starts a fresh budget.
+            $runs = AiRun::query()->where('review_version_id', $version->id)->where('provider', 'matrix')->where('id', '!=', $requestId)
+                ->when($version->started_at !== null, fn ($query) => $query->where('created_at', '>=', $version->started_at))->get();
+            if ($runs->contains(fn ($run) => $run->status === 'STARTED')) {
                 throw new MatrixTaskException('MATRIX_USAGE_RECONCILIATION_REQUIRED');
             }
-            if ((float) $runs->sum('estimated_cost') + (float) config('airs.matrix.request_budget_usd') > (float) config('airs.matrix.review_budget_usd')) {
+            // A finished run with unknown cost is charged at the per-request ceiling MATRIX enforces.
+            $requestBudget = (float) config('airs.matrix.request_budget_usd');
+            $spent = $runs->sum(fn ($run) => $run->estimated_cost === null ? $requestBudget : (float) $run->estimated_cost);
+            if ($spent + $requestBudget > (float) config('airs.matrix.review_budget_usd')) {
                 throw new MatrixTaskException('MATRIX_REVIEW_BUDGET');
             }
         }

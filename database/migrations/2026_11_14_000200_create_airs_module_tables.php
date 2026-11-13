@@ -52,6 +52,7 @@ return new class extends Migration
             $table->string('text_model')->nullable();
             $table->string('vision_model')->nullable();
             $table->string('status')->default('UPLOADED');
+            $table->unsignedSmallInteger('attempts')->default(0);
             $table->string('overall_state')->nullable();
             $table->unsignedSmallInteger('score')->nullable();
             $table->string('shadow_outcome', 20)->nullable();

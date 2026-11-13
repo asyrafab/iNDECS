@@ -128,8 +128,8 @@ $queueAirsArguments = @(
 ) + $caBundleArguments + @(
     'artisan', 'queue:work', 'airs', '--queue=airs',
     '--sleep=1',
-    '--tries=3',
-    '--timeout=110'
+    '--tries=1',
+    '--timeout=960'
 )
 
 $queueGisArguments = @(

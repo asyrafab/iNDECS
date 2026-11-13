@@ -34,12 +34,17 @@ final class RunAirsCheck implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $tries = 3;
+    /** No automatic queue retries: retries go through CheckService::rerun() or airs:recover-checks. */
+    public int $tries = 1;
 
     public int $timeout = 900;
 
+    /** Failures that are MATRIX/worker outages; airs:recover-checks retries these automatically. */
+    public const TRANSIENT_FAILURE = 'MATRIX_UNAVAILABLE';
+
     public function __construct(public readonly string $reviewVersionId)
     {
+        $this->onConnection('airs')->onQueue('airs');
     }
 
     public function middleware(): array
@@ -49,9 +54,16 @@ final class RunAirsCheck implements ShouldQueue
         return [(new WithoutOverlapping('airs-check-'.$caseId))->shared()->releaseAfter(30)->expireAfter(960)];
     }
 
-    public function backoff(): array
+    /** Called when the worker dies or the job times out: never leave a check stuck in PROCESSING. */
+    public function failed(?Throwable $exception): void
     {
-        return [30, 120, 300];
+        $version = ReviewVersion::query()->find($this->reviewVersionId);
+        if ($version === null || in_array($version->status, ['COMPLETED', 'FAILED'], true)) {
+            return;
+        }
+        $version->forceFill(['status' => 'FAILED'])->save();
+        [$code, $message] = $this->safeFailure($exception ?? new \RuntimeException('Worker stopped.'));
+        app(ReviewStateService::class)->fail($version->reviewCase, $code, $message);
     }
 
     public function handle(
@@ -66,15 +78,19 @@ final class RunAirsCheck implements ShouldQueue
         FindingAggregator $aggregator,
         ReportGenerator $reports,
     ): void {
-        $version = ReviewVersion::query()->find($this->reviewVersionId);
-        if ($version === null || $version->status === 'COMPLETED') {
+        // Claim: only a version waiting in UPLOADED is run; duplicate or late jobs do nothing.
+        $claimed = ReviewVersion::query()->whereKey($this->reviewVersionId)->where('status', 'UPLOADED')
+            ->update(['status' => 'PROCESSING', 'started_at' => now(), 'attempts' => \Illuminate\Support\Facades\DB::raw('attempts + 1'), 'updated_at' => now()]);
+        if ($claimed !== 1) {
             return;
         }
+        $version = ReviewVersion::query()->findOrFail($this->reviewVersionId);
         $case = $version->reviewCase;
         if ($case->latestVersion()->first()?->id !== $version->id) {
+            $version->forceFill(['status' => 'FAILED'])->save();
+
             return; // superseded by a later check
         }
-        $version->forceFill(['status' => 'PROCESSING', 'started_at' => $version->started_at ?? now()])->save();
 
         try {
             $archive = $case->activeFiles()->where('extension', 'zip')->first();
@@ -154,6 +170,15 @@ final class RunAirsCheck implements ShouldQueue
             $exception instanceof UnsafeArchiveException => ['ARCHIVE_EXTRACTION_FAILED', 'The archive did not pass safe extraction checks.'],
             $exception instanceof InvalidDocumentException => ['DOCUMENT_PROCESSING_FAILED', $exception->getMessage()],
             $exception instanceof InvalidAiResponseException => ['AI_RESPONSE_INVALID', 'An AI response failed schema validation and was not used.'],
+            $exception instanceof \App\Airs\Exceptions\MatrixTaskException && $exception->getMessage() === 'MATRIX_REVIEW_BUDGET'
+                => ['MATRIX_REVIEW_BUDGET', 'The MATRIX budget for this check was reached before documents were organised. Staff can rerun the check.'],
+            $exception instanceof \App\Airs\Exceptions\MatrixTaskException && in_array($exception->getMessage(), ['MATRIX_SCOPE_DENIED', 'MATRIX_CLEARANCE_REQUIRED', 'MATRIX_STALE_REVIEW', 'MATRIX_IMAGE_SCOPE_DENIED'], true)
+                => ['MATRIX_DENIED', 'MATRIX refused this check ('.$exception->getMessage().').'],
+            $exception instanceof \App\Airs\Exceptions\MatrixTaskException,
+            $exception instanceof \Symfony\Component\Process\Exception\ProcessTimedOutException,
+            $exception instanceof \Illuminate\Contracts\Cache\LockTimeoutException,
+            $exception instanceof \Illuminate\Queue\TimeoutExceededException
+                => [self::TRANSIENT_FAILURE, 'MATRIX was unavailable; the check is still in progress and will be retried automatically.'],
             default => ['CASE_FAILED', 'Processing could not be completed. The check can be rerun without using another paid check.'],
         };
     }

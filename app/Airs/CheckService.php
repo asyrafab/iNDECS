@@ -104,6 +104,7 @@ final class CheckService
                 'text_model' => config('airs.text_model'),
                 'vision_model' => config('airs.vision_model'),
                 'status' => 'UPLOADED',
+                'attempts' => 0,
                 'overall_state' => null,
                 'score' => null,
                 'shadow_outcome' => null,
@@ -138,6 +139,8 @@ final class CheckService
     public function rerun(ReviewVersion $failed): ReviewVersion
     {
         $version = DB::transaction(function () use ($failed): ReviewVersion {
+            $applicationId = $failed->reviewCase()->value('application_id');
+            DB::select('SELECT pg_advisory_xact_lock(hashtext(?))', ['airs:'.$applicationId]); // same lock as start()
             $version = ReviewVersion::query()->lockForUpdate()->findOrFail($failed->id);
             if ($version->status !== 'FAILED') {
                 throw new CheckNotAllowed('NOT_FAILED');
@@ -161,7 +164,7 @@ final class CheckService
 
     private function dispatch(ReviewVersion $version): void
     {
-        RunAirsCheck::dispatch($version->id)->onQueue((string) config('airs.queue'));
+        RunAirsCheck::dispatch($version->id); // connection and queue 'airs' are set by the job
     }
 
     /** @param Collection<int, ApplicationDocument> $documents */

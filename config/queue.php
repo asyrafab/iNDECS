@@ -32,11 +32,11 @@ return [
     'connections' => [
 
         'airs' => [
-            'driver' => 'database',
+            'driver' => env('AIRS_QUEUE_DRIVER', 'database'),
             'connection' => env('DB_QUEUE_CONNECTION'),
             'table' => env('DB_QUEUE_TABLE', 'jobs'),
             'queue' => 'airs',
-            'retry_after' => 180,
+            'retry_after' => 1000, // above RunAirsCheck's 900 s timeout
             'after_commit' => false,
         ],
 
