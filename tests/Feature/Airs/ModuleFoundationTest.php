@@ -38,9 +38,6 @@ final class ModuleFoundationTest extends TestCase
     {
         $this->assertSame('fake', config('airs.provider'));
         $this->assertFalse(config('airs.matrix.enabled'));
-        if (! class_exists(\App\Airs\Ai\FakeAiProvider::class)) {
-            $this->markTestIncomplete('FakeAiProvider arrives with the AI layer (plan Task 5).');
-        }
         $this->assertInstanceOf(\App\Airs\Ai\FakeAiProvider::class, app(AiProvider::class));
     }
 

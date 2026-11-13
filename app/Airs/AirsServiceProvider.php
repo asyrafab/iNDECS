@@ -24,4 +24,11 @@ final class AirsServiceProvider extends ServiceProvider
             return $app->make($class);
         });
     }
+
+    public function boot(): void
+    {
+        if ($this->app->runningInConsole()) {
+            $this->commands([Console\MatrixStatus::class, Console\MatrixUsage::class]);
+        }
+    }
 }
