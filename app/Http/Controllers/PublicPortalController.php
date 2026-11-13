@@ -127,8 +127,9 @@ final class PublicPortalController extends Controller
         $owned = ApplicantDraft::query()->ownedBy($request->user())->findOrFail($draft);
         abort_unless(\App\Services\PaidCheck\PaidCheckJourneyService::draftEditable($owned), 403, 'Draf dikunci semasa semakan AIRS.');
         $data = $this->validated($request);
-        // A paid draft cannot change its application type.
-        if ($owned->journey()->exists() && $data['application_type_id'] !== $owned->application_type_id) {
+        // Once a payment has been started (pending or paid) the draft's application type is fixed.
+        $paymentStarted = \App\Models\CheckPayment::query()->where('draft_id', $owned->id)->whereIn('status', ['pending', 'paid'])->exists();
+        if ($paymentStarted && $data['application_type_id'] !== $owned->application_type_id) {
             throw ValidationException::withMessages(['application_type_id' => 'Jenis permohonan tidak boleh ditukar selepas bayaran.']);
         }
         $request->validate(['version' => ['required', 'integer', 'min:1']]);

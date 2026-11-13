@@ -11,6 +11,7 @@ use App\Services\PaidCheck\ApplicantCheckPresenter;
 use App\Services\PaidCheck\PaidCheckJourneyService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -20,11 +21,13 @@ final class PortalCheckResultController extends Controller
 {
     public function __construct(private readonly ApplicantCheckPresenter $presenter) {}
 
-    public function show(Request $request, string $draft): View
+    public function show(Request $request, string $draft): Response
     {
         $journey = $this->journey($request, $draft);
 
-        return view('public.drafts.partials.check-result', ['draft' => $journey->draft, 'result' => $this->presenter->for($journey)]);
+        // The header lets the page poller tell this partial apart from, e.g., a login page after session expiry.
+        return response()->view('public.drafts.partials.check-result', ['draft' => $journey->draft, 'result' => $this->presenter->for($journey)])
+            ->header('X-Airs-Partial', '1');
     }
 
     public function document(Request $request, string $draft, string $document): StreamedResponse

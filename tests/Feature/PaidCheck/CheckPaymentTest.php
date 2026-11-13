@@ -138,7 +138,25 @@ final class CheckPaymentTest extends TestCase
         $this->assertSame('evt-1', $payment->fresh()->gateway_event_id);
         $this->assertSame(1, AuditLog::query()->where('event', 'check_payment_confirmed')->count());
         $this->assertSame(1, AuditLog::query()->where('event', 'check_payment_duplicate_event')->count());
-        Event::assertDispatchedTimes(CheckPaymentConfirmed::class, 1);
+        // The listener is faked, so no journey exists: each retry re-dispatches so a lost journey can be
+        // recovered (the journey service is idempotent; see JourneyReviewFixesTest).
+        Event::assertDispatchedTimes(CheckPaymentConfirmed::class, 3);
+    }
+
+    public function test_confirm_does_not_redispatch_once_the_journey_exists(): void
+    {
+        Event::fake([CheckPaymentConfirmed::class]);
+        $draft = $this->readyLjupDraft();
+        $payment = app(CheckPaymentService::class)->start(\App\Models\User::find($draft->user_id), $draft, false);
+        $service = app(CheckPaymentService::class);
+        $service->confirm($payment->reference, 'evt-1', CarbonImmutable::now());
+        Event::fake([CheckPaymentConfirmed::class]);
+        \Illuminate\Support\Facades\Queue::fake([\App\Airs\Jobs\RunAirsCheck::class]);
+        app(\App\Services\PaidCheck\PaidCheckJourneyService::class)->paid($payment->fresh());
+
+        $service->confirm($payment->reference, 'evt-1', CarbonImmutable::now());
+
+        Event::assertNotDispatched(CheckPaymentConfirmed::class);
     }
 
     public function test_paid_draft_cannot_start_another_payment(): void

@@ -56,6 +56,14 @@
         </div>
     @endif
     @if ($running)
-        <script>(() => { const s = document.currentScript.closest('[data-check-poll-url]'); if (!s) return; setTimeout(() => fetch(s.dataset.checkPollUrl, {headers: {'X-Requested-With': 'XMLHttpRequest'}}).then(r => r.ok ? r.text() : null).then(html => { if (html) s.outerHTML = html; }), 10000); })();</script>
+        {{-- One page-level poller: scripts inside swapped-in HTML do not run, so it re-finds the section each tick
+             and stops once no running section is left. Only responses marked X-Airs-Partial replace the section. --}}
+        <script>window.airsCheckPoll ??= setInterval(() => {
+            const section = document.querySelector('[data-check-poll-url]');
+            if (!section) { clearInterval(window.airsCheckPoll); window.airsCheckPoll = undefined; return; }
+            fetch(section.dataset.checkPollUrl, {headers: {'X-Requested-With': 'XMLHttpRequest'}, redirect: 'error'})
+                .then(r => r.ok && r.headers.get('X-Airs-Partial') === '1' ? r.text() : null)
+                .then(html => { if (html) section.outerHTML = html; }).catch(() => {});
+        }, 10000);</script>
     @endif
 </section>

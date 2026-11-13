@@ -42,6 +42,14 @@ final class ApplicantCheckPresenter
         $case = ReviewCase::query()->where('application_id', $journey->application_id)->first();
         $versions = $case === null ? collect() : $case->versions()->orderBy('check_number')->get();
         $checks = $versions->map(fn (ReviewVersion $version) => $this->check($journey, $case, $version))->values()->all();
+        // A running journey whose check never started (recorded as paid_check_start_failed) needs staff, not polling.
+        $waitingFor = PaidCheckJourneyService::runningCheckNumber($journey);
+        if ($waitingFor !== null && ! $versions->contains('check_number', $waitingFor)
+            && \App\Models\AuditLog::query()->where('auditable_type', PaidCheckJourney::class)->where('auditable_id', $journey->id)
+                ->where('event', 'paid_check_start_failed')->where('after_values->check_number', $waitingFor)->exists()) {
+            $checks[] = ['number' => $waitingFor, 'status' => 'failed', 'score' => null, 'items' => [], 'missing_required' => [],
+                'message' => 'Semakan tidak dapat dimulakan. Pegawai JKEJ akan menghubungi anda.'];
+        }
         $open = PaidCheckJourneyService::amendmentOpen($journey);
 
         return [

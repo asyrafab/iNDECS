@@ -58,6 +58,11 @@ final class PaidCheckJourneyService
                 return $existing;
             }
             abort_unless(CheckPayment::query()->whereKey($payment->id)->where('status', 'paid')->exists(), 409, 'Payment is not confirmed.');
+            // Safety net: the draft must still be a type with an enabled AIRS module and declare its lighting types.
+            $module = config('airs.modules.'.$draft->application_type_id);
+            if (! is_array($module) || ($module['enabled'] ?? false) !== true || $draft->lightingTypes() === []) {
+                throw new \RuntimeException('Paid draft no longer matches an enabled AIRS module; staff action required.');
+            }
             $type = $draft->applicationType()->firstOrFail();
             $application = Application::query()->create([
                 'application_type_id' => $type->id,
@@ -141,40 +146,65 @@ final class PaidCheckJourneyService
     /** The applicant accepts check 1 as final; no check 2 runs. */
     public function submitAsIs(User $owner, PaidCheckJourney $journey): void
     {
+        // Validation and handover share one locked transaction, so a concurrent amendment cannot slip in between.
         DB::transaction(function () use ($owner, $journey): void {
             $locked = $this->lockedFor($owner, $journey);
-            if ($locked->state !== PaidCheckState::AwaitingApplicant || $locked->amended_at !== null) {
+            if (! $this->handOverLocked($locked, 1, $owner->id)) {
                 throw ValidationException::withMessages(['check' => 'Permohonan ini tidak lagi menunggu tindakan anda.']);
             }
         });
-        $this->handOver($journey, 1);
     }
 
     /**
-     * Hands the application to the responsible department with the final check (idempotent). Writes the
-     * immutable accepted-submission record; missing required documents are flagged, never rejected.
+     * Hands the application to the responsible department with the final check. Compare-and-set: check 1
+     * is final only while awaiting the applicant and unamended; check 2 only while check 2 is running.
+     * Any other state (including already handed over) is a no-op.
      */
     public function handOver(PaidCheckJourney $journey, int $finalCheckNumber): void
     {
-        DB::transaction(function () use ($journey, $finalCheckNumber): void {
+        DB::transaction(fn () => $this->handOverLocked(PaidCheckJourney::query()->lockForUpdate()->findOrFail($journey->id), $finalCheckNumber, null));
+    }
+
+    /** Expiry of one journey: re-checked under the lock (the deadline may have been extended meanwhile). */
+    public function handOverExpiredJourney(PaidCheckJourney $journey): void
+    {
+        DB::transaction(function () use ($journey): void {
             $locked = PaidCheckJourney::query()->lockForUpdate()->findOrFail($journey->id);
-            if ($locked->state === PaidCheckState::HandedOver) {
-                return;
+            if ($locked->amendment_due_at !== null && $locked->amendment_due_at->isPast()) {
+                $this->handOverLocked($locked, 1, null);
             }
-            $version = ReviewVersion::query()->where('check_number', $finalCheckNumber)
-                ->whereHas('reviewCase', fn ($query) => $query->where('application_id', $locked->application_id))->firstOrFail();
-            $manifest = (array) (SystemConfigSnapshot::query()->where('review_version_id', $version->id)->value('config_json')['document_manifest'] ?? []);
-            $missing = app(ApplicantCheckPresenter::class)->missingRequired($locked, $finalCheckNumber);
-            $payment = $locked->payment;
-            AcceptedSubmission::query()->create([
-                'application_id' => $locked->application_id, 'document_manifest' => $manifest, 'document_set_hash' => $version->document_set_hash,
-                'clearance_kind' => 'paid', 'payment_clearance_reference' => $payment->reference, 'payment_cleared_at' => $payment->paid_at,
-                'accepted_at' => now(), 'missing_required_documents' => $missing,
-            ]);
-            $locked->application->update(['current_stage' => ApplicationStage::TechnicalCirculation, 'current_status' => ApplicationStatus::Submitted]);
-            $locked->forceFill(['state' => PaidCheckState::HandedOver, 'final_check_number' => $finalCheckNumber, 'handed_over_at' => now()])->save();
-            $this->audit($locked, 'paid_check_handed_over', null, ['final_check_number' => $finalCheckNumber, 'missing_required_documents' => $missing], null);
         });
+    }
+
+    /** Must run inside a transaction holding the journey row lock. Returns whether it handed over. */
+    private function handOverLocked(PaidCheckJourney $locked, int $finalCheckNumber, ?int $actorId): bool
+    {
+        $allowed = match ($finalCheckNumber) {
+            1 => $locked->state === PaidCheckState::AwaitingApplicant && $locked->amended_at === null,
+            2 => $locked->state === PaidCheckState::Check2Running,
+            default => false,
+        };
+        if (! $allowed) {
+            return false;
+        }
+        $version = ReviewVersion::query()->where('check_number', $finalCheckNumber)->where('status', 'COMPLETED')
+            ->whereHas('reviewCase', fn ($query) => $query->where('application_id', $locked->application_id))->first();
+        if ($version === null) {
+            return false; // the final check must have completed
+        }
+        $manifest = (array) (SystemConfigSnapshot::query()->where('review_version_id', $version->id)->value('config_json')['document_manifest'] ?? []);
+        $missing = app(ApplicantCheckPresenter::class)->missingRequired($locked, $finalCheckNumber);
+        $payment = $locked->payment;
+        AcceptedSubmission::query()->create([
+            'application_id' => $locked->application_id, 'document_manifest' => $manifest, 'document_set_hash' => $version->document_set_hash,
+            'clearance_kind' => 'paid', 'payment_clearance_reference' => $payment->reference, 'payment_cleared_at' => $payment->paid_at,
+            'accepted_at' => now(), 'missing_required_documents' => $missing,
+        ]);
+        $locked->application->update(['current_stage' => ApplicationStage::TechnicalCirculation, 'current_status' => ApplicationStatus::Submitted]);
+        $locked->forceFill(['state' => PaidCheckState::HandedOver, 'final_check_number' => $finalCheckNumber, 'handed_over_at' => now()])->save();
+        $this->audit($locked, 'paid_check_handed_over', null, ['final_check_number' => $finalCheckNumber, 'missing_required_documents' => $missing], $actorId);
+
+        return true;
     }
 
     /** Hands over every journey whose amendment window ended without an amendment (check 1 final). */
@@ -183,7 +213,7 @@ final class PaidCheckJourneyService
         $expired = PaidCheckJourney::query()->where('state', PaidCheckState::AwaitingApplicant)->whereNull('amended_at')
             ->where('amendment_due_at', '<', now())->orderBy('amendment_due_at')->limit(100)->get();
         foreach ($expired as $journey) {
-            $this->handOver($journey, 1);
+            $this->handOverExpiredJourney($journey);
         }
 
         return $expired->count();
@@ -263,8 +293,47 @@ final class PaidCheckJourneyService
         } catch (Throwable $exception) {
             // The payment and application stand; staff rerun the check (it never consumes a paid check).
             report($exception);
-            $this->audit($journey, 'paid_check_start_failed', null, ['error' => class_basename($exception), 'message' => mb_substr($exception->getMessage(), 0, 200)], null);
+            $this->audit($journey, 'paid_check_start_failed', null, ['check_number' => self::runningCheckNumber($journey),
+                'error' => class_basename($exception), 'message' => mb_substr($exception->getMessage(), 0, 200)], null);
         }
+    }
+
+    /** The check a running journey is waiting for (null when not running). */
+    public static function runningCheckNumber(PaidCheckJourney $journey): ?int
+    {
+        return match ($journey->state) {
+            PaidCheckState::Check1Running => 1,
+            PaidCheckState::Check2Running => 2,
+            default => null,
+        };
+    }
+
+    /**
+     * Journeys waiting on a check that will not finish by itself: the check never started, or it failed
+     * with a non-transient error. Staff rerun the check (CheckService::rerun) or contact the applicant.
+     *
+     * @return list<array{journey: PaidCheckJourney, reason: string}>
+     */
+    public function stuck(): array
+    {
+        $stuck = [];
+        $running = PaidCheckJourney::query()->whereIn('state', [PaidCheckState::Check1Running, PaidCheckState::Check2Running])
+            ->where('updated_at', '<', now()->subHour())->with('application')->orderBy('updated_at')->get();
+        foreach ($running as $journey) {
+            $number = self::runningCheckNumber($journey);
+            $version = ReviewVersion::query()->where('check_number', $number)
+                ->whereHas('reviewCase', fn ($query) => $query->where('application_id', $journey->application_id))->with('reviewCase')->first();
+            $reason = match (true) {
+                $version === null => "Semakan {$number} tidak bermula",
+                $version->status === 'FAILED' && $version->reviewCase->error_code !== 'MATRIX_UNAVAILABLE' => "Semakan {$number} gagal: ".$version->reviewCase->error_code,
+                default => null,
+            };
+            if ($reason !== null) {
+                $stuck[] = ['journey' => $journey, 'reason' => $reason];
+            }
+        }
+
+        return $stuck;
     }
 
     /** Copies the latest upload of every checklist item that currently applies into the application's documents. */

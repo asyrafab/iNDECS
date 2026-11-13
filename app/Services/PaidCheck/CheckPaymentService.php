@@ -101,7 +101,9 @@ final class CheckPaymentService
 
             return [$payment, true];
         });
-        if ($newlyPaid) {
+        // A retried callback re-dispatches when an earlier attempt was paid but its journey was never created
+        // (the listener failed after the payment committed). The journey service is idempotent.
+        if ($newlyPaid || ! \App\Models\PaidCheckJourney::query()->where('draft_id', $payment->draft_id)->exists()) {
             CheckPaymentConfirmed::dispatch($payment->id);
         }
 
