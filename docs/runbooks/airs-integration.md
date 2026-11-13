@@ -1,45 +1,44 @@
-# AIRS review integration
+# AIRS review module — operations runbook
 
-Implemented under [ADR-354](../adr/ADR-354-airs-review-connector.md), 2026-11-04. AMIRA remains independent and is not changed by this increment.
+AIRS runs inside iNDECS ([ADR-383](../adr/ADR-383-airs-merged-into-indecs.md)); the earlier HTTP connector of ADR-354 is removed. Code: `app/Airs` (engine), `app/Services/PaidCheck` (applicant journey), `app/Services/Kejuruteraan` + `/kejuruteraan` (JKEJ officer workspace). Tables: schema `airs` (engine, officer feedback, field reviews, lesson exports) and `core.check_payments`, `core.paid_check_journeys`, `core.accepted_submissions`, `core.public_holidays`.
 
-## Available behaviour
+## Journey in one paragraph
 
-The iNDECS application chooser exposes an AIRS review workspace to system administrators at `/airs`. Bangunan and Perancang case pages link to their permission-checked AIRS history. Existing application access, type/department/district scopes and reviewer permissions govern every result, document and feedback action. The workspace is not another public submission form.
+An LJUP draft (Jabatan Kejuruteraan) declares its lighting types and uses the free local precheck. Payment (or an audited waiver) creates the application and runs check 1; the applicant sees an applicant-safe result and may amend once within 5 working days (extendable once by 5) to run check 2, or submit as-is. The application then hands over to JKEJ with `core.accepted_submissions` written and missing required documents flagged. AIRS never rejects or closes an application; scores are advisory and the threshold is shadow-only.
 
-AIRS accepts service-authenticated version-one review requests, validates the manifest and every document checksum, queues its existing review engine, returns correlated progress/findings and accepts attributed/idempotent officer feedback. Service-owned reviews cannot be opened through AIRS's legacy public/session URLs. Original AI findings remain unchanged. iNDECS downloads source evidence from its own immutable document revisions after permission/integrity checks, rather than linking to an unauthenticated AIRS document route.
+## Setup
 
-## Payment and activation boundary
+1. Migrate: `php artisan migrate`. On a database that still holds the retired standalone AIRS tables in schema `airs`, remove those tables first (this deletes the old AIRS pilot data — get the owner's approval and back up).
+2. Python 3 with `python_worker/requirements.txt` (PyMuPDF, Pillow). Set `AIRS_PYTHON_BINARY` if not `.venv/Scripts/python.exe`.
+3. Environment (see `.env.example`):
+   - `DB_TIMEZONE=UTC` — the database session must match the UTC application timezone (ADR-314). Rows written earlier under a Malaysia-time session read back 8 hours off.
+   - `AIRS_AI_PROVIDER` = `fake` | `openai` | `matrix`; `AIRS_RULE_VERSION`; `AIRS_SCORE_THRESHOLD` (shadow only).
+   - MATRIX: `AIRS_MATRIX_ENABLED`, `AIRS_MATRIX_MODEL`, `AIRS_MATRIX_WORKER` (path to `../MATRIX/runtime/cli.mjs`), budgets `AIRS_MATRIX_REQUEST_BUDGET_USD` (0.25) and `AIRS_MATRIX_REVIEW_BUDGET_USD` (5). Check with `php artisan matrix:status`.
+   - Fee: `AIRS_CHECK_FEE_SEN` (unset disables payment; amount not yet decided). `AIRS_PAYMENT_DRIVER=staging` is the only driver and is refused in production until the MBSP gateway is integrated.
+   - Lessons: `AIRS_MATRIX_LESSONS_PATH` (default `storage/app/airs/lessons`).
+4. LJUP checklist: JKEJ supplies it; a `senior_engineering_officer` publishes it with `php artisan catalogue:publish LJUP <file.json> --actor=<email>`.
+5. Public holidays for working-day deadlines go in `core.public_holidays`.
 
-`core.accepted_submissions` is an immutable, generic acceptance ledger. A future verified-payment/submission workflow must record the application, exact canonical document manifest/hash, payment-clearance or approved-waiver reference, clearance time and acceptance time. Database constraints and append-only triggers protect this proof. There is no endpoint, command or form in this increment to manufacture acceptance, mark payment paid or bypass fees. Do not populate this ledger manually to enable reviews. Test fixtures are confined to `indecs_test`.
+## Processes to supervise
 
-Staff registration, `submitted` status and an uploaded payment document are not payment proof. Missing clearance, changed/unsafe files, stale document sets and missing application/module configuration prevent dispatch. Every document round requires its own accepted version. Fee amounts, public submission/payment integration, gateway confirmation and validated department rule packs remain launch gates. Current AIRS `BUILDING_PLAN`/`PLANNING_PERMISSION` slots do not imply working rules; unsupported requests become blocked without repeated engine calls. LJUP is the existing review engine, not a substitute for Bangunan rules.
+- Queue worker for AIRS checks: `php artisan queue:work airs --queue=airs --tries=1 --timeout=960` (connection `airs`, `retry_after` 1000). Checks are never auto-retried by the queue.
+- Scheduler (`php artisan schedule:work` or cron) runs:
+  - `airs:recover-checks` every minute — re-queues lost checks and retries checks that failed because MATRIX was unavailable (up to 3 attempts).
+  - `paid-check:hand-over-expired` every five minutes — hands over journeys whose amendment window ended (check 1 final).
 
-## Setup and deployment
+## Operator commands
 
-1. Rehearse and back up the target environment under the platform deployment procedure.
-2. Apply only the additive iNDECS migration `2026_11_04_000100_create_airs_integration.php` and AIRS migration `2026_11_04_000100_add_indecs_review_contract.php`. Neither migrates legacy records or enables public submission. Rollback refuses once review/acceptance evidence exists; use a forward fix thereafter.
-3. Generate a dedicated integration token; configure the same value server-side as `AIRS_SERVICE_TOKEN` in iNDECS and `INDECS_SERVICE_TOKEN` in AIRS. Do not reuse staff passwords, model keys or AMIRA tokens. iNDECS also needs `AIRS_ENABLED=true` and `AIRS_SERVICE_URL`; AIRS needs `INDECS_INTEGRATION_ENABLED=true`. Clear/rebuild cached configuration through the normal release process. Secrets remain in untracked environment configuration.
-4. Use HTTPS and internal network restrictions in deployment. HTTP is allowed only for loopback in local/testing iNDECS environments. This service token is separate from future browser OIDC; it never appears in rendered pages or browser requests.
-5. Run `php artisan airs:check` from iNDECS for authenticated capabilities. This sends no documents and invokes no model.
-6. Keep the iNDECS `airs` queue worker, AIRS review queue worker and iNDECS scheduler running under supervision. `airs:sync` runs every minute and schedules at most 20 active requests plus pending feedback; queue locks prevent overlapping requests for the same review. Run the iNDECS connector with `php artisan queue:work airs --queue=airs --timeout=110` (visibility 180 seconds), and AIRS with `php artisan queue:work indecs --queue=indecs,default --timeout=900` (visibility 1000 seconds). The AIRS Windows launcher includes these queues; restart it after updating. Operator refresh is also available.
-
-No existing `.env`, credentials or operational records are copied from one system to another. Only the dedicated service token is shared for the intended server connection. An inactive connector retains truthful availability messages.
-
-## Wire contract and resilience
-
-All AIRS endpoints are under `/api/v1/`, protected by its integration middleware and request throttling. The first transport uses multipart immutable files plus a JSON `manifest` (maximum 64 KiB), rather than signed download URLs. No URL-fetching or shared filesystem/database access is involved. Each manifest contains request/application/submission identifiers, module, selected lighting types, clearance/acceptance timestamps/reference, and document ID/revision/name/MIME/size/SHA-256 entries. iNDECS bounds a packet to 50 files/100 MiB and AIRS applies its own file/page/processing limits.
-
-| Endpoint | Purpose |
+| Command | Use |
 |---|---|
-| `GET /capabilities` | Authenticated API/module availability without AI |
-| `POST /reviews` | Idempotent accepted-submission intake; returns review/version IDs |
-| `GET /reviews/{id}` or `/reviews/{id}/findings` | Correlated status, pinned rule version, original findings, page/source-document evidence and external officer feedback |
-| `POST /reviews/{id}/findings/{finding}/feedback` | Attributed append-only feedback, deduplicated by event ID; positive feedback requires evidence |
+| `php artisan paid-check:stuck` | Journeys whose check never started or failed permanently for over an hour. Rerun a failed check with `CheckService::rerun()` or contact the applicant. |
+| `php artisan paid-check:waive <draft> --actor=<email> --reason="<policy ref>"` | Audited fee waiver by an officer holding `kejuruteraan.ljup.fee_waive`. |
+| `php artisan airs:export-lessons [--since=]` | Export new officer corrections as de-identified MATRIX candidate lessons (JSONL). Officer comments are free text and may mention names: share files only with the MATRIX evaluation team. |
+| `php artisan matrix:status` / `matrix:usage` | MATRIX runtime check and per-check usage (client estimate, not invoice). |
 
-The request ID is stable across ambiguous timeouts/retries. Conflicting reuse is refused. Multipart transfers are not retried inside the HTTP client with exhausted streams; the queue reopens immutable files for each attempt. Requests stay durable during outages. HTTP 409/413/422 blocks a package for operator/configuration attention; other connection failures retain the original request for retry. Changed packages before initial dispatch are superseded. Historical results remain readable, but only the latest accepted/current document round may receive feedback. No AIRS result writes application status/history, confirms payment or issues a letter.
+## Officer workspace
 
-Polling is the implemented result transport; signed push callbacks remain a later option under the same correlation contract. Requests and findings carry exact submission/hash/module identities; mismatches and unsupported positive findings are rejected. Paid AI pre-submission classification is not enabled. Free preparation checks and AMIRA remain separate.
+`/kejuruteraan` lists LJUP applications for holders of `kejuruteraan.ljup.access` (district scope applies once an application has site/lot records). Officers with `kejuruteraan.ljup.review` comment per finding and review MATRIX-extracted fields on the final, handed-over check; both are attributed and append-only. Officer correction requests, decisions and letters are not part of AIRS.
 
 ## Verification
 
-Run `php artisan test`, `php vendor/bin/pint --test` and `php artisan view:cache` in iNDECS. Run the AIRS suite with its dedicated `airs_test` PostgreSQL configuration and fake provider; `IndecsIntegrationTest` exercises intake/auth/idempotency/checksums/module gates/evidence/feedback/legacy-access isolation. Never run those migrations against operational databases as a test substitute. The connector is shared core/integration capability; department fields remain in extension tables.
+`php artisan test` (uses `indecs_test`, the fake AI provider and a sync `airs` queue). The real-package acceptance test runs with `PLAN_REVIEW_GREEN_CAMOUR_PATH="<folder of the 12 PDFs>" php artisan test --filter=GreenCamourAcceptanceTest`.

@@ -1,5 +1,7 @@
 # iNDECS and AIRS integration contract
 
+> **Superseded in part by [ADR-383](../adr/ADR-383-airs-merged-into-indecs.md) (16 November 2026):** AIRS is now an in-process iNDECS module, not a separate service. Where this contract describes a separate AIRS service, its own API, accepted submission before the first check, or the journey order, ADR-383 takes precedence. Ownership of evidence, findings, advisory scoring and officer authority below still applies.
+
 > **AI ecosystem alignment — 9 November 2026:** [Current roles and integration boundaries](ai-ecosystem.md). AMIRA remains application assistance; MATRIX is the planned document specialist; MINDA is internal intelligence. Existing authority, free-precheck and payment gates remain.
 
 

@@ -135,3 +135,5 @@ Date: YYYY-MM-DD. Status: Proposed | Accepted | Superseded by ADR-MMM.
 - [ADR-381: Circular garden in the opening animation](ADR-381-circular-garden-in-opening-animation.md)
 
 - [ADR-382: Small edging on the garden walking path](ADR-382-garden-path-stone-edging.md)
+
+- [ADR-383: AIRS merged into iNDECS as an in-process module](ADR-383-airs-merged-into-indecs.md)
