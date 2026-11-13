@@ -31,6 +31,9 @@
         <div class="form-actions"><div><button class="button button-primary" type="submit"><x-icon name="check" />Simpan draf</button><a class="button button-secondary" href="{{ route('portal.home') }}">Kembali ke Fail saya</a></div><small>@if($draft->exists)Versi {{ $draft->version }} · @endif Simpanan manual. Simpan sebelum meninggalkan halaman.</small></div>
     </form>
     @if ($draft->exists)
+        @if ($checkResult ?? null)
+            @include('public.drafts.partials.check-result', ['result' => $checkResult])
+        @endif
         @include('public.drafts.partials.checklist')
     @endif
     </x-slot:file></x-portal-counter>

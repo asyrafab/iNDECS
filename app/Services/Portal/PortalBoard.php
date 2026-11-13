@@ -43,7 +43,13 @@ final class PortalBoard
             if ($list['available']) {
                 $progress[$draft->id] = ['ready' => $list['required_ready'], 'total' => $list['required_total']];
             }
-            if ($needs > 0) {
+            $journey = $draft->journey()->first();
+            if ($journey?->state === \App\Enums\PaidCheckState::AwaitingApplicant) {
+                $action->push($draft);
+                $todos[] = ['text' => "{$draft->title}: keputusan semakan AIRS sedia", 'href' => route('portal.drafts.edit', $draft).'#semakan-airs'];
+            } elseif ($journey !== null) {
+                $active->push($draft);
+            } elseif ($needs > 0) {
                 $action->push($draft);
                 $todos[] = ['text' => "{$draft->title}: {$needs} dokumen perlu tindakan", 'href' => route('portal.drafts.edit', $draft).'#dokumen'];
             } else {

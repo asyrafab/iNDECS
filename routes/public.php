@@ -4,6 +4,7 @@ use App\Http\Controllers\AmiraChatController;
 use App\Http\Controllers\Auth\GoogleLoginController;
 use App\Http\Controllers\Auth\PublicAccessController;
 use App\Http\Controllers\PortalCheckPaymentController;
+use App\Http\Controllers\PortalCheckResultController;
 use App\Http\Controllers\PortalDraftDocumentController;
 use App\Http\Controllers\PublicPortalController;
 use App\Http\Controllers\PortalGuidanceController;
@@ -50,6 +51,12 @@ Route::prefix('portal')->name('portal.')->group(function (): void {
         Route::post('/drafts/{draft}/payment', [PortalCheckPaymentController::class, 'start'])->whereUlid('draft')->middleware('throttle:10,1')->name('drafts.payment.start');
         Route::get('/payments/{payment}/staging', [PortalCheckPaymentController::class, 'staging'])->whereUlid('payment')->name('payments.staging');
         Route::post('/payments/{payment}/staging/confirm', [PortalCheckPaymentController::class, 'confirmStaging'])->whereUlid('payment')->middleware('throttle:10,1')->name('payments.staging.confirm');
+        // Applicant-safe AIRS check results and the applicant's own evidence documents.
+        Route::get('/drafts/{draft}/check', [PortalCheckResultController::class, 'show'])->whereUlid('draft')->middleware('throttle:60,1')->name('drafts.check');
+        Route::get('/drafts/{draft}/check/documents/{document}', [PortalCheckResultController::class, 'document'])->whereUlid(['draft', 'document'])->middleware('throttle:60,1')->name('drafts.check.document');
+        Route::post('/drafts/{draft}/check/extend', [PortalCheckResultController::class, 'extend'])->whereUlid('draft')->middleware('throttle:10,1')->name('drafts.check.extend');
+        Route::post('/drafts/{draft}/check/amend', [PortalCheckResultController::class, 'amend'])->whereUlid('draft')->middleware('throttle:10,1')->name('drafts.check.amend');
+        Route::post('/drafts/{draft}/check/submit', [PortalCheckResultController::class, 'submit'])->whereUlid('draft')->middleware('throttle:10,1')->name('drafts.check.submit');
         Route::put('/drafts/{draft}', [PublicPortalController::class, 'update'])->whereUlid('draft')->middleware('throttle:20,1')->name('drafts.update');
         Route::post('/account', [PublicAccessController::class, 'claim'])->middleware('throttle:5,1')->name('claim');
         Route::get('/account/google', [GoogleLoginController::class, 'redirect'])->name('google.link');

@@ -43,6 +43,7 @@
         </ul>
         @php($airsEnabled = (config('airs.modules.'.$draft->application_type_id.'.enabled') ?? false) === true)
         @php($fee = \App\Services\PaidCheck\CheckPaymentService::feeSen())
+        @unless ($checkResult ?? null)
         <div class="precheck-gate {{ $checklist['ready'] ? 'is-ready' : '' }}">
             @if (! $airsEnabled)
                 <div><strong>{{ $checklist['ready'] ? 'Sedia untuk semakan AIRS' : 'Lengkapkan dokumen wajib untuk meneruskan' }}</strong>
@@ -66,5 +67,6 @@
                 </form>
             @endif
         </div>
+        @endunless
     @endif
 </section>

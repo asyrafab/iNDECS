@@ -80,6 +80,13 @@ final class PaidCheckJourneyService
         return $journey->fresh();
     }
 
+    /** The single amendment window is open: awaiting the applicant, not yet amended, deadline not passed. */
+    public static function amendmentOpen(PaidCheckJourney $journey): bool
+    {
+        return $journey->state === PaidCheckState::AwaitingApplicant && $journey->amended_at === null
+            && $journey->amendment_due_at !== null && CarbonImmutable::now()->lessThanOrEqualTo($journey->amendment_due_at);
+    }
+
     /** Listener for AirsCheckCompleted: opens the amendment window after check 1, hands over after check 2. */
     public function checkCompleted(AirsCheckCompleted $event): void
     {
