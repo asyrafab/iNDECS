@@ -54,6 +54,26 @@ class Application extends Model
         });
     }
 
+    /**
+     * LJUP applications visible to a Kejuruteraan officer. District scope (ADR-307) applies when the
+     * application has site/lot rows; portal applications carry only a free-text address, so they are
+     * visible to every LJUP officer until their site is recorded.
+     */
+    public function scopeVisibleToLjupOfficer(Builder $query, User $user): Builder
+    {
+        $query->where('application_type_id', 'LJUP');
+        if ($user->role === 'system_admin' || blank($user->district)) {
+            return $query;
+        }
+
+        return $query->where(function (Builder $districtQuery) use ($user): void {
+            $districtQuery
+                ->whereHas('sites', fn (Builder $siteQuery) => $siteQuery->where('district', $user->district))
+                ->orWhereHas('lots', fn (Builder $lotQuery) => $lotQuery->where('district', $user->district))
+                ->orWhere(fn (Builder $unlocated) => $unlocated->whereDoesntHave('sites')->whereDoesntHave('lots'));
+        });
+    }
+
     public function applicationType(): BelongsTo
     {
         return $this->belongsTo(ApplicationType::class);

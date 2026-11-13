@@ -27,15 +27,18 @@ final class ApplicationLauncher
         }
         // Planned systems are visible to the administrator without advertising working navigation.
         $administrator = $user->role === 'system_admin' && DB::table('core.roles')->where('id', 'system_admin')->where('account_type', 'staff')->where('is_active', true)->exists();
+        if ($administrator || $user->canAccessKejuruteraan()) {
+            $applications[] = ['name' => 'iNDECS Kejuruteraan', 'department' => 'kejuruteraan', 'icon' => 'ruler', 'description' => 'Pelan Lampu Jalan (LJUP) dan semakan AIRS',
+                'url' => $user->canAccessKejuruteraan() ? route('kejuruteraan.index') : null];
+        }
         if ($administrator) {
-            $applications[] = ['name' => 'iNDECS Kejuruteraan', 'department' => 'kejuruteraan', 'icon' => 'ruler', 'description' => 'Pelan kerja tanah dan infrastruktur', 'url' => null];
             $applications[] = ['name' => 'iNDECS Landskap', 'department' => 'landskap', 'icon' => 'layers', 'description' => 'Pelan landskap', 'url' => null];
         }
         if ($user->canAccessOsc()) {
             $applications[] = ['name' => 'eOSC+', 'brand' => 'eosc', 'icon' => 'folder-open', 'description' => 'Agenda dan mesyuarat OSC', 'url' => route('osc.meetings.index')];
         }
         if ($administrator) {
-            $applications[] = ['name' => 'AIRS', 'brand' => 'airs', 'icon' => 'search', 'description' => 'AI Review Studio · Semakan pelan', 'url' => null];
+            $applications[] = ['name' => 'AIRS', 'brand' => 'airs', 'icon' => 'search', 'description' => 'AI Review Studio · Semakan pelan', 'url' => $user->canAccessKejuruteraan() ? route('kejuruteraan.index') : null];
             $applications[] = ['name' => 'E-Plan Submission', 'brand' => 'esri', 'icon' => 'square-dashed', 'description' => 'Penghantaran data spatial', 'url' => 'https://spgis.mbsp.gov.my/ePlanSubmission'];
         }
 

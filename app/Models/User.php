@@ -49,6 +49,18 @@ class User extends Authenticatable
         return app(CorePermissionService::class)->userCan($this, $permission, $this->department_id, 'PKM');
     }
 
+    /** LJUP (Jabatan Kejuruteraan) permissions: access, review, documents.configure, fee_waive. */
+    public function canPerformLjup(string $action): bool
+    {
+        return $this->is_active && $this->account_type === 'staff'
+            && app(CorePermissionService::class)->userCan($this, 'kejuruteraan.ljup.'.$action, 'JKEJ', 'LJUP');
+    }
+
+    public function canAccessKejuruteraan(): bool
+    {
+        return $this->canPerformLjup('access');
+    }
+
     public function canPerformBangunan(string $action, string $type): bool
     {
         return in_array($type, BangunanApplication::TYPES, true)

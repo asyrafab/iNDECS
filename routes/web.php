@@ -128,6 +128,13 @@ Route::middleware(['auth', 'bangunan.legacy'])->prefix('bangunan')->name('bangun
     Route::get('/legacy/{legacyPermohonan}', [BangunanLegacyController::class, 'show'])->name('legacy.show');
 });
 
+// Jabatan Kejuruteraan: LJUP applications and their AIRS checks (ADR-383).
+Route::middleware(['auth', 'kejuruteraan.access'])->prefix('kejuruteraan')->name('kejuruteraan.')->group(function (): void {
+    Route::get('/', [\App\Http\Controllers\KejuruteraanApplicationController::class, 'index'])->name('index');
+    Route::get('/applications/{application}', [\App\Http\Controllers\KejuruteraanApplicationController::class, 'show'])->whereUlid('application')->name('show');
+    Route::get('/applications/{application}/documents/{document}', [\App\Http\Controllers\KejuruteraanApplicationController::class, 'document'])->whereUlid(['application', 'document'])->name('documents.show');
+});
+
 Route::middleware(['auth', 'osc.access'])->prefix('osc')->name('osc.')->group(function (): void {
     Route::get('/', [MeetingController::class, 'index'])->name('meetings.index');
     Route::get('/meetings/create', [MeetingController::class, 'create'])->name('meetings.create');

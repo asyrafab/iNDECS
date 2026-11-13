@@ -25,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'perancang.access' => EnsurePkmAccess::class,
             'perancang.permission' => EnsurePkmPermission::class,
             'public.access' => EnsurePublicAccess::class,
+            'kejuruteraan.access' => \App\Http\Middleware\EnsureKejuruteraanAccess::class,
         ]);
         $middleware->redirectUsersTo(function (Request $request): string {
             $user = $request->user();
