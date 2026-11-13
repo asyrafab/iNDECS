@@ -12,11 +12,13 @@ use App\Enums\ApplicationStatus;
 use App\Enums\DocumentVerificationStatus;
 use App\Enums\PaidCheckState;
 use App\Models\ApplicantDraft;
+use App\Models\ApplicantDraftDocument;
 use App\Models\Application;
 use App\Models\ApplicationDocument;
 use App\Models\AuditLog;
 use App\Models\CheckPayment;
 use App\Models\PaidCheckJourney;
+use App\Models\User;
 use App\Services\ApplicationReferenceGenerator;
 use App\Services\Precheck\DraftChecklist;
 use App\Services\WorkingCalendar;
@@ -24,6 +26,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Throwable;
 
 /**
@@ -87,6 +90,76 @@ final class PaidCheckJourneyService
             && $journey->amendment_due_at !== null && CarbonImmutable::now()->lessThanOrEqualTo($journey->amendment_due_at);
     }
 
+    /** A draft can be edited before payment, and afterwards only while its single amendment window is open. */
+    public static function draftEditable(ApplicantDraft $draft): bool
+    {
+        $journey = PaidCheckJourney::query()->where('draft_id', $draft->id)->first();
+
+        return $journey === null || self::amendmentOpen($journey);
+    }
+
+    /** One extension of 5 working days, before the deadline. */
+    public function extend(User $owner, PaidCheckJourney $journey): void
+    {
+        DB::transaction(function () use ($owner, $journey): void {
+            $locked = $this->lockedFor($owner, $journey);
+            if (! self::amendmentOpen($locked)) {
+                throw ValidationException::withMessages(['check' => 'Tempoh pindaan telah tamat.']);
+            }
+            if ($locked->extended_at !== null) {
+                throw ValidationException::withMessages(['check' => 'Tempoh pindaan hanya boleh dilanjutkan sekali sebelum tamat.']);
+            }
+            $before = $locked->amendment_due_at;
+            $due = $this->calendar->addWorkingDays($before, self::AMENDMENT_WORKING_DAYS);
+            $locked->forceFill(['amendment_due_at' => $due, 'extended_at' => now()])->save();
+            $this->audit($locked, 'amendment_window_extended', ['amendment_due_at' => $before->toIso8601String()], ['amendment_due_at' => $due->toIso8601String()], $owner->id);
+        });
+    }
+
+    /** The single amendment: changed uploads become new document revisions, then check 2 runs. */
+    public function submitAmendment(User $owner, PaidCheckJourney $journey): void
+    {
+        $journey = DB::transaction(function () use ($owner, $journey): PaidCheckJourney {
+            $locked = $this->lockedFor($owner, $journey);
+            if (! self::amendmentOpen($locked)) {
+                throw ValidationException::withMessages(['check' => $locked->amended_at !== null || $locked->state !== PaidCheckState::AwaitingApplicant
+                    ? 'Pindaan hanya boleh dibuat sekali.' : 'Tempoh pindaan telah tamat.']);
+            }
+            $draft = ApplicantDraft::query()->lockForUpdate()->findOrFail($locked->draft_id);
+            $changes = $this->reviseDocuments($draft, $locked->application);
+            $locked->forceFill(['amended_at' => now(), 'state' => PaidCheckState::Check2Running, 'lighting_types' => $draft->lightingTypes()])->save();
+            $this->audit($locked, 'amendment_submitted', null, $changes + ['lighting_types' => $draft->lightingTypes()], $owner->id);
+
+            return $locked;
+        });
+        $this->startCheck($journey);
+    }
+
+    /** The applicant accepts check 1 as final; no check 2 runs. */
+    public function submitAsIs(User $owner, PaidCheckJourney $journey): void
+    {
+        DB::transaction(function () use ($owner, $journey): void {
+            $locked = $this->lockedFor($owner, $journey);
+            if ($locked->state !== PaidCheckState::AwaitingApplicant || $locked->amended_at !== null) {
+                throw ValidationException::withMessages(['check' => 'Permohonan ini tidak lagi menunggu tindakan anda.']);
+            }
+        });
+        $this->handOver($journey, 1);
+    }
+
+    /** Hands the application to the responsible department with the final check. Idempotent. */
+    public function handOver(PaidCheckJourney $journey, int $finalCheckNumber): void
+    {
+        DB::transaction(function () use ($journey, $finalCheckNumber): void {
+            $locked = PaidCheckJourney::query()->lockForUpdate()->findOrFail($journey->id);
+            if ($locked->state === PaidCheckState::HandedOver) {
+                return;
+            }
+            $locked->forceFill(['state' => PaidCheckState::HandedOver, 'final_check_number' => $finalCheckNumber, 'handed_over_at' => now()])->save();
+            $this->audit($locked, 'paid_check_handed_over', null, ['final_check_number' => $finalCheckNumber], null);
+        });
+    }
+
     /** Listener for AirsCheckCompleted: opens the amendment window after check 1, hands over after check 2. */
     public function checkCompleted(AirsCheckCompleted $event): void
     {
@@ -101,6 +174,54 @@ final class PaidCheckJourneyService
                 $this->audit($journey, 'paid_check_result_ready', null, ['check_number' => 1, 'amendment_due_at' => $due->toIso8601String()], null);
             }
         });
+        if ($event->checkNumber === 2) {
+            $journey = PaidCheckJourney::query()->where('application_id', $event->applicationId)->first();
+            if ($journey?->state === PaidCheckState::Check2Running) {
+                $this->handOver($journey, 2);
+            }
+        }
+    }
+
+    private function lockedFor(User $owner, PaidCheckJourney $journey): PaidCheckJourney
+    {
+        $locked = PaidCheckJourney::query()->lockForUpdate()->findOrFail($journey->id);
+        abort_unless(ApplicantDraft::query()->whereKey($locked->draft_id)->where('user_id', $owner->id)->exists(), 404);
+
+        return $locked;
+    }
+
+    /**
+     * Brings the application's current documents in line with the draft: changed uploads become new
+     * revisions, new items are added, removed or no-longer-applicable items stop being current.
+     *
+     * @return array{revised: list<string>, added: list<string>, withdrawn: list<string>}
+     */
+    private function reviseDocuments(ApplicantDraft $draft, Application $application): array
+    {
+        $changes = ['revised' => [], 'added' => [], 'withdrawn' => []];
+        $current = $application->currentDocuments()->get()->keyBy('document_type_id');
+        $kept = [];
+        foreach ($this->checklists->for($draft)['items'] as $item) {
+            $upload = $item['document'];
+            if ($upload === null) {
+                continue;
+            }
+            $existing = $current->get($upload->document_type_id);
+            $kept[] = $upload->document_type_id;
+            if ($existing !== null && $existing->checksum_sha256 === $upload->sha256) {
+                continue;
+            }
+            $copy = $this->copyUpload($draft, $application, $upload, $existing);
+            $changes[$existing === null ? 'added' : 'revised'][] = $copy->original_name;
+        }
+        foreach ($current as $typeId => $document) {
+            if (! in_array($typeId, $kept, true)) {
+                $document->update(['is_current' => false]);
+                $changes['withdrawn'][] = $document->original_name;
+            }
+        }
+
+        return $changes;
     }
 
     private function startCheck(PaidCheckJourney $journey): void
@@ -120,27 +241,35 @@ final class PaidCheckJourneyService
     /** Copies the latest upload of every checklist item that currently applies into the application's documents. */
     private function copyDocuments(ApplicantDraft $draft, Application $application): void
     {
-        $disk = Storage::disk('local');
         foreach ($this->checklists->for($draft)['items'] as $item) {
-            $upload = $item['document'];
-            if ($upload === null) {
-                continue;
+            if ($item['document'] !== null) {
+                $this->copyUpload($draft, $application, $item['document'], null);
             }
-            $extension = strtolower(pathinfo($upload->original_name, PATHINFO_EXTENSION)) ?: 'pdf';
-            $path = 'applications/'.$application->id.'/'.Str::ulid().'.'.$extension;
-            $bytes = (string) $disk->get($upload->path);
-            if (hash('sha256', $bytes) !== $upload->sha256) {
-                throw new \RuntimeException('Draft document integrity check failed.');
-            }
-            $disk->put($path, $bytes);
-            ApplicationDocument::query()->create([
-                'application_id' => $application->id, 'document_type_id' => $upload->document_type_id, 'revision_number' => 1,
-                'original_name' => $upload->original_name, 'storage_path' => $path, 'mime_type' => $upload->mime,
-                'size_bytes' => $upload->size_bytes, 'checksum_sha256' => $upload->sha256, 'scan_status' => 'clean', 'scanned_at' => now(),
-                'uploaded_by' => $draft->user_id, 'uploaded_at' => now(), 'verification_status' => DocumentVerificationStatus::Pending,
-                'is_current' => true,
-            ]);
         }
+    }
+
+    /** Copies one verified draft upload into the application, superseding $previous when given. */
+    private function copyUpload(ApplicantDraft $draft, Application $application, ApplicantDraftDocument $upload, ?ApplicationDocument $previous): ApplicationDocument
+    {
+        $disk = Storage::disk('local');
+        $extension = strtolower(pathinfo($upload->original_name, PATHINFO_EXTENSION)) ?: 'pdf';
+        $path = 'applications/'.$application->id.'/'.Str::ulid().'.'.$extension;
+        $bytes = (string) $disk->get($upload->path);
+        if (hash('sha256', $bytes) !== $upload->sha256) {
+            throw new \RuntimeException('Draft document integrity check failed.');
+        }
+        $disk->put($path, $bytes);
+        $previous?->update(['is_current' => false]);
+        $revision = 1 + (int) ApplicationDocument::query()->where('application_id', $application->id)
+            ->where('document_type_id', $upload->document_type_id)->max('revision_number');
+
+        return ApplicationDocument::query()->create([
+            'application_id' => $application->id, 'document_type_id' => $upload->document_type_id, 'revision_number' => $revision,
+            'original_name' => $upload->original_name, 'storage_path' => $path, 'mime_type' => $upload->mime,
+            'size_bytes' => $upload->size_bytes, 'checksum_sha256' => $upload->sha256, 'scan_status' => 'clean', 'scanned_at' => now(),
+            'uploaded_by' => $draft->user_id, 'uploaded_at' => now(), 'verification_status' => DocumentVerificationStatus::Pending,
+            'is_current' => true, 'supersedes_id' => $previous?->id,
+        ]);
     }
 
     private function audit(PaidCheckJourney $journey, string $event, ?array $before, array $after, ?int $actorId): void

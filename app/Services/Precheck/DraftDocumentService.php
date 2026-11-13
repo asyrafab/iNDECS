@@ -108,5 +108,7 @@ final class DraftDocumentService
     {
         abort_unless($draft->user_id === $owner->id, 404);
         abort_unless($owner->email_verified_at !== null, 403, 'Sahkan emel anda melalui halaman Akaun saya sebelum menyediakan draf.');
+        // After payment, documents change only inside the single amendment window.
+        abort_unless(\App\Services\PaidCheck\PaidCheckJourneyService::draftEditable($draft), 403, 'Draf dikunci semasa semakan AIRS.');
     }
 }

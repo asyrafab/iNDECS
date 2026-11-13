@@ -8,6 +8,8 @@ use App\Models\ApplicantDraft;
 use App\Models\ApplicationDocument;
 use App\Models\PaidCheckJourney;
 use App\Services\PaidCheck\ApplicantCheckPresenter;
+use App\Services\PaidCheck\PaidCheckJourneyService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
@@ -31,6 +33,27 @@ final class PortalCheckResultController extends Controller
         $file = ApplicationDocument::query()->where('application_id', $journey->application_id)->findOrFail($document);
 
         return Storage::disk('local')->response($file->storage_path, $file->original_name, ['Content-Type' => $file->mime_type], 'inline');
+    }
+
+    public function extend(Request $request, string $draft, PaidCheckJourneyService $journeys): RedirectResponse
+    {
+        $journeys->extend($request->user(), $this->journey($request, $draft));
+
+        return to_route('portal.drafts.edit', $draft)->with('status', 'Tempoh pindaan dilanjutkan 5 hari bekerja.');
+    }
+
+    public function amend(Request $request, string $draft, PaidCheckJourneyService $journeys): RedirectResponse
+    {
+        $journeys->submitAmendment($request->user(), $this->journey($request, $draft));
+
+        return to_route('portal.drafts.edit', $draft)->with('status', 'Pindaan dihantar. Semakan semula AIRS sedang dijalankan.');
+    }
+
+    public function submit(Request $request, string $draft, PaidCheckJourneyService $journeys): RedirectResponse
+    {
+        $journeys->submitAsIs($request->user(), $this->journey($request, $draft));
+
+        return to_route('portal.drafts.edit', $draft)->with('status', 'Permohonan dihantar kepada Jabatan Kejuruteraan.');
     }
 
     private function journey(Request $request, string $draft): PaidCheckJourney

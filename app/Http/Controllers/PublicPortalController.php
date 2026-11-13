@@ -125,7 +125,12 @@ final class PublicPortalController extends Controller
         $this->requireVerified($request);
         // Check ownership before validating input; foreign IDs always return 404.
         $owned = ApplicantDraft::query()->ownedBy($request->user())->findOrFail($draft);
+        abort_unless(\App\Services\PaidCheck\PaidCheckJourneyService::draftEditable($owned), 403, 'Draf dikunci semasa semakan AIRS.');
         $data = $this->validated($request);
+        // A paid draft cannot change its application type.
+        if ($owned->journey()->exists() && $data['application_type_id'] !== $owned->application_type_id) {
+            throw ValidationException::withMessages(['application_type_id' => 'Jenis permohonan tidak boleh ditukar selepas bayaran.']);
+        }
         $request->validate(['version' => ['required', 'integer', 'min:1']]);
         DB::transaction(function () use ($request, $owned, $data): void {
             $locked = ApplicantDraft::query()->ownedBy($request->user())->lockForUpdate()->findOrFail($owned->id);
