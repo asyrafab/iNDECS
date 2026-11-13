@@ -10,3 +10,4 @@ Artisan::command('inspire', function () {
 
 Schedule::command('amira:prune-guidance')->daily()->withoutOverlapping();
 Schedule::command('amira:prune')->dailyAt('03:00')->withoutOverlapping();
+Schedule::command('airs:recover-checks')->everyMinute()->withoutOverlapping();

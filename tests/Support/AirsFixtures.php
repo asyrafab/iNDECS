@@ -38,7 +38,8 @@ trait AirsFixtures
         $uploader = User::query()->first() ?? User::factory()->create();
 
         return ApplicationDocument::create(['application_id' => $application->id, 'document_type_id' => $type->id,
-            'original_name' => $name, 'storage_path' => $path, 'mime_type' => $mime, 'revision_number' => 1,
+            'original_name' => $name, 'storage_path' => $path, 'mime_type' => $mime,
+            'revision_number' => 1 + (int) ApplicationDocument::query()->where('application_id', $application->id)->where('document_type_id', $type->id)->max('revision_number'),
             'size_bytes' => strlen($bytes), 'checksum_sha256' => hash('sha256', $bytes), 'scan_status' => 'clean',
             'scanned_at' => now(), 'uploaded_by' => $uploader->id, 'uploaded_at' => now(), 'is_current' => true]);
     }

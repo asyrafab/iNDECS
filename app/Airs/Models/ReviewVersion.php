@@ -48,6 +48,11 @@ final class ReviewVersion extends Model
         return $this->hasMany(AiRun::class);
     }
 
+    public function processingTasks(): HasMany
+    {
+        return $this->hasMany(ProcessingTask::class);
+    }
+
     public function reports(): HasMany
     {
         return $this->hasMany(GeneratedReport::class);

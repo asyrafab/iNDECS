@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Services\Airs;
+namespace App\Airs;
 
 use App\Models\Application;
 use Illuminate\Support\Facades\Storage;
