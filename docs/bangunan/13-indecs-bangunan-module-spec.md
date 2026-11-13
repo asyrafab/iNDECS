@@ -1,5 +1,7 @@
 # 13. iNDECS Bangunan Module Specification
 
+> **Integration policy update — 2026-11-04:** [ADR-352](../adr/ADR-352-indecs-airs-submission-and-precheck.md) and the [shared contract](../integration/indecs-airs-contract.md) govern the single iNDECS submission journey. Free applicant precheck is bounded checklist/file/text/local-OCR preparation with no paid AI; payment clears before formal acceptance, then AIRS technical review runs. iNDECS owns operational workflow and decisions; scores are advisory. Fees and correction-round charging remain undecided. Conflicting earlier tariffs, standalone AIRS operational ownership and paid AI intake auto-fill before submission are superseded. Historical milestones are not implementation claims.
+
 Version 2.0, 2026-09-18. Replaces the version 1 Phase 0 and Phase 1 specifications. Follows iNDECS `AGENTS.md` and `docs/DESIGN-DIRECTION.md`.
 
 ## 1. Identity of the module
@@ -152,7 +154,7 @@ All functions from version 1 remain in scope. Their new home:
 - Fees: golden tests against 200 historical applications comparing computed fees to legacy `BANGUNAN1` totals.
 - Letters: snapshot tests per template; QR round trip; supersession.
 - Migration: per-module count and field comparison scripts run in CI against a scrubbed snapshot.
-- Browser journeys: registration to SKP9; permit to renewal; notice to handover; meeting decision to letter; public submission to payment.
+- Browser journeys: registration to SKP9; permit to renewal; notice to handover; meeting decision to letter; draft/precheck to payment clearance, accepted formal submission, AIRS review and officer decision.
 
 ## Open questions
 

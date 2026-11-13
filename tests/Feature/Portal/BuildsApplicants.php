@@ -18,7 +18,9 @@ trait BuildsApplicants
     protected function applicant(string $email = 'applicant@example.test', bool $verified = true, string $name = 'Pemohon Ujian'): User
     {
         $user = app(PublicIdentityService::class)->create($email, $name, 'long-test-password');
-        $user->forceFill(['email_verified_at' => $verified ? now() : null])->save();
+        // AMIRA tests opt in to the one-time AI agreement (ADR-369) by defining amiraConsentByDefault().
+        $consent = method_exists($this, 'amiraConsentByDefault') && $this->amiraConsentByDefault();
+        $user->forceFill(['email_verified_at' => $verified ? now() : null, 'amira_consented_at' => $consent ? now() : null])->save();
 
         return $user;
     }

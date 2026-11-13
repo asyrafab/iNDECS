@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+<title id="title">Fungsi utama mengikut pengguna</title><desc id="desc">Gambaran sasaran; perincian proses disahkan dalam sesi jabatan</desc>
+<style>:root {--color-navy:#102a43;--color-text:#172b3a;--color-text-muted:#596e80;--color-accent:#2c9da0;--color-accent-700:#14676b;--color-bg:#f7f9fb;--color-bg-soft:#e6f4f4;--color-surface:#ffffff;--color-border:#dce4ea;} text {font-family:"Google Sans","Segoe UI",sans-serif;}</style>
+<rect x="0" y="0" width="1600" height="900" fill="var(--color-bg)" stroke="none" stroke-width="2"/>
+<text x="64" y="90" font-size="42" font-weight="600" fill="var(--color-text)">Fungsi utama mengikut pengguna</text>
+<text x="64" y="139" font-size="25" font-weight="400" fill="var(--color-text-muted)">Gambaran sasaran; perincian proses disahkan dalam sesi jabatan</text>
+<line x1="64" y1="172" x2="1536" y2="172" stroke="var(--color-border)" stroke-width="2"/>
+<text x="79" y="293" font-size="32" font-weight="600" fill="var(--color-text)">Pemohon / PSP</text>
+<line x1="79" y1="320" x2="519" y2="320" stroke="var(--color-accent)" stroke-width="4"/>
+<text x="79" y="395" font-size="27" font-weight="400" fill="var(--color-text)">Panduan dan persediaan</text>
+<text x="79" y="470" font-size="27" font-weight="400" fill="var(--color-text)">dokumen</text>
+<text x="79" y="545" font-size="27" font-weight="400" fill="var(--color-text)">Penghantaran dan bayaran</text>
+<text x="79" y="620" font-size="27" font-weight="400" fill="var(--color-text)">Status dan maklum balas</text>
+<text x="579" y="293" font-size="32" font-weight="600" fill="var(--color-text)">Pegawai jabatan</text>
+<line x1="579" y1="320" x2="1019" y2="320" stroke="var(--color-accent)" stroke-width="4"/>
+<text x="579" y="395" font-size="27" font-weight="400" fill="var(--color-text)">Semakan dokumen</text>
+<text x="579" y="470" font-size="27" font-weight="400" fill="var(--color-text)">dan teknikal</text>
+<text x="579" y="545" font-size="27" font-weight="400" fill="var(--color-text)">Tugasan, ulasan, pembetulan</text>
+<text x="579" y="620" font-size="27" font-weight="400" fill="var(--color-text)">Rekod dan versi dokumen</text>
+<text x="1079" y="293" font-size="32" font-weight="600" fill="var(--color-text)">Pengurusan / OSC</text>
+<line x1="1079" y1="320" x2="1519" y2="320" stroke="var(--color-accent)" stroke-width="4"/>
+<text x="1079" y="395" font-size="27" font-weight="400" fill="var(--color-text)">Pemantauan status</text>
+<text x="1079" y="470" font-size="27" font-weight="400" fill="var(--color-text)">dan tempoh</text>
+<text x="1079" y="545" font-size="27" font-weight="400" fill="var(--color-text)">Agenda, kertas dan peta</text>
+<text x="1079" y="620" font-size="27" font-weight="400" fill="var(--color-text)">Pertimbangan dan keputusan</text>
+<text x="79" y="751" font-size="31" font-weight="600" fill="var(--color-accent-700)">Fungsi bersama menyokong proses khusus setiap jabatan</text>
+<line x1="64" y1="803" x2="1536" y2="803" stroke="var(--color-border)" stroke-width="2"/>
+<text x="64" y="849" font-size="23" font-weight="400" fill="var(--color-text-muted)">Konsep sasaran — pelaksanaan berperingkat</text>
+</svg>

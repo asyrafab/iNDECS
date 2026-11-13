@@ -2,6 +2,8 @@
 
 Date: 2026-10-28. Status: Accepted.
 
+AMIRA ownership and connection wording are refined by [ADR-353](ADR-353-independent-amira-backend.md): its backend is independent, and live AMIRA conversation is distinct from AIRS document review. The local-guidance restrictions below remain in force.
+
 ## Context
 
 The programme owner approved the interactive navy-sidebar concept, retaining

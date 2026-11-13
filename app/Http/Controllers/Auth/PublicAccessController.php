@@ -130,7 +130,7 @@ class PublicAccessController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('portal.login');
+        return redirect()->route('home')->with('skip_welcome_introduction', true);
     }
 
     private function sendLink(PublicIdentityService $identity, User $user, string $purpose): void

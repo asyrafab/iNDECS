@@ -1,5 +1,14 @@
 # iNDECS — Intergrated Development Control System
 
+> **AI ecosystem alignment — 9 November 2026:** [Current roles and integration boundaries](integration/ai-ecosystem.md). AMIRA remains application assistance; MATRIX is the planned document specialist; MINDA is internal intelligence. Existing authority, free-precheck and payment gates remain.
+
+
+## AIRS integration and applicant submission (accepted 2026-11-04)
+
+[ADR-352](adr/ADR-352-indecs-airs-submission-and-precheck.md) and the [shared integration contract](integration/indecs-airs-contract.md) govern the target journey. iNDECS owns identity, drafts, formal submission, authoritative document versions, payments, corrections, assignment/SLA, notifications, official decisions and letters. AIRS is its review subsystem and owns review rules, evidence, findings and AI-run history; AMIRA assists within record permissions.
+
+Free applicant precheck covers checklist/file usability and bounded embedded-text/local-OCR retrieval, with manual confirmation and resource limits. No paid generative AI/cloud processing, technical compliance review or readiness score is allowed before submission. Payment must clear before formal acceptance (only approved audited policy waivers); accepted submission then dispatches formal AIRS review. Fee amounts and correction-round charging remain undecided. Scores are advisory; they never reject, hide findings or change state. This documents agreed direction, not completed public submission/payment/integration functionality.
+
 > **Bahasa Melayu:** Sistem Bersepada Kawalan Pembangunan
 
 > **Tagline:** Satu Platform, Pelbagai Permohonan Pembangunan

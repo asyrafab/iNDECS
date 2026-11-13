@@ -1,5 +1,10 @@
 # 16. Decision Log (Version 2)
 
+> **AI ecosystem alignment — 9 November 2026:** [Current roles and integration boundaries](18-ai-ecosystem-alignment.md). AMIRA remains application assistance; MATRIX is the planned document specialist; MINDA is internal intelligence. Existing authority, free-precheck and payment gates remain.
+
+
+> **Integration policy update — 2026-11-04:** [ADR-352](../adr/ADR-352-indecs-airs-submission-and-precheck.md) and the [shared contract](../integration/indecs-airs-contract.md) govern the single iNDECS submission journey. Free applicant precheck is bounded checklist/file/text/local-OCR preparation with no paid AI; payment clears before formal acceptance, then AIRS technical review runs. iNDECS owns operational workflow and decisions; scores are advisory. Fees and correction-round charging remain undecided. Conflicting earlier tariffs, standalone AIRS operational ownership and paid AI intake auto-fill before submission are superseded. Historical milestones are not implementation claims.
+
 Version 1 records ADR-001 to ADR-009 are in `archive/v1-standalone/08-decision-log.md`. Each entry below states which version 1 record it supersedes or confirms.
 
 ---
@@ -116,6 +121,8 @@ Date: 2026-10-29. Status: Accepted. Supersedes ADR-211 and the Bangunan-led orde
 
 ## ADR-213: eOSC+ is the OSC meeting room inside iNDECS
 
+> Historical product boundary, revised by ADR-378: iNDECS registers papers under eOSC; NADI > eOSC is the in-meeting module. Technical identifiers and historical implementation remain until a reviewed transition.
+
 Date: 2026-10-29. Status: Accepted. New.
 
 **Context.** The legacy eOSC / MJKP system (PHP, Access, MapGuide 6.5) used in Jawatankuasa OSC meetings cannot take new application types, gives attendees no access to papers, and shows an out-of-date map. ArcGIS Enterprise at `spgis.mbsp.gov.my` is the master GIS but disconnects often.
@@ -150,3 +157,15 @@ Date: 2026-10-29. Status: Accepted. New.
 | PD-212 | Delegated authority thresholds for PBK | Pengarah | Phase B month 5 |
 | PD-213 | Piagam Pelanggan durations per family | Product owner | Phase B month 5 |
 | PD-214 | Bangunan officer reference group for rule confirmation | Pengarah | Phase B |
+
+## ADR-352: Integrated AIRS submission and precheck boundary
+
+Date: 2026-11-04. Status: Accepted. Refines ADR-203 to ADR-206; supersedes conflicting standalone AIRS intake, operational workflow, tariff and scoring assumptions.
+
+See the [codebase ADR](../adr/ADR-352-indecs-airs-submission-and-precheck.md) and [shared contract](../integration/indecs-airs-contract.md). iNDECS owns the public/official journey; free precheck has no paid AI and uses bounded checklist/file/text/local-OCR preparation. Payment clears before accepted formal submission and formal AIRS technical review. AMIRA assists, scores are advisory and officers decide. Fees/correction-round charging and physical database deployment reconciliation remain open. No runtime changes are implied.
+
+## ADR-378: NADI meeting application and eOSC registration boundary
+
+Date: 2026-11-09. Status: product name, scope and functional boundary accepted by owner; technical topology open.
+
+**NADI — Navigation, Analysis, Decisions & Intelligence** is the advanced application used within meetings. eOSC is the first specialised module; future meeting types remain possible without committed additional modules. The hierarchy is **NADI > eOSC**, with other meeting types alongside it later. iNDECS registers each paper under eOSC for its assigned meeting and communicates with NADI. Revises the all-inside-eOSC/C10 product assumption of ADR-213; preserves official iNDECS records, OSC decision controls, permissions and audit. No runtime migration is implied. See [ADR-378](../adr/ADR-378-nadi-meeting-application-boundary.md) and [current direction](../eosc/nadi-direction.md).

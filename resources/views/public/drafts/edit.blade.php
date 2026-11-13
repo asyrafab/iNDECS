@@ -2,7 +2,7 @@
 @section('title', $draft->exists ? 'Sambung draf' : 'Mulakan draf')
 @section('counter', '1')
 @section('content')
-    <x-portal-counter :board="$board" guide="Lengkapkan jenis permohonan, tajuk dan butiran projek, kemudian simpan draf. Senarai dokumen mengikut butiran projek anda; muat naik setiap dokumen untuk semakan awal percuma. Bayaran dan penghantaran rasmi belum dibuka."><x-slot:file>
+    <x-portal-counter :board="$board" :draft="$draft" guide="Lengkapkan jenis permohonan, tajuk dan butiran projek, kemudian simpan draf. Senarai dokumen mengikut butiran projek anda; muat naik setiap dokumen untuk semakan awal percuma. Bayaran dan penghantaran rasmi belum dibuka."><x-slot:file>
     <div class="page-heading"><a class="back-link" href="{{ route('portal.home') }}"><x-icon name="arrow-left" />Kembali ke Fail saya</a><span class="eyebrow">Persediaan permohonan</span><h1>{{ $draft->exists ? 'Sambung draf' : 'Mulakan draf baharu' }}</h1><p>Simpan maklumat awal cadangan anda. Maklumat boleh dikemas kini kemudian.</p></div>
     <div class="alert alert-info"><x-icon name="circle-alert" /><div><strong>Draf belum dihantar kepada MBSP.</strong> Semakan awal dokumen adalah percuma. Fi, bayaran dan penghantaran rasmi belum dibuka.</div></div>
     <form class="application-form" method="POST" action="{{ $draft->exists ? route('portal.drafts.update', $draft) : route('portal.drafts.store') }}">

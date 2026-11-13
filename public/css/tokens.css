@@ -8,6 +8,42 @@
   --color-text: #172b3a; --color-text-muted: #596e80;
   --color-border: #dce4ea; --color-border-soft: #edf1f4;
   --color-accent: #2c9da0;
+  /* Owner-supplied system identity (ADR-380). */
+  --color-mark-outline: #231f20;
+  --color-mark-fill: #14676b;
+  /* Department artwork only (ADR-370); common actions retain teal. */
+  --color-department-perancang-light: #8172c4;
+  --color-department-perancang-deep: #433578;
+  --color-department-perancang-frame: #302052;
+  --color-department-perancang-line: #d4c5f4;
+  --color-department-bangunan-light: #ce8a60;
+  --color-department-bangunan-deep: #97502f;
+  --color-department-bangunan-frame: #683316;
+  --color-department-bangunan-line: #ffe0b9;
+  --color-department-kejuruteraan-light: #639cba;
+  --color-department-kejuruteraan-deep: #2d5c7b;
+  --color-department-kejuruteraan-frame: #183e58;
+  --color-department-kejuruteraan-line: #c5e9f7;
+  --color-department-landskap-light: #579c6a;
+  --color-department-landskap-deep: #286343;
+  --color-department-landskap-frame: #17452d;
+  --color-department-landskap-line: #d2efc5;
+  --color-department-letter: var(--color-on-accent);
+  --shadow-department-icon: 0 6px 8px #102a4326;
+  --size-department-icon: 64px;
+  --width-esri-logo: 112px;
+  --filter-esri-logo: none;
+  --size-department-icon-compact: 32px;
+  --size-department-icon-preview: 240px;
+  --opacity-department-pattern: .5;
+  --opacity-department-perancang-pattern: .275;
+  --opacity-department-botanical-pattern: .65;
+  --stroke-department-pattern: .4;
+  --stroke-department-pattern-compact: .6;
+  --stroke-department-engineering-structure: .6;
+  --stroke-department-engineering-grid: .2;
+  --opacity-department-engineering-grid: .22;
+  --width-department-preview: 1200px;
   --color-accent-100: #e6f4f4; --color-accent-200: #cce9e8; --color-accent-300: #a4d7d6;
   --color-accent-400: #69bfbe; --color-accent-500: #2c9da0; --color-accent-600: #197c80;
   --color-accent-700: #14676b; --color-accent-800: #105256; --color-accent-900: #0c3e43;
@@ -110,13 +146,45 @@
   --color-amira-panel-border: var(--color-sidebar-border);
   --color-amira-panel-link: var(--color-sidebar-active-text);
   --color-amira-highlight: #ffffff;
-  --size-amira-bubble: 160px;
+  --color-amira-body-light: var(--color-accent-200);
+  --color-amira-body-mid: var(--color-accent-400);
+  --color-amira-ai-light: var(--status-ai-bg);
+  --color-amira-ai-deep: var(--status-ai-text);
+  --color-amira-concern-light: var(--color-neutral-200);
+  --color-amira-concern-deep: var(--color-neutral-700);
+  --color-amira-alert-light: var(--status-attention-bg);
+  --color-amira-alert-deep: var(--status-attention-text);
+  --size-amira-bubble: 224px;
   --size-amira-bubble-small: 40px;
+  --size-amira-bubble-compact: 88px;
+  --amira-canvas-bleed: 50%;
+  --duration-amira-slide: 650ms;
+  --color-amira-poke-glow: #f5c542;
+  --duration-amira-poke-overload: 750ms;
+  --duration-amira-poke-pop: 300ms;
+  --duration-amira-poke-gone: 900ms;
+  --duration-amira-poke-return: 450ms;
+  --duration-amira-poke-settle: 450ms;
+  --duration-amira-release: 1100ms;
+  --duration-amira-satellite: 3200ms;
+  --duration-amira-response: 2200ms;
+  --duration-amira-character: 8ms;
+  --duration-amira-reply-max: 2200ms;
+  --duration-amira-message-enter: 280ms;
+  --scale-amira-message-enter: .94;
+  --duration-amira-emerge: 700ms;
+  --duration-amira-atmosphere: 450ms;
+  --duration-amira-rise: 600ms;
+  --duration-amira-name: 280ms;
+  --duration-amira-history-timeout: 15000ms;
+  --scale-amira-emerge-peak: 1.06;
+  --height-amira-counter: calc(100dvh - var(--space-16) - var(--space-12));
   --width-counter-amira: 360px;
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
+  --filter-esri-logo: invert(1);
   --color-login-staff-bg: var(--color-sidebar-text);
   --color-login-staff-text: var(--color-sidebar-bg);
   --color-login-staff-muted: var(--color-sidebar-border);
@@ -127,6 +195,7 @@
   --color-login-staff-thumb: var(--color-sidebar-bg);
   --color-login-staff-thumb-text: var(--color-sidebar-text);
   --color-login-staff-button-hover: var(--color-sidebar-hover);
+  --color-mark-outline: var(--color-sidebar-text);
   --color-navy: #dceaf5; --color-slate: #b7ccdd;
   --color-bg: #0b1927; --color-bg-soft: #133536; --color-surface: #122538;
   --color-text: #e4edf4; --color-text-muted: #adbfce;
@@ -145,11 +214,20 @@
   --status-pending-bg: #2b3d4b; --status-pending-text: #c2d1dc;
   --asset-mark: var(--asset-mark-reversed);
   --color-amira-highlight: #dceaf5;
+  --color-amira-body-light: var(--color-accent-800);
+  --color-amira-body-mid: var(--color-accent-700);
+  --color-amira-ai-light: var(--status-ai-text);
+  --color-amira-ai-deep: var(--status-ai-bg);
+  --color-amira-concern-light: var(--color-neutral-700);
+  --color-amira-concern-deep: var(--color-neutral-200);
+  --color-amira-alert-light: var(--status-attention-text);
+  --color-amira-alert-deep: var(--status-attention-bg);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
+    --filter-esri-logo: invert(1);
     --color-login-staff-bg: var(--color-sidebar-text);
     --color-login-staff-text: var(--color-sidebar-bg);
     --color-login-staff-muted: var(--color-sidebar-border);
@@ -160,7 +238,8 @@
     --color-login-staff-thumb: var(--color-sidebar-bg);
     --color-login-staff-thumb-text: var(--color-sidebar-text);
     --color-login-staff-button-hover: var(--color-sidebar-hover);
-    --color-navy: #dceaf5; --color-slate: #b7ccdd;
+    --color-mark-outline: var(--color-sidebar-text);
+  --color-navy: #dceaf5; --color-slate: #b7ccdd;
     --color-bg: #0b1927; --color-bg-soft: #133536; --color-surface: #122538;
     --color-text: #e4edf4; --color-text-muted: #adbfce;
     --color-border: #2d455a; --color-border-soft: #253b4e;
@@ -178,6 +257,14 @@
     --status-pending-bg: #2b3d4b; --status-pending-text: #c2d1dc;
     --asset-mark: var(--asset-mark-reversed);
     --color-amira-highlight: #dceaf5;
+    --color-amira-body-light: var(--color-accent-800);
+    --color-amira-body-mid: var(--color-accent-700);
+    --color-amira-ai-light: var(--status-ai-text);
+    --color-amira-ai-deep: var(--status-ai-bg);
+    --color-amira-concern-light: var(--color-neutral-700);
+    --color-amira-concern-deep: var(--color-neutral-200);
+    --color-amira-alert-light: var(--status-attention-text);
+    --color-amira-alert-deep: var(--status-attention-bg);
   }
 }
 :root[data-motion="reduced"] { --duration-fast: 0ms; --duration-normal: 0ms; --duration-slow: 0ms; --scale-application-hover: 1; }

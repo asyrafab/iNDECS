@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+<title id="title">Dua skop yang sering disebut e-submission</title><desc id="desc">Penghantaran permohonan dalam talian dan penghantaran data spatial saling melengkapi</desc>
+<style>:root {--color-navy:#102a43;--color-text:#172b3a;--color-text-muted:#596e80;--color-accent:#2c9da0;--color-accent-700:#14676b;--color-bg:#f7f9fb;--color-bg-soft:#e6f4f4;--color-surface:#ffffff;--color-border:#dce4ea;} text {font-family:"Google Sans","Segoe UI",sans-serif;}</style>
+<rect x="0" y="0" width="1600" height="900" fill="var(--color-bg)" stroke="none" stroke-width="2"/>
+<text x="64" y="90" font-size="42" font-weight="600" fill="var(--color-text)">Dua skop yang sering disebut e-submission</text>
+<text x="64" y="139" font-size="25" font-weight="400" fill="var(--color-text-muted)">Penghantaran permohonan dalam talian dan penghantaran data spatial saling melengkapi</text>
+<line x1="64" y1="172" x2="1536" y2="172" stroke="var(--color-border)" stroke-width="2"/>
+<rect x="64" y="221" width="698" height="66" fill="var(--color-navy)" stroke="none" stroke-width="2"/>
+<text x="88" y="265" font-size="32" font-weight="600" fill="var(--color-surface)">Permohonan dalam talian</text>
+<rect x="838" y="221" width="698" height="66" fill="var(--color-navy)" stroke="none" stroke-width="2"/>
+<text x="862" y="265" font-size="32" font-weight="600" fill="var(--color-surface)">E-Plan Submission (Esri)</text>
+<text x="88" y="350" font-size="29" font-weight="400" fill="var(--color-text)">Borang, dokumen dan pelan</text>
+<line x1="88" y1="373" x2="738" y2="373" stroke="var(--color-border)" stroke-width="2"/>
+<text x="88" y="423" font-size="29" font-weight="400" fill="var(--color-text)">Bayaran, pembetulan dan status</text>
+<line x1="88" y1="446" x2="738" y2="446" stroke="var(--color-border)" stroke-width="2"/>
+<text x="88" y="496" font-size="29" font-weight="400" fill="var(--color-text)">Keputusan dan surat rasmi</text>
+<line x1="88" y1="519" x2="738" y2="519" stroke="var(--color-border)" stroke-width="2"/>
+<text x="862" y="350" font-size="29" font-weight="400" fill="var(--color-text)">Penghantaran CAD dan Excel</text>
+<line x1="862" y1="373" x2="1512" y2="373" stroke="var(--color-border)" stroke-width="2"/>
+<text x="862" y="423" font-size="29" font-weight="400" fill="var(--color-text)">Pemprosesan kepada data GIS</text>
+<line x1="862" y1="446" x2="1512" y2="446" stroke="var(--color-border)" stroke-width="2"/>
+<text x="862" y="496" font-size="29" font-weight="400" fill="var(--color-text)">Kegunaan peta dan analisis</text>
+<line x1="862" y1="519" x2="1512" y2="519" stroke="var(--color-border)" stroke-width="2"/>
+<text x="88" y="615" font-size="28" font-weight="600" fill="var(--color-text)">iNDECS: rekod dan aliran kerja</text>
+<text x="88" y="658" font-size="28" font-weight="400" fill="var(--color-text)">AIRS: bantuan semakan teknikal</text>
+<text x="862" y="615" font-size="28" font-weight="600" fill="var(--color-text)">Subsistem spatial</text>
+<text x="862" y="658" font-size="28" font-weight="400" fill="var(--color-text)">Dihubungkan dengan iNDECS</text>
+<rect x="64" y="707" width="1472" height="62" fill="var(--color-bg-soft)" stroke="none" stroke-width="2"/>
+<text x="88" y="748" font-size="30" font-weight="600" fill="var(--color-accent-700)">Data spatial ialah satu komponen dalam keseluruhan urusan permohonan</text>
+<line x1="64" y1="803" x2="1536" y2="803" stroke="var(--color-border)" stroke-width="2"/>
+<text x="64" y="849" font-size="23" font-weight="400" fill="var(--color-text-muted)">Konsep sasaran — pelaksanaan berperingkat</text>
+</svg>

@@ -6,11 +6,12 @@
     $assistantReference = $assistantApplication instanceof \App\Models\Application ? $assistantApplication->application_reference : ($assistantLegacy instanceof \App\Models\LegacyPermohonan ? $assistantLegacy->pmn_no_rujukan : null);
     $assistantStage = $assistantApplication instanceof \App\Models\Application ? $assistantApplication->current_stage->label() : null;
     $assistantGuide = request()->routeIs('*.create') ? 'Lengkapkan maklumat permohonan, pihak dan tapak. Semak medan wajib sebelum anda menghantar borang.' : (request()->routeIs('bangunan.documents.*') ? 'Semak senarai dokumen, revisi semasa dan catatan pegawai. Pengesahan serta peralihan dibuat oleh pegawai melalui borang yang tersedia.' : (request()->routeIs('bangunan.legacy.*') ? 'Halaman warisan memaparkan salinan baca sahaja. Gunakan carian dan penapis untuk mencari rekod; perubahan dibuat melalui proses jabatan.' : (request()->routeIs('bangunan.document-catalogue.*') ? 'Senarai semak perlu berdasarkan sumber yang disahkan jabatan. Semak rujukan dan keperluan sebelum mengesahkan katalog.' : ($assistantStaff ? 'Gunakan senarai permohonan untuk mencari rujukan. Buka rekod bagi melihat peringkat, dokumen dan tindakan yang tersedia untuk peranan anda.' : 'Gunakan kaedah akses yang dipaparkan. Jangan kongsikan kata laluan atau pautan akses emel. Penghantaran permohonan awam belum dibuka.'))));
+    $assistantGuide = $portalGuide ?? $assistantGuide;
 @endphp
 <aside class="amira-panel" id="amira-panel" aria-labelledby="amira-title" data-guide="{{ $assistantGuide }}" data-reference="{{ $assistantReference }}" data-stage="{{ $assistantStage }}" hidden>
     <div class="amira-panel-inner">
         <header class="amira-header"><div class="amira-identity"><x-icon name="messages-square" /><div><h2 id="amira-title">AMIRA</h2><p>Pembantu AI iNDECS</p></div></div><button type="button" class="icon-button" data-amira-close aria-label="Tutup AMIRA"><x-icon name="x" /></button></header>
-        <p class="amira-availability"><span class="status-badge status-pending">Panduan sistem</span> Sambungan AIRS belum tersedia</p>
+        <p class="amira-availability"><span class="status-badge status-pending">Panduan sistem</span> Perbualan AI AMIRA belum tersedia</p>
         <div class="amira-context"><x-icon name="panel-right" /><span>{{ $assistantReference ?: $assistantContext }}@if ($assistantStage)<small>{{ $assistantStage }}</small>@endif</span></div>
         <div class="amira-conversation">
             <p class="amira-greeting">Saya AMIRA. Saya boleh membantu anda memahami halaman ini dan mencari langkah seterusnya.</p>

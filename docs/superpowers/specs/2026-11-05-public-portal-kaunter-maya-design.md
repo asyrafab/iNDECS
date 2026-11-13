@@ -322,6 +322,23 @@ documents: guidelines, standards, by-laws, checklists, sample plans.
 - **Ownership.** Only the draft owner, until step 7 adds groups. Files and
   checks belong to the draft and are not an official application.
 
+### 8.6b Step 4: AMIRA conversation (owner and implementer, 2026-11-06)
+
+See ADR-369.
+
+**Owner:**
+- Development model `qwen/qwen3.5-9b`; the 27B is too slow on this GPU.
+- 30 messages per day per PSP.
+- Conversations kept 12 months.
+
+**Implementer's calls:**
+- Conversations are stored in iNDECS; the AMIRA backend stays stateless.
+- Context is pushed and minimised.
+- Library grounding uses PostgreSQL full-text search over pdftotext chunks.
+- Replies are queued and polled.
+- Particulars proposals are applied and saved by the PSP, never by AMIRA.
+- With chat on, the composer is AI chat. With chat off, ADR-368 saved local guidance.
+
 ### 8.7 Deadlines
 For Pindaan Kecil and Pindaan, AMIRA reminds the PSP 3 days before the
 deadline. If the deadline passes, the file closes as Tolak, and the PSP

@@ -1,10 +1,13 @@
-# eOSC+ Plan 1: Foundation and Agenda Builder — Implementation Plan
+# eOSC Plan 1: Foundation and Agenda Builder — Implementation Plan
+
+> **Historical implementation plan — direction revised 9 November 2026:** See [NADI direction](../nadi-direction.md). NADI is the in-meeting application; eOSC within iNDECS registers papers for assigned meetings. This plan records the original iNDECS build, not an approved NADI deployment or migration. Preserve its technical identifiers and reconcile ownership/reuse before further implementation. eOSC is the first NADI module; its rules do not prescribe future meeting types.
+
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Staff can create OSC meetings, departments put applications (linked or standalone) forward with papers, and the secretary orders and publishes a versioned agenda that members read on their phones.
 
-**Architecture:** eOSC+ is core capability C10 inside the iNDECS Laravel app. Tables live in the PostgreSQL `core` schema with prefix `osc_`; services own every write (row-version checks, append-only `audit_logs`); thin controllers under the `/osc` route prefix render Blade views in the existing workspace shell.
+**Architecture:** eOSC is core capability C10 inside the iNDECS Laravel app. Tables live in the PostgreSQL `core` schema with prefix `osc_`; services own every write (row-version checks, append-only `audit_logs`); thin controllers under the `/osc` route prefix render Blade views in the existing workspace shell.
 
 **Tech Stack:** PHP 8.3, Laravel (existing app), PostgreSQL 18 + PostGIS (`indecs_test` for tests), PHPUnit feature tests, Blade with `public/css/indecs.css`, Laravel mail notifications, existing `DocumentScanner` contract (ClamAV).
 
@@ -14,7 +17,7 @@
 
 - Follow `AGENTS.md` and `docs/DESIGN-DIRECTION.md` exactly: tokens only (no hard-coded colour, font, spacing), Lucide icons via `<x-icon>`, Bahasa Melayu interface, reuse existing `indecs.css` classes, no Tailwind.
 - Tables: `core.osc_*`. Routes: prefix `/osc`, names `osc.*`. Permissions: `osc.*`. Recorded in ADR-314 (Task 1).
-- Product name shown to users: **eOSC+**.
+- Product name shown to users: **eOSC**.
 - Every state change writes an `AuditLog` row (`auditable_type`, `auditable_id`, `event`, `actor_id`, `before_values`, `after_values`, `ip_address`). Never update or delete audit rows.
 - Every mutable record carries `row_version`; writes take `int $expectedVersion` and fail with the message `Rekod telah berubah. Muat semula sebelum meneruskan.` on mismatch (same text as `WorkflowService`).
 - One agenda item = one application (design section 5). An application may be tabled many times, at different meetings or the same meeting.
@@ -39,13 +42,13 @@
 |---|---|
 | `docs/adr/ADR-314-eosc-naming-and-c10-schema.md` | Naming decision for routes, tables, permissions |
 | `database/migrations/2026_10_29_000000_create_osc_meetings_and_agenda.php` | All `core.osc_*` tables for this plan |
-| `database/seeders/OscSeeder.php` | Roles, permissions, grants for eOSC+ (called from `DatabaseSeeder`) |
+| `database/seeders/OscSeeder.php` | Roles, permissions, grants for eOSC (called from `DatabaseSeeder`) |
 | `app/Enums/Osc/MeetingStatus.php`, `MeetingRole.php`, `AgendaItemStatus.php`, `TablingPurpose.php` | Enums with BM `label()` |
 | `app/Models/Osc/Meeting.php`, `MeetingMember.php`, `AgendaItem.php`, `AgendaItemPaper.php`, `AgendaVersion.php`, `DepartmentSetting.php` | Eloquent models |
 | `app/Services/Osc/MeetingService.php` | Create meetings, manage members |
 | `app/Services/Osc/AgendaService.php` | Propose, endorse, accept, return, reorder, publish |
 | `app/Services/Osc/AgendaPaperService.php` | Scanned, hashed, versioned paper upload and download |
-| `app/Services/Osc/OscAccess.php` | Every "may this user see/do this" rule for eOSC+ |
+| `app/Services/Osc/OscAccess.php` | Every "may this user see/do this" rule for eOSC |
 | `app/Notifications/Osc/AgendaPublished.php` | Mail to meeting members on publish |
 | `app/Http/Middleware/EnsureOscAccess.php` | `osc.access` alias |
 | `app/Http/Controllers/Osc/MeetingController.php`, `AgendaItemController.php`, `AgendaPaperController.php` | HTTP layer |
@@ -77,7 +80,7 @@
   - `User::canAccessOsc(): bool` (`canPerformOsc('osc.meeting.view')`)
   - Models in namespace `App\Models\Osc`, ULID keys where the table uses ULID, relations: `Meeting::members()`, `Meeting::items()` (ordered by `position` nulls last, then `created_at`), `Meeting::versions()`, `AgendaItem::meeting()`, `AgendaItem::application()`, `AgendaItem::papers()` (ordered by `version` desc), `AgendaItem::previousItem()`, `AgendaItem::presenter()`
 
-- [ ] **Step 1: Write ADR-314** in the ADR template from `docs/adr/README.md`. Decision: eOSC+ is core C10; tables `core.osc_*`; routes `/osc`, names `osc.*`; permissions `osc.meeting.view`, `osc.meeting.manage`, `osc.agenda.propose`, `osc.agenda.endorse`; roles `osc_secretary` (Setiausaha OSC), `osc_steno` (STENO OSC); product name eOSC+. Add the row to `DESIGN-DIRECTION.md` section 1: `| eOSC+ | eOSC+ (Mesyuarat OSC) | eOSC+ | /osc | core.osc_ | — | Bil. 21/2026 |`. Add ADR-314 to the list in `docs/adr/README.md`.
+- [ ] **Step 1: Write ADR-314** in the ADR template from `docs/adr/README.md`. Decision: eOSC is core C10; tables `core.osc_*`; routes `/osc`, names `osc.*`; permissions `osc.meeting.view`, `osc.meeting.manage`, `osc.agenda.propose`, `osc.agenda.endorse`; roles `osc_secretary` (Setiausaha OSC), `osc_steno` (STENO OSC); product name eOSC. Add the row to `DESIGN-DIRECTION.md` section 1: `| eOSC | eOSC (Mesyuarat OSC) | eOSC | /osc | core.osc_ | — | Bil. 21/2026 |`. Add ADR-314 to the list in `docs/adr/README.md`.
 
 - [ ] **Step 2: Write the failing test** `tests/Feature/Osc/OscSchemaTest.php`
 
@@ -115,7 +118,7 @@ Expected: FAIL (table `core.osc_meetings` missing).
   - `down()`: refuse with `RuntimeException` if any `core.osc_meetings` row exists; otherwise drop in reverse order (same guard pattern as `2026_10_28_000000_create_core_document_verification.php`).
 
 - [ ] **Step 5: Write `OscSeeder`** using the `updateOrInsert` pattern of `DatabaseSeeder::seedCorePermissions()`. Roles `osc_secretary`, `osc_steno`. Permissions with BM labels:
-  - `osc.meeting.view`: Akses eOSC+
+  - `osc.meeting.view`: Akses eOSC
   - `osc.meeting.manage`: Urus mesyuarat dan agenda OSC
   - `osc.agenda.propose`: Cadang perkara ke agenda OSC
   - `osc.agenda.endorse`: Sokong cadangan agenda jabatan
@@ -141,7 +144,7 @@ Expected: PASS. Then run `php artisan migrate:rollback --step=1 --pretend` to co
 
 ```bash
 git add docs/adr/ADR-314-eosc-naming-and-c10-schema.md docs/adr/README.md docs/DESIGN-DIRECTION.md database/ app/Enums/Osc app/Models/Osc app/Models/User.php tests/Feature/Osc/OscSchemaTest.php
-git commit -m "feat(osc): add eOSC+ meeting and agenda schema with permissions (ADR-314)"
+git commit -m "feat(osc): add eOSC meeting and agenda schema with permissions (ADR-314)"
 ```
 
 ---
@@ -421,7 +424,7 @@ Expected: PASS.
 | GET | `/papers/{paper}` | `osc.papers.show` | Inline PDF (`Content-Disposition: inline`) |
 
 **Screen content (BM copy is fixed; layout uses existing classes):**
-- Sidebar link `eOSC+` with icon `gavel`, shown when `canAccessOsc()`.
+- Sidebar link `eOSC` with icon `gavel`, shown when `canAccessOsc()`.
 - `index`: heading "Mesyuarat OSC", table of number, date, venue and status badge, and a "Mesyuarat baharu" button for managers.
 - `show` for managers has three panels:
   - "Cadangan" (proposed and endorsed items, with Sokong / Terima / Kembalikan buttons)
@@ -444,7 +447,7 @@ public function test_member_cannot_see_draft_agenda_or_proposals(): void
 // member GET show while Draft → 403; after publish, page does not contain a returned item's title
 
 public function test_sidebar_and_application_button_visibility(): void
-// building_officer sees 'eOSC+' and 'Bentang ke mesyuarat OSC' on bangunan.show; a user without osc permissions sees neither
+// building_officer sees 'eOSC' and 'Bentang ke mesyuarat OSC' on bangunan.show; a user without osc permissions sees neither
 
 public function test_pages_render_without_hard_coded_colours(): void
 // rendered HTML of osc pages contains no '#[0-9a-fA-F]{3,6}' inside style attributes
@@ -464,7 +467,7 @@ Expected: all pass, no Pint changes, views compile.
 
 - [ ] **Step 5: Check the screens in a browser at desktop width and at 375 px** (the main screen and a phone), in both light and dark mode. Expected: no horizontal scroll, and the action buttons are reachable.
 
-- [ ] **Step 6: Commit** `feat(osc): eOSC+ meeting, agenda builder and member agenda screens`
+- [ ] **Step 6: Commit** `feat(osc): eOSC meeting, agenda builder and member agenda screens`
 
 ---
 
@@ -481,6 +484,6 @@ Expected: all pass, no Pint changes, views compile.
   - What members see.
   - That only staff accounts can attend until Plan 4 ships.
 
-- [ ] **Step 2: Update the status lines and `progress.md`** with the test count from the last full run, then copy the docs to the eOSC+ mirror.
+- [ ] **Step 2: Update the status lines and `progress.md`** with the test count from the last full run, then copy the docs to the eOSC mirror.
 
 - [ ] **Step 3: Commit** `docs(osc): agenda runbook and plan 1 progress`

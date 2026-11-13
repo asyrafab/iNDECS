@@ -1,5 +1,10 @@
 # 10. Platform Landscape
 
+> **AI ecosystem alignment — 9 November 2026:** [Current roles and integration boundaries](18-ai-ecosystem-alignment.md). AMIRA remains application assistance; MATRIX is the planned document specialist; MINDA is internal intelligence. Existing authority, free-precheck and payment gates remain.
+
+
+> **Integration policy update — 2026-11-04:** [ADR-352](../adr/ADR-352-indecs-airs-submission-and-precheck.md) and the [shared contract](../integration/indecs-airs-contract.md) govern the single iNDECS submission journey. Free applicant precheck is bounded checklist/file/text/local-OCR preparation with no paid AI; payment clears before formal acceptance, then AIRS technical review runs. iNDECS owns operational workflow and decisions; scores are advisory. Fees and correction-round charging remain undecided. Conflicting earlier tariffs, standalone AIRS operational ownership and paid AI intake auto-fill before submission are superseded. Historical milestones are not implementation claims.
+
 Version 2.0, 2026-09-18.
 
 ## 1. The four systems

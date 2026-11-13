@@ -9,7 +9,7 @@
     $workspaceName = $isOsc ? 'eOSC+' : ($isBangunan ? 'iNDECS Bangunan' : 'iNDECS Perancang');
     $workspaceShort = $isOsc ? 'eOSC+' : ($isBangunan ? 'Bangunan' : 'Perancang');
     $workspaceDepartment = $isOsc ? 'Mesyuarat OSC' : ($isBangunan ? 'Jabatan Bangunan' : 'Jabatan Perancang Bandar');
-    $workspaceIcon = $isOsc ? 'folder-open' : ($isBangunan ? 'building-2' : 'map');
+    $workspaceDepartmentIcon = $isBangunan ? 'bangunan' : 'perancang';
     $homeUrl = $isOsc ? route('osc.meetings.index') : ($isBangunan ? ($canBangunan ? route('bangunan.index') : route('bangunan.legacy.index')) : ($canBangunan ? route('perancang.index') : route('dashboard')));
     $canRegisterBangunan = $canBangunan && collect(\App\Models\BangunanApplication::TYPES)->contains(fn ($family) => $staff->canPerformBangunan('access', $family) && $staff->canPerformBangunan('register', $family));
 @endphp
@@ -39,11 +39,12 @@
                 <span><strong>iNDECS</strong><small>Kawalan Pembangunan</small></span>
             </a>
             <details class="workspace-switcher">
-                <summary><span><small>Ruang jabatan</small><strong><x-icon :name="$workspaceIcon" />{{ $workspaceShort }}</strong></span><x-icon name="chevron-down" /></summary>
+                <summary><span><small>Ruang jabatan</small><strong>@if ($isOsc)<x-eosc-icon compact />@else<x-department-icon :department="$workspaceDepartmentIcon" compact />@endif{{ $workspaceShort }}</strong></span><x-icon name="chevron-down" /></summary>
                 <nav aria-label="Pilih ruang jabatan">
-                    @if ($canPerancang)<a href="{{ $canBangunan ? route('perancang.index') : route('dashboard') }}" @if (! $isBangunan && ! $isOsc) aria-current="page" @endif><x-icon name="map" />iNDECS Perancang</a>@endif
-                    @if ($canBangunan)<a href="{{ route('bangunan.index') }}" @if ($isBangunan && ! request()->routeIs('bangunan.legacy.*')) aria-current="page" @endif><x-icon name="building-2" />iNDECS Bangunan</a>@elseif ($canLegacy)<a href="{{ route('bangunan.legacy.index') }}" aria-current="page"><x-icon name="archive" />Bangunan · Rekod warisan</a>@endif
-                    @if ($canOsc)<a href="{{ route('osc.meetings.index') }}" @if ($isOsc) aria-current="page" @endif><x-icon name="folder-open" />eOSC+</a>@endif
+                    <a href="{{ route('home') }}"><x-icon name="layout-dashboard" />Semua aplikasi</a>
+                    @if ($canPerancang)<a href="{{ $canBangunan ? route('perancang.index') : route('dashboard') }}" @if (! $isBangunan && ! $isOsc) aria-current="page" @endif><x-department-icon department="perancang" compact />iNDECS Perancang</a>@endif
+                    @if ($canBangunan)<a href="{{ route('bangunan.index') }}" @if ($isBangunan && ! request()->routeIs('bangunan.legacy.*')) aria-current="page" @endif><x-department-icon department="bangunan" compact />iNDECS Bangunan</a>@elseif ($canLegacy)<a href="{{ route('bangunan.legacy.index') }}" aria-current="page"><x-department-icon department="bangunan" compact />Bangunan · Rekod warisan</a>@endif
+                    @if ($canOsc)<a href="{{ route('osc.meetings.index') }}" @if ($isOsc) aria-current="page" @endif><x-eosc-icon compact />eOSC+</a>@endif
                 </nav>
             </details>
             <nav class="primary-nav" aria-label="Navigasi utama">
@@ -61,7 +62,7 @@
                     <a href="{{ route('perancang.index') }}" class="nav-link {{ request()->routeIs('perancang.index', 'perancang.show') ? 'active' : '' }}" @if (request()->routeIs('perancang.index', 'perancang.show')) aria-current="page" @endif><x-icon name="files" />Permohonan PKM</a>
                     @if ($staff->canPerformPkm('perancang.pkm.register'))<a href="{{ route('perancang.create') }}" class="nav-link {{ request()->routeIs('perancang.create') ? 'active' : '' }}" @if (request()->routeIs('perancang.create')) aria-current="page" @endif><x-icon name="file-plus-2" />Daftar PKM</a>@endif
                 @endif
-                @if ($canOsc && ! $isOsc)<a href="{{ route('osc.meetings.index') }}" class="nav-link"><x-icon name="folder-open" />eOSC+</a>@endif
+                @if ($canOsc && ! $isOsc)<a href="{{ route('osc.meetings.index') }}" class="nav-link"><x-eosc-icon compact />eOSC+</a>@endif
                 <span class="nav-label nav-label-spaced">Bantuan</span>
                 @if ($staff->canViewLibrary())<a href="{{ route('library.index') }}" class="nav-link {{ request()->routeIs('library.*') ? 'active' : '' }}" @if (request()->routeIs('library.*')) aria-current="page" @endif><x-icon name="files" />Perpustakaan jabatan</a>@endif
                 <button class="nav-link" type="button" data-amira-open aria-controls="amira-panel" aria-expanded="false"><x-icon name="messages-square" />Panduan AMIRA</button>
@@ -72,7 +73,7 @@
         <div class="page-shell">
             <header class="topbar">
                 <button class="menu-button icon-button" type="button" data-menu-toggle aria-label="Buka menu" aria-expanded="false" aria-controls="sidebar"><x-icon name="menu" /></button>
-                <div class="topbar-context"><x-mark class="mark-small" /><div><strong>{{ $workspaceName }}</strong><span>{{ $workspaceDepartment }}</span></div></div>
+                <div class="topbar-context">@if ($isOsc)<x-eosc-icon compact />@else<x-department-icon :department="$workspaceDepartmentIcon" compact />@endif<div><strong>{{ $workspaceName }}</strong><span>{{ $workspaceDepartment }}</span></div></div>
                 <div class="topbar-actions">
                     @include('partials.theme-control')
                     <button class="button button-secondary button-small amira-toggle" type="button" data-amira-open aria-controls="amira-panel" aria-expanded="false"><x-icon name="messages-square" /><span>AMIRA</span></button>

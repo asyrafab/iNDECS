@@ -29,3 +29,6 @@ Thumbs.db
 
 # Brainstorm mockups and plan-execution scratch
 .superpowers/
+
+# Generated runtime/preview output
+/output

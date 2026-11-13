@@ -69,7 +69,7 @@ final class WorkspacePresentationTest extends TestCase
         ];
         foreach ($pages as $name => $url) {
             $response = $this->get($url)->assertOk()->assertSee('iNDECS Bangunan')
-                ->assertSee('Sambungan AIRS belum tersedia')
+                ->assertSee('Perbualan AI AMIRA belum tersedia')
                 ->assertDontSee('href="'.route('perancang.index').'"', false);
             if (in_array($name, ['bangunan-show', 'bangunan-documents'], true)) {
                 $response->assertSee('data-reference="'.$application->application_reference.'"', false);
@@ -98,7 +98,7 @@ final class WorkspacePresentationTest extends TestCase
     public function test_public_identity_uses_shared_branding_without_staff_record_context(): void
     {
         foreach (['staff-login' => route('login'), 'public-login' => route('portal.login'), 'public-register' => route('portal.register')] as $name => $url) {
-            $response = $this->get($url)->assertOk()->assertSee('Sambungan AIRS belum tersedia')
+            $response = $this->get($url)->assertOk()->assertSee('Perbualan AI AMIRA belum tersedia')
                 ->assertSee('img/mbsp.png')->assertDontSee('data-stage="Pendaftaran"', false);
             $this->capture($name, $response);
         }

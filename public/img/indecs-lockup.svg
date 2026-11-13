@@ -1,7 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 120" width="420" height="120" fill="none">
-  <rect x="4" y="60" width="56" height="56" stroke="#102a43" stroke-width="8"></rect>
-  <rect x="32" y="32" width="56" height="56" stroke="#102a43" stroke-width="8"></rect>
-  <rect x="56" y="0" width="64" height="64" fill="#2c9da0"></rect>
+  <svg x="0" y="0" width="120" height="120" viewBox="25.6 25.6 229.6 229.6"><path d="M142.9,255.2H25.6v-117.3h117.3v117.3ZM30.6,250.2h107.3v-107.3H30.6v107.3Z" fill="#231f20"/><path d="M199.1,199.1h-117.3v-117.3h117.3v117.3ZM86.8,194.1h107.3v-107.3h-107.3v107.3Z" fill="#231f20"/><path d="M196.6,255.2c-32.3,0-58.7-26.3-58.7-58.7h5c0,29.6,24.1,53.7,53.7,53.7s53.7-24.1,53.7-53.7-24.1-53.7-53.7-53.7v-5c32.3,0,58.7,26.3,58.7,58.7s-26.3,58.7-58.7,58.7Z" fill="#231f20"/><rect x="137.9" y="25.6" width="117.3" height="117.3" fill="#14676b"/></svg>
   <rect x="148" y="14" width="2" height="92" fill="#102a43" fill-opacity="0.4"></rect>
   <text x="174" y="62" font-family="Google Sans, Segoe UI, system-ui, sans-serif" font-weight="600" font-size="46" letter-spacing="-1.4" fill="#102a43">iNDECS</text>
   <text x="174" y="88" font-family="Google Sans, Segoe UI, system-ui, sans-serif" font-weight="500" font-size="13" letter-spacing="2" fill="#596e80">SISTEM BERSEPADA KAWALAN PEMBANGUNAN</text>

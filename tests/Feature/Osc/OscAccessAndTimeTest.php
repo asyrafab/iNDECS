@@ -64,7 +64,7 @@ final class OscAccessAndTimeTest extends TestCase
         $this->login('setiausaha@indecs.test')->assertRedirect(route('osc.meetings.index'));
         $this->assertAuthenticatedAs($this->secretary);
 
-        $this->get('/')->assertRedirect(route('osc.meetings.index'));
+        $this->get('/')->assertOk()->assertSee('data-application-launcher', false);
         $this->get(route('osc.meetings.index'))->assertOk()->assertSee('Bil. 21/2026');
     }
 
@@ -82,7 +82,7 @@ final class OscAccessAndTimeTest extends TestCase
 
         $this->login('ahli@indecs.test')->assertRedirect(route('osc.meetings.index'));
         $this->assertAuthenticatedAs($member);
-        $this->get('/')->assertRedirect(route('osc.meetings.index'));
+        $this->get('/')->assertOk()->assertSee('data-application-launcher', false);
         $this->get(route('osc.meetings.index'))->assertOk()->assertSee('Bil. 21/2026');
         $this->get(route('osc.meetings.show', $this->meeting))->assertOk()->assertSee('Penamaan Jalan Pertama');
     }

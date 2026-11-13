@@ -1,7 +1,11 @@
 # AI Review Studio (AIRS) — System Description
 
-**Document version:** 1.0
-**Date:** 11 August 2026
+> **AMIRA ownership update — 2026-11-04:** [The backend extraction](integration/amira-backend.md) establishes AMIRA as an independent service in `C:\Users\Asyra\Documents\AMIRA`. The extracted guidance catalogue is implemented; free-text conversation/inference remains unavailable. AIRS retains review AI and its UI/assets, with local guidance during outages. This supersedes earlier AIRS-owned assistant-backend assumptions.
+
+> **Current integration authority — 2026-11-04:** [iNDECS–AIRS integration contract](integration/indecs-airs-contract.md) governs ownership, public intake, free precheck, payment, scoring and AMIRA. iNDECS owns formal submission, payments and decisions; AIRS owns review processing. Free precheck uses checklist/file checks and bounded local text/OCR only; paid technical AI starts after payment clearance and accepted submission. Fees and correction-round charges remain undecided. Conflicting standalone flows, RM150/RM50 tariffs, score-based rejection and AIRS-issued official outcomes below are superseded; retain them only as prototype/history references. This notice records policy, not completed implementation.
+
+**Document version:** 1.1 (integration policy alignment)
+**Original baseline:** 11 August 2026; **integration policy updated:** 4 November 2026
 **Application version at time of writing:** `v0.7.0-beta.1` (beta channel)
 **Product owner:** Majlis Bandaraya Seberang Perai (MBSP)
 **Status:** Beta / controlled pilot
@@ -32,7 +36,7 @@ The following are absorbed into this document and should no longer be circulated
 - `22_AMIRA_RIVE_SPEC.md` — the AMIRA animation asset contract.
 - `21_AIRS_CREATIVE_DIRECTION.md` — brand, visual identity and interface direction.
 - `CHANGELOG.md` — release history.
-- The numbered technical references `01`–`20`, which remain useful but are older than this document. Where they disagree with this document, **this document wins**. Known divergences are listed in Appendix B.
+- The numbered technical references `01`–`20`, which remain useful but are older than this document. Where they disagree with this document, **this document wins for the historical technical baseline**. The 2026-11-04 integration contract takes precedence for integrated ownership, submission, precheck, payment, scoring and AMIRA. Known older divergences are listed in Appendix B.
 
 ---
 
@@ -42,7 +46,7 @@ The following are absorbed into this document and should no longer be circulated
 
 AIRS is an AI-assisted technical review system for development plan applications submitted to MBSP. Its first and only active module reviews **Pelan Lampu Jalan Untuk Pembangunan (LJUP)** — street lighting plans.
 
-An applicant submits a package of documents. AIRS extracts, classifies and reads them, checks them against a versioned internal catalogue of MBSP's own requirements, and produces a structured report in which every finding is linked to the specific document and page that supports it. An MBSP officer then reviews those findings item by item and an approval officer signs off.
+An applicant prepares and formally submits through iNDECS after payment clearance. AIRS receives the accepted document-set version, extracts, classifies and reads it, and checks the configured requirements. Every finding links to supporting document/page evidence. Officers assess findings and record official decisions in iNDECS. Free applicant precheck is limited to preparation checks under the integration contract.
 
 The assistant persona presented to users is **AMIRA** — *AI Multidocument Interpretation and Review Assistant*.
 
@@ -92,52 +96,20 @@ This is not a slogan; it is enforced in the architecture:
 
 **Control note on `ADMIN`.** By decision of the product owner, `ADMIN` is a full superuser rather than a segregated account-management role. Because a compromised admin credential could therefore produce a validly signed MBSP letter, the following compensating controls are mandatory: named individuals only with no shared accounts; enforced multi-factor authentication; visible tagging on the case and letter whenever an admin performs a review or approval; logged role changes notified to other administrators; and periodic access review. User removal is soft-delete only — hard deletion would destroy the evidence behind signed approvals.
 
-## 5. How an application flows
+## 5. Agreed integrated application journey (2026-11-04)
 
 ```text
-Applicant prepares package
-        |
-        v
-Email verified  (a passwordless "shadow account" is created if not registered)
-        |
-        v
-Documents uploaded
-        |
-        v
-Automatic completeness check   -- fails --> returned to applicant, no charge
-        |
-      passes
-        |
-        v
-RM150 paid via MBSPpay
-        |
-        v
-Submission accepted  --> SLA clock starts (3 working days)
-        |
-        v
-Auto-assigned to a review officer by district (derived from mukim/lot)
-        |
-        v
-AI processing: extract, classify, read, evaluate, consolidate, report
-        |
-        v
-Officer reviews findings item by item
-        |
-   +----+----------------------------+
-   |                                 |
-correction needed                 complete
-   |                                 |
-   v                                 v
-Applicant corrects            Approval officer approves
-(free if MBSP asked;                 |
- RM50 if applicant-initiated)        v
-   |                          System digitally signs the letter
-   +--> back to review               |
-                                     v
-                          Applicant downloads; QR verification available
+iNDECS login -> application draft -> checklist uploads
+  -> free file/text/local-OCR preparation precheck -> applicant confirmation
+  -> fee assessment -> verified payment (or approved audited waiver)
+  -> formal submission accepted in iNDECS
+  -> AIRS technical review -> evidence-linked preliminary findings
+  -> officer assessment/corrections -> official decision/letter in iNDECS
 ```
 
-## 6. Where the system stands today
+AMIRA assists throughout within the user's permissions. No paid AI is used for applicant precheck; no score automatically approves/rejects a submission or hides findings. Fee amounts and correction-round charges remain undecided. See the integration contract for resource controls, ownership, versioning and acceptance criteria.
+
+## 6. Historical capability baseline (August 2026)
 
 | Area | Status |
 |---|---|
@@ -502,7 +474,7 @@ These constrain everything that follows. Changing any of them requires re-planni
 | 7 | Companies are registered by **SSM number only**, unverified, deduplicated on that number, shown to officers as applicant-declared. |
 | 8 | **RM150 is due before a submission is accepted.** The SLA clock starts at payment webhook confirmation. |
 | 9 | Deterministic completeness checks run **before** the payment page. |
-| 10 | The **RM50 resubmission fee is waived when MBSP requested the correction**; charged only for applicant-initiated resubmission or scope change. |
+| 10 | Every amendment costs **RM50**, including an officer-requested amendment, unless an authorised officer records a waiver and reason. A rejected case cannot be amended; it requires a new application and the configured initial fee. |
 | 11 | Unpaid applications are **cancelled after 3 months** and the bill terminated. |
 | 12 | Refunds are approved manually by senior management; the system only records them. |
 | 13 | District is **derived from a mukim/lot lookup**, not chosen freely by the applicant. |
@@ -539,7 +511,7 @@ Inserted because payment webhooks, persistent queue workers and SLA scheduling c
 
 ### Phase 3 — Payment and officer operations
 
-Payment: MBSPpay integration; RM150 gate before acceptance; conditional RM50 resubmission fee driven by recorded correction cause; unique payment reference derived from the application reference number; verified idempotent webhooks; receipts; reconciliation; three-month cancellation sweep with warnings at ~60 and ~80 days and bill termination; manual refund recording.
+Payment: the staging implementation provides a RM150 gate before LJUP acceptance and a separate RM50 bill for every amendment, with an audited officer waiver. Fees are configurable per application type and snapshotted on each bill. Dummy online, counter and cheque outcomes are available only outside production. Remaining production work is MBSPpay integration, a unique payment reference derived from the application reference number, verified idempotent webhooks, receipts, reconciliation, three-month cancellation warnings and manual refund recording.
 
 Two external confirmations are required early: whether MBSPpay can **void** a bill via API, and what happens if a cancelled bill is nevertheless paid.
 

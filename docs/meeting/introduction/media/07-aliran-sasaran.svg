@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+<title id="title">Aliran keseluruhan dan langkah seterusnya</title><desc id="desc">Konsep sasaran — pelaksanaan berperingkat</desc>
+<style>:root {--color-navy:#102a43;--color-text:#172b3a;--color-text-muted:#596e80;--color-accent:#2c9da0;--color-accent-700:#14676b;--color-bg:#f7f9fb;--color-bg-soft:#e6f4f4;--color-surface:#ffffff;--color-border:#dce4ea;} text {font-family:"Google Sans","Segoe UI",sans-serif;}</style>
+<rect x="0" y="0" width="1600" height="900" fill="var(--color-bg)" stroke="none" stroke-width="2"/>
+<text x="64" y="90" font-size="42" font-weight="600" fill="var(--color-text)">Aliran keseluruhan dan langkah seterusnya</text>
+<text x="64" y="139" font-size="25" font-weight="400" fill="var(--color-text-muted)">Konsep sasaran — pelaksanaan berperingkat</text>
+<line x1="64" y1="172" x2="1536" y2="172" stroke="var(--color-border)" stroke-width="2"/>
+<text x="64" y="267" font-size="35" font-weight="600" fill="var(--color-accent-700)">01</text>
+<rect x="64" y="304" width="220" height="190" fill="var(--color-bg-soft)" stroke="none" stroke-width="2"/>
+<text x="79" y="356" font-size="25" font-weight="600" fill="var(--color-navy)">Persediaan</text>
+<line x1="287" y1="401" x2="306" y2="401" stroke="var(--color-accent)" stroke-width="3"/>
+<line x1="294" y1="393" x2="306" y2="401" stroke="var(--color-accent)" stroke-width="3"/>
+<line x1="294" y1="409" x2="306" y2="401" stroke="var(--color-accent)" stroke-width="3"/>
+<text x="312" y="267" font-size="35" font-weight="600" fill="var(--color-accent-700)">02</text>
+<rect x="312" y="304" width="220" height="190" fill="var(--color-bg-soft)" stroke="none" stroke-width="2"/>
+<text x="327" y="356" font-size="25" font-weight="600" fill="var(--color-navy)">Pra-semak</text>
+<text x="327" y="404" font-size="25" font-weight="600" fill="var(--color-navy)">percuma</text>
+<line x1="535" y1="401" x2="554" y2="401" stroke="var(--color-accent)" stroke-width="3"/>
+<line x1="542" y1="393" x2="554" y2="401" stroke="var(--color-accent)" stroke-width="3"/>
+<line x1="542" y1="409" x2="554" y2="401" stroke="var(--color-accent)" stroke-width="3"/>
+<text x="560" y="267" font-size="35" font-weight="600" fill="var(--color-accent-700)">03</text>
+<rect x="560" y="304" width="220" height="190" fill="var(--color-navy)" stroke="none" stroke-width="2"/>
+<text x="575" y="356" font-size="25" font-weight="600" fill="var(--color-surface)">Bayaran dan</text>
+<text x="575" y="404" font-size="25" font-weight="600" fill="var(--color-surface)">penerimaan</text>
+<text x="575" y="452" font-size="25" font-weight="600" fill="var(--color-surface)">rasmi</text>
+<line x1="783" y1="401" x2="802" y2="401" stroke="var(--color-accent)" stroke-width="3"/>
+<line x1="790" y1="393" x2="802" y2="401" stroke="var(--color-accent)" stroke-width="3"/>
+<line x1="790" y1="409" x2="802" y2="401" stroke="var(--color-accent)" stroke-width="3"/>
+<text x="808" y="267" font-size="35" font-weight="600" fill="var(--color-accent-700)">04</text>
+<rect x="808" y="304" width="220" height="190" fill="var(--color-bg-soft)" stroke="none" stroke-width="2"/>
+<text x="823" y="356" font-size="25" font-weight="600" fill="var(--color-navy)">Semakan dan</text>
+<text x="823" y="404" font-size="25" font-weight="600" fill="var(--color-navy)">pembetulan</text>
+<line x1="1031" y1="401" x2="1050" y2="401" stroke="var(--color-accent)" stroke-width="3"/>
+<line x1="1038" y1="393" x2="1050" y2="401" stroke="var(--color-accent)" stroke-width="3"/>
+<line x1="1038" y1="409" x2="1050" y2="401" stroke="var(--color-accent)" stroke-width="3"/>
+<text x="1056" y="267" font-size="35" font-weight="600" fill="var(--color-accent-700)">05</text>
+<rect x="1056" y="304" width="220" height="190" fill="var(--color-bg-soft)" stroke="none" stroke-width="2"/>
+<text x="1071" y="356" font-size="25" font-weight="600" fill="var(--color-navy)">Pertimbangan</text>
+<line x1="1279" y1="401" x2="1298" y2="401" stroke="var(--color-accent)" stroke-width="3"/>
+<line x1="1286" y1="393" x2="1298" y2="401" stroke="var(--color-accent)" stroke-width="3"/>
+<line x1="1286" y1="409" x2="1298" y2="401" stroke="var(--color-accent)" stroke-width="3"/>
+<text x="1304" y="267" font-size="35" font-weight="600" fill="var(--color-accent-700)">06</text>
+<rect x="1304" y="304" width="220" height="190" fill="var(--color-bg-soft)" stroke="none" stroke-width="2"/>
+<text x="1319" y="356" font-size="25" font-weight="600" fill="var(--color-navy)">Keputusan</text>
+<text x="1319" y="404" font-size="25" font-weight="600" fill="var(--color-navy)">dan surat</text>
+<text x="64" y="559" font-size="28" font-weight="600" fill="var(--color-text)">Pra-semak: kelengkapan dan kebolehgunaan fail</text>
+<text x="64" y="605" font-size="26" font-weight="400" fill="var(--color-text)">Bayaran disahkan sebelum penerimaan rasmi; pengecualian dasar perlu diluluskan</text>
+<text x="64" y="651" font-size="26" font-weight="400" fill="var(--color-text)">AIRS formal selepas penerimaan. Pembetulan boleh berulang; laluan OSC mengikut jenis.</text>
+<rect x="64" y="699" width="1472" height="73" fill="var(--color-navy)" stroke="none" stroke-width="2"/>
+<text x="88" y="746" font-size="30" font-weight="600" fill="var(--color-surface)">Seterusnya: sesi setiap jabatan untuk proses, keperluan dan keutamaan</text>
+<line x1="64" y1="803" x2="1536" y2="803" stroke="var(--color-border)" stroke-width="2"/>
+<text x="64" y="849" font-size="23" font-weight="400" fill="var(--color-text-muted)">Semakan teknikal dan keputusan berasingan daripada pra-semak percuma</text>
+</svg>

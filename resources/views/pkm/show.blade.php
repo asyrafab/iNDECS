@@ -3,6 +3,7 @@
 @section('title', $application->application_reference)
 
 @section('content')
+<p><a class="button button-secondary button-small" href="{{ route('airs.application', $application) }}">Semakan AIRS</a></p>
     <div class="record-heading">
         <div>
             <a href="{{ route('perancang.index') }}" class="back-link"><x-icon name="arrow-left" /> Kembali ke senarai</a>

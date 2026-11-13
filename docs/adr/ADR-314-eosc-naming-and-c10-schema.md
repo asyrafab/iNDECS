@@ -1,5 +1,7 @@
 # ADR-314: eOSC+ naming and the C10 schema
 
+> **NADI alignment — 9 November 2026:** [Current direction](../eosc/nadi-direction.md): **NADI > eOSC**. iNDECS registers papers under eOSC for assigned meetings and communicates with NADI, the application used within meetings. Other meeting types may become sibling NADI modules later. The committee remains Jawatankuasa OSC. Earlier all-inside-iNDECS meeting descriptions are historical where they conflict; integration implementation remains to be designed.
+
 Date: 2026-10-29. Status: Accepted. Builds on ADR-213 (eOSC+ is core capability C10).
 
 ## Context

@@ -1,6 +1,12 @@
-# eOSC+ build plans
+# NADI build plans and eOSC implementation baseline
 
-The approved design (`../README.md`, v1.1, 2026-10-29) covers several subsystems. It is built as a series of
+> **Direction updated 9 November 2026:** [NADI — Navigation, Analysis, Decisions & Intelligence](../nadi-direction.md) is the in-meeting application, with eOSC as its first module and other meeting types possible later. eOSC in iNDECS keeps paper registration and meeting assignment. Plans 1–2 below describe existing implementation history; their routes/tables remain unchanged. Before Plan 3 or further meeting-screen work, reconcile component ownership, agenda/paper exchange, decision write-back and reuse of the built agenda/map screens. The old all-inside-iNDECS architecture is not automatically the NADI architecture. Historical branch/status entries below have not been re-verified by this documentation update.
+
+
+> **AI ecosystem alignment — 9 November 2026:** [Current roles and integration boundaries](../ai-ecosystem-alignment.md). AMIRA remains application assistance; MATRIX is the planned document specialist; MINDA is internal intelligence. Existing authority, free-precheck and payment gates remain.
+
+
+The OSC design baseline (v1.1, 2026-10-29) covers several subsystems. It is built as a series of
 plans. Each plan ends in working, tested software, and each is written in detail only when the previous one
 has landed, so it can use the real code.
 

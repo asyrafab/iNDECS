@@ -1,6 +1,9 @@
-# eOSC+ meetings and agenda
+# eOSC meetings and agenda
 
-Implemented increment: eOSC+ Plan 1 (foundation and agenda builder), 2026-10-29, on branch `feat/eosc-foundation` (not yet merged). Decision record: ADR-314. eOSC+ is core capability C10 inside iNDECS; screens are under `/osc`. This increment covers meetings, agenda items, papers and agenda publishing only. The meeting map (Plan 2, ADR-315) is described in the section "Meeting map" below and in `gis-layers.md`; there is no decision panel, attendance or external attendee access yet (later plans).
+> **NADI direction — 9 November 2026:** [Current product boundary](../eosc/nadi-direction.md): eOSC in iNDECS registers papers for assigned meetings; NADI is the in-meeting application, eOSC first. This runbook describes the existing iNDECS implementation and retains its routes, commands and configuration. It is not a NADI deployment guide; migration/reuse remains to be designed. Historical branch/merge status below has not been re-verified.
+
+
+Implemented increment: eOSC Plan 1 (foundation and agenda builder), 2026-10-29, on branch `feat/eosc-foundation` (not yet merged). Decision record: ADR-314. eOSC is core capability C10 inside iNDECS; screens are under `/osc`. This increment covers meetings, agenda items, papers and agenda publishing only. The meeting map (Plan 2, ADR-315) is described in the section "Meeting map" below and in `gis-layers.md`; there is no decision panel, attendance or external attendee access yet (later plans).
 
 ## Deployment
 
@@ -17,7 +20,7 @@ Rollback refuses to drop the tables once any meeting exists; use a reviewed data
 
 Papers can be up to 50 MB. PHP must accept that: set `upload_max_filesize` and `post_max_size` to at least `50M` (`post_max_size` slightly larger is safer) in the PHP configuration used by the web server, and allow the same body size in the web server or reverse proxy. Check with `php -i | grep -E "upload_max_filesize|post_max_size"` for the CLI and a phpinfo check for the web SAPI. With lower limits an upload fails before it reaches iNDECS.
 
-Times: every date and time in eOSC+ (meeting time, cut-offs, published-at labels) is entered and shown in Malaysian local time (`Asia/Kuala_Lumpur`, UTC+8), set by `DISPLAY_TIMEZONE` (config `app.display_timezone`). The database stores UTC. Do not change the application timezone (`config/app.php`) for eOSC+.
+Times: every date and time in eOSC (meeting time, cut-offs, published-at labels) is entered and shown in Malaysian local time (`Asia/Kuala_Lumpur`, UTC+8), set by `DISPLAY_TIMEZONE` (config `app.display_timezone`). The database stores UTC. Do not change the application timezone (`config/app.php`) for eOSC.
 
 ## Granting roles
 
@@ -121,7 +124,7 @@ Until Plan 4 (attendee access) ships, members, chairperson and presenters must b
 
 ## Validation
 
-`php artisan test` covers meetings, linked and standalone proposals, cut-offs, endorsement, accept/return, versioned publishing and changes, papers, visibility, closed-meeting refusals, sign-in for eOSC+-only staff and members, and cut-offs in Malaysian local time. Use the configured test database, never a production connection.
+`php artisan test` covers meetings, linked and standalone proposals, cut-offs, endorsement, accept/return, versioned publishing and changes, papers, visibility, closed-meeting refusals, sign-in for eOSC-only staff and members, and cut-offs in Malaysian local time. Use the configured test database, never a production connection.
 
 ## Meeting map
 

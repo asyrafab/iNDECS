@@ -1,5 +1,8 @@
 # Architecture Decision Records
 
+> **AI ecosystem alignment — 9 November 2026:** [Current roles and integration boundaries](../integration/ai-ecosystem.md). AMIRA remains application assistance; MATRIX is the planned document specialist; MINDA is internal intelligence. Existing authority, free-precheck and payment gates remain.
+
+
 One file per decision, named `ADR-NNN-short-title.md`, numbered from 301. Never edit an accepted record; supersede it with a new one that references the old.
 
 Programme-level decisions (ADR-201 to ADR-213) are in `../bangunan/16-decision-log.md`.
@@ -100,3 +103,35 @@ Date: YYYY-MM-DD. Status: Proposed | Accepted | Superseded by ADR-MMM.
 - [ADR-362: Department library and conditional checklist rules](ADR-362-department-library-and-checklist-rules.md)
 
 - [ADR-363: Free applicant pre-check](ADR-363-free-precheck.md)
+
+- [ADR-364: Logout returns to welcome without the introduction](ADR-364-logout-to-welcome-without-introduction.md)
+
+- [ADR-365: AMIRA fluid avatar and random bubble release](ADR-365-amira-fluid-avatar-and-bubble-release.md)
+
+- [ADR-366: Centred AMIRA identity and contained orbit](ADR-366-centred-amira-identity-and-contained-orbit.md)
+
+- [ADR-367: AMIRA typing and conversation-box entrance](ADR-367-amira-typing-and-message-entrance.md)
+- [ADR-369: AMIRA conversation on a local Qwen model](ADR-369-amira-conversation-on-local-qwen.md)
+- [ADR-370: Department letter icons](ADR-370-department-letter-icons.md)
+- [ADR-371: Department icons in navigation](ADR-371-department-icon-navigation.md)
+- [ADR-372: Official AIRS chooser logo](ADR-372-official-airs-launcher-logo.md)
+- [ADR-373: Esri logo for E-Plan Submission](ADR-373-official-esri-launcher-logo.md)
+- [ADR-374: Transparent Esri chooser identity](ADR-374-transparent-esri-logo.md)
+- [ADR-375: E-Plan Submission destination](ADR-375-eplan-submission-link.md)
+- [ADR-376: Temporary eOSC+ icon](ADR-376-temporary-eosc-icon.md)
+
+## AI agent naming — 9 November 2026
+
+[ADR-377: MBSP AI agent identities and documentation alignment](ADR-377-mbsp-ai-agent-identities.md) records the confirmed names and preserves existing source-system and review authority.
+
+- [ADR-379: Landscape semicircle in the iNDECS mark](ADR-379-landscape-semicircle-in-system-mark.md)
+
+## NADI meeting direction — 9 November 2026
+
+[ADR-378: NADI identity and in-meeting application boundary](ADR-378-nadi-meeting-application-boundary.md) records **NADI > eOSC**, iNDECS paper registration under eOSC and communication with NADI, with other meeting types open for later modules. Revises ADR-213 product scope and ADR-314 display naming; existing technical identifiers remain.
+
+- [ADR-380: Owner-supplied iNDECS logo](ADR-380-owner-supplied-indecs-logo.md)
+
+- [ADR-381: Circular garden in the opening animation](ADR-381-circular-garden-in-opening-animation.md)
+
+- [ADR-382: Small edging on the garden walking path](ADR-382-garden-path-stone-edging.md)

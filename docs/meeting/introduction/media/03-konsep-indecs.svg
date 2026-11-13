@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+<title id="title">iNDECS — platform kawalan pemajuan</title><desc id="desc">Portal utama dan pemegang rekod rasmi</desc>
+<style>:root {--color-navy:#102a43;--color-text:#172b3a;--color-text-muted:#596e80;--color-accent:#2c9da0;--color-accent-700:#14676b;--color-bg:#f7f9fb;--color-bg-soft:#e6f4f4;--color-surface:#ffffff;--color-border:#dce4ea;} text {font-family:"Google Sans","Segoe UI",sans-serif;}</style>
+<rect x="0" y="0" width="1600" height="900" fill="var(--color-bg)" stroke="none" stroke-width="2"/>
+<text x="64" y="90" font-size="42" font-weight="600" fill="var(--color-text)">iNDECS — platform kawalan pemajuan</text>
+<text x="64" y="139" font-size="25" font-weight="400" fill="var(--color-text-muted)">Portal utama dan pemegang rekod rasmi</text>
+<line x1="64" y1="172" x2="1536" y2="172" stroke="var(--color-border)" stroke-width="2"/>
+<rect x="64" y="334" width="300" height="160" fill="var(--color-surface)" stroke="var(--color-border)" stroke-width="2"/>
+<text x="88" y="395" font-size="32" font-weight="600" fill="var(--color-text)">Pemohon / PSP</text>
+<text x="88" y="442" font-size="24" font-weight="400" fill="var(--color-text)">Persediaan dan urusan</text>
+<line x1="380" y1="414" x2="505" y2="414" stroke="var(--color-accent)" stroke-width="3"/>
+<line x1="493" y1="406" x2="505" y2="414" stroke="var(--color-accent)" stroke-width="3"/>
+<line x1="493" y1="422" x2="505" y2="414" stroke="var(--color-accent)" stroke-width="3"/>
+<rect x="525" y="273" width="540" height="462" fill="var(--color-navy)" stroke="none" stroke-width="2"/>
+<text x="555" y="337" font-size="48" font-weight="600" fill="var(--color-surface)">iNDECS</text>
+<text x="555" y="404" font-size="31" font-weight="400" fill="var(--color-surface)">Rekod rasmi</text>
+<text x="555" y="457" font-size="31" font-weight="400" fill="var(--color-surface)">Versi dokumen</text>
+<text x="555" y="510" font-size="31" font-weight="400" fill="var(--color-surface)">Aliran kerja dan sejarah</text>
+<line x1="1082" y1="414" x2="1188" y2="414" stroke="var(--color-accent)" stroke-width="3"/>
+<line x1="1176" y1="406" x2="1188" y2="414" stroke="var(--color-accent)" stroke-width="3"/>
+<line x1="1176" y1="422" x2="1188" y2="414" stroke="var(--color-accent)" stroke-width="3"/>
+<rect x="1205" y="273" width="331" height="300" fill="var(--color-bg-soft)" stroke="none" stroke-width="2"/>
+<text x="1229" y="330" font-size="31" font-weight="600" fill="var(--color-text)">Jabatan teknikal</text>
+<text x="1229" y="386" font-size="28" font-weight="400" fill="var(--color-text)">Perancang</text>
+<text x="1229" y="433" font-size="28" font-weight="400" fill="var(--color-text)">Bangunan</text>
+<text x="1229" y="480" font-size="28" font-weight="400" fill="var(--color-text)">Kejuruteraan</text>
+<text x="1229" y="527" font-size="28" font-weight="400" fill="var(--color-text)">Landskap</text>
+<rect x="550" y="596" width="490" height="112" fill="var(--color-bg-soft)" stroke="none" stroke-width="2"/>
+<text x="575" y="640" font-size="31" font-weight="600" fill="var(--color-text)">eOSC+ dalam iNDECS</text>
+<text x="575" y="684" font-size="26" font-weight="400" fill="var(--color-text)">Urusan mesyuarat OSC</text>
+<line x1="64" y1="803" x2="1536" y2="803" stroke="var(--color-border)" stroke-width="2"/>
+<text x="64" y="849" font-size="23" font-weight="400" fill="var(--color-text-muted)">Konsep sasaran — pelaksanaan berperingkat</text>
+</svg>

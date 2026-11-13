@@ -192,6 +192,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'amira_consented_at' => 'datetime',
             'is_active' => 'boolean',
             'has_password' => 'boolean',
             'password' => 'hashed',

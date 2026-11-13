@@ -1,3 +1,86 @@
+// Shared presentation for local guidance in the drawer and Kaunter Maya.
+const amiraReplyStates = new WeakMap();
+const amiraActiveReplies = new Set();
+const amiraMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+const amiraReducedMotion = () => amiraMotion.matches || document.documentElement.dataset.motion === 'reduced';
+
+function animateAmiraReply(root, heading, content, question, options = {}) {
+    amiraReplyStates.get(root)?.finish();
+    const answer = root.querySelector('[data-amira-answer]');
+    const copy = root.querySelector('[data-amira-answer-copy]');
+    const user = root.querySelector('[data-amira-user]');
+    const avatar = options.avatar || root.querySelector('[data-amira-bubble]');
+    const text = content || '';
+    let frame = 0;
+    const animations = [];
+    let finished = false;
+    let resolveDone;
+    const done = new Promise(resolve => { resolveDone = resolve; });
+    const state = {
+        finish() {
+            if (finished) return;
+            finished = true;
+            cancelAnimationFrame(frame);
+            animations.forEach(animation => animation.cancel());
+            copy.textContent = text;
+            copy.style.minHeight = '';
+            answer.setAttribute('aria-busy', 'false');
+            if (avatar) window.AmiraBubble?.setSpeaking(avatar, false);
+            amiraActiveReplies.delete(state);
+            options.onUpdate?.();
+            resolveDone();
+        },
+    };
+    amiraReplyStates.set(root, state);
+    answer.setAttribute('aria-busy', 'true');
+    const title = root.querySelector('[data-amira-answer-title]');
+    title.textContent = heading;
+    title.hidden = !heading;
+    user.textContent = question || '';
+    user.hidden = !question;
+    answer.hidden = false;
+    copy.textContent = text;
+    if (options.immediate || amiraReducedMotion() || document.hidden || !text) { state.finish(); return done; }
+
+    // Measure complete text once; reveal into its reserved space without reflowing every letter.
+    copy.style.minHeight = `${copy.getBoundingClientRect().height}px`;
+    copy.textContent = '';
+    const styles = getComputedStyle(document.documentElement);
+    const milliseconds = name => {
+        const value = styles.getPropertyValue(name).trim();
+        return parseFloat(value) * (value.endsWith('ms') ? 1 : 1000);
+    };
+    const letters = typeof Intl.Segmenter === 'function'
+        ? Array.from(new Intl.Segmenter('ms', { granularity: 'grapheme' }).segment(text), part => part.segment)
+        : Array.from(text);
+    const duration = Math.min(letters.length * milliseconds('--duration-amira-character'), milliseconds('--duration-amira-reply-max'));
+    const scale = styles.getPropertyValue('--scale-amira-message-enter').trim();
+    [user, answer].filter(box => !box.hidden && typeof box.animate === 'function').forEach(box => {
+        animations.push(box.animate([
+            { opacity: 0, transform: `scale(${scale})`, transformOrigin: box === user ? 'top right' : 'top left' },
+            { opacity: 1, transform: 'scale(1)', transformOrigin: box === user ? 'top right' : 'top left' },
+        ], { duration: milliseconds('--duration-amira-message-enter'), easing: styles.getPropertyValue('--ease-standard').trim() }));
+    });
+    amiraActiveReplies.add(state);
+    if (avatar) window.AmiraBubble?.setSpeaking(avatar, true);
+    const started = performance.now();
+    let shown = 0;
+    const type = now => {
+        if (amiraReducedMotion() || document.hidden || !root.isConnected) { state.finish(); return; }
+        const count = Math.min(letters.length, Math.floor((now - started) / duration * letters.length));
+        if (count !== shown) { copy.textContent = letters.slice(0, count).join(''); shown = count; options.onUpdate?.(); }
+        if (count === letters.length) state.finish(); else frame = requestAnimationFrame(type);
+    };
+    frame = requestAnimationFrame(type);
+    return done;
+}
+
+const finishAmiraReplies = () => [...amiraActiveReplies].forEach(state => state.finish());
+amiraMotion.addEventListener('change', () => { if (amiraReducedMotion()) finishAmiraReplies(); });
+new MutationObserver(() => { if (amiraReducedMotion()) finishAmiraReplies(); })
+    .observe(document.documentElement, { attributes: true, attributeFilter: ['data-motion'] });
+document.addEventListener('visibilitychange', () => { if (document.hidden) finishAmiraReplies(); });
+
 document.addEventListener('DOMContentLoaded', () => {
     const sidebar = document.querySelector('#sidebar');
     const menuToggle = document.querySelector('[data-menu-toggle]');
@@ -124,11 +207,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const showGuidance = (root, kind, question) => {
         if (!root) return;
         const main = document.querySelector('#main-content');
-        const title = root.querySelector('[data-amira-answer-title]');
-        const copy = root.querySelector('[data-amira-answer-copy]');
-        const user = root.querySelector('[data-amira-user]');
-        user.hidden = !question;
-        user.textContent = question || '';
         let heading = 'Panduan halaman ini';
         let content = root.dataset.guide;
         if (kind === 'fields') {
@@ -145,16 +223,15 @@ document.addEventListener('DOMContentLoaded', () => {
             heading = 'Panduan sistem setempat';
             content = 'Perbualan AI AMIRA belum tersedia. Pilih panduan halaman, bantuan borang atau langkah seterusnya untuk panduan berdasarkan halaman ini. Semakan dokumen melalui AIRS dan jawapan AI langsung belum disambungkan.';
         }
-        title.textContent = heading;
-        copy.textContent = content;
-        root.querySelector('[data-amira-answer]').hidden = false;
+        animateAmiraReply(root, heading, content, question);
     };
     // The drawer (#amira-panel) and the inline Kaunter Maya panel ([data-amira-guidance]) share one guidance engine.
     [assistant, ...document.querySelectorAll('[data-amira-guidance]')].filter(Boolean).forEach(root => {
+    if (root.hasAttribute('data-amira-session')) return;
     // Inline AMIRA controls ship hidden so they stay inert without JavaScript.
     root.querySelectorAll('[data-amira-interactive][hidden]').forEach(node => { node.hidden = false; });
     root.querySelectorAll('[data-amira-prompt]').forEach(button => button.addEventListener('click', () => showGuidance(root, button.dataset.amiraPrompt, button.textContent.trim())));
-    root.querySelector('[data-amira-form]')?.addEventListener('submit', event => {
+    root.querySelector('[data-amira-form]:not([data-amira-chat])')?.addEventListener('submit', event => {
         event.preventDefault();
         const input = root.querySelector('[data-amira-input], #amira-question');
         const question = input.value.trim();

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AirsReviewController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\BangunanApplicationController;
 use App\Http\Controllers\BangunanDocumentCatalogueController;
@@ -16,10 +17,21 @@ use App\Http\Controllers\Osc\LayoutImageController;
 use App\Http\Controllers\Osc\MeetingController;
 use App\Http\Controllers\Osc\MeetingMapController;
 use App\Http\Controllers\PkmApplicationController;
+use App\Services\ApplicationLauncher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 require __DIR__.'/public.php';
+
+Route::middleware('auth')->group(function (): void {
+    Route::get('/airs', [AirsReviewController::class, 'index'])->name('airs.index');
+    Route::get('/applications/{application}/airs', [AirsReviewController::class, 'application'])->name('airs.application');
+    Route::post('/applications/{application}/airs', [AirsReviewController::class, 'store'])->middleware('throttle:10,1')->name('airs.store');
+    Route::get('/airs/reviews/{review}', [AirsReviewController::class, 'show'])->name('airs.show');
+    Route::post('/airs/reviews/{review}/refresh', [AirsReviewController::class, 'refresh'])->middleware('throttle:20,1')->name('airs.refresh');
+    Route::post('/airs/reviews/{review}/feedback', [AirsReviewController::class, 'feedback'])->middleware('throttle:20,1')->name('airs.feedback');
+    Route::get('/airs/reviews/{review}/documents/{document}', [AirsReviewController::class, 'document'])->name('airs.document');
+});
 
 Route::middleware('guest')->group(function (): void {
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
@@ -30,7 +42,15 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
     ->middleware('auth')
     ->name('logout');
 
-Route::get('/', function (Request $request) {
+Route::get('/', function (Request $request, ApplicationLauncher $launcher) {
+    $user = $request->user();
+    abort_if($user && ! $user->isPublicAccount() && ! $user->canAccessStaffWorkspace(), 403);
+
+    return response()->view('welcome', ['launcherApplications' => $user ? $launcher->forUser($user) : []])
+        ->header('Cache-Control', 'no-store');
+})->name('home');
+
+Route::get('/dashboard', function (Request $request) {
     if (! $request->user()) {
         return view('welcome');
     }

@@ -50,6 +50,56 @@
     const amira = document.getElementById('amira-counter');
     if (!amira) return;
     const phone = window.matchMedia('(max-width: 900px)');
+
+    // Desktop: drag the panel's right edge (or use arrow keys) to resize; double-click resets. Saved per browser.
+    const handle = amira.querySelector('[data-amira-resize]');
+    if (handle) {
+        const rootStyle = document.documentElement.style;
+        const MIN = 300;
+        const max = () => Math.max(MIN, Math.min(720, Math.round(window.innerWidth * .5)));
+        const current = () => amira.getBoundingClientRect().width;
+        const apply = (width, save = true) => {
+            const value = Math.round(Math.min(max(), Math.max(MIN, width)));
+            rootStyle.setProperty('--width-counter-amira', `${value}px`);
+            handle.setAttribute('aria-valuenow', String(value));
+            handle.setAttribute('aria-valuemax', String(max()));
+            if (save) { try { localStorage.setItem('indecs.amira.width', String(value)); } catch { /* This page only. */ } }
+        };
+        handle.hidden = false;
+        handle.setAttribute('aria-valuemin', String(MIN));
+        handle.setAttribute('aria-valuenow', String(Math.round(current())));
+        handle.setAttribute('aria-valuemax', String(max()));
+        handle.addEventListener('pointerdown', event => {
+            if (phone.matches || event.button !== 0) return;
+            event.preventDefault();
+            handle.setPointerCapture(event.pointerId);
+            const startX = event.clientX;
+            const startWidth = current();
+            document.documentElement.classList.add('is-resizing-amira');
+            const move = moved => apply(startWidth + moved.clientX - startX);
+            const end = () => {
+                handle.removeEventListener('pointermove', move);
+                handle.removeEventListener('pointerup', end);
+                handle.removeEventListener('pointercancel', end);
+                document.documentElement.classList.remove('is-resizing-amira');
+            };
+            handle.addEventListener('pointermove', move);
+            handle.addEventListener('pointerup', end);
+            handle.addEventListener('pointercancel', end);
+        });
+        handle.addEventListener('keydown', event => {
+            const step = event.shiftKey ? 64 : 16;
+            const keys = { ArrowLeft: () => current() - step, ArrowRight: () => current() + step, Home: () => MIN, End: () => max() };
+            if (!keys[event.key]) return;
+            event.preventDefault();
+            apply(keys[event.key]());
+        });
+        handle.addEventListener('dblclick', () => {
+            rootStyle.removeProperty('--width-counter-amira');
+            try { localStorage.removeItem('indecs.amira.width'); } catch { /* Nothing saved. */ }
+            handle.setAttribute('aria-valuenow', String(Math.round(current())));
+        });
+    }
     const sheetOpeners = [...document.querySelectorAll('[data-amira-sheet-open]')];
     let sheetOpener = null;
     const setSheet = (open, returnFocus = true) => {

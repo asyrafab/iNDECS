@@ -8,6 +8,8 @@ use App\Models\ApplicantDraft;
 use App\Models\ApplicationType;
 use App\Models\LibraryDocument;
 use App\Models\User;
+use App\Services\Amira\ContextBuilder;
+use App\Services\Amira\ProposalSanitiser;
 use App\Services\Portal\PortalBoard;
 use App\Services\Precheck\DraftChecklist;
 use Illuminate\Database\Eloquent\Builder;
@@ -19,8 +21,6 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 final class PublicPortalController extends Controller
 {
-    private const TYPES = ['PKM', 'PB', 'PBK', 'PBS', 'PMT', 'TEL'];
-
     public function __construct(private readonly PortalBoard $board) {}
 
     public function home(Request $request)
@@ -58,8 +58,30 @@ final class PublicPortalController extends Controller
 
         $types = $this->types()->get();
         $selected = $types->firstWhere('id', $request->query('type'));
+        // ADR-369: "Guna butiran ini" from AMIRA opens this form prefilled; only offered values survive, and nothing is saved until the PSP saves.
+        $prefill = $this->prefill($request->query('prefill'));
+        $draft = new ApplicantDraft(['application_type_id' => $prefill['application_type'] ?? $selected?->id]);
+        $draft->fill(array_intersect_key($prefill, array_flip(ApplicantDraft::PARTICULARS)));
 
-        return view('public.drafts.edit', ['draft' => new ApplicantDraft(['application_type_id' => $selected?->id]), 'types' => $types, 'board' => $this->board->for($request->user())]);
+        return view('public.drafts.edit', ['draft' => $draft, 'types' => $types, 'board' => $this->board->for($request->user())]);
+    }
+
+    private function prefill(mixed $query): array
+    {
+        if (! is_array($query)) {
+            return [];
+        }
+        $numeric = fn (mixed $value, bool $integer) => is_string($value) && is_numeric($value)
+            ? ($integer ? (ctype_digit($value) ? (int) $value : null) : (float) $value) : null;
+
+        return ProposalSanitiser::clean([
+            'application_type' => is_string($query['application_type'] ?? null) ? $query['application_type'] : null,
+            'work_type' => is_string($query['work_type'] ?? null) ? $query['work_type'] : null,
+            'building_category' => is_string($query['building_category'] ?? null) ? $query['building_category'] : null,
+            'storeys' => $numeric($query['storeys'] ?? null, true),
+            'floor_area' => $numeric($query['floor_area'] ?? null, false),
+            'site_conditions' => is_array($query['site_conditions'] ?? null) ? array_values($query['site_conditions']) : [],
+        ], app(ContextBuilder::class)->options()) ?? [];
     }
 
     public function store(Request $request)
@@ -120,9 +142,7 @@ final class PublicPortalController extends Controller
 
     private function types(): Builder
     {
-        return ApplicationType::query()->whereIn('id', self::TYPES)->where('is_active', true)
-            ->whereHas('primaryDepartment', fn (Builder $query) => $query->where('is_active', true))
-            ->with('primaryDepartment')->orderBy('primary_department_id')->orderBy('id');
+        return ApplicationType::query()->portal();
     }
 
     private function validated(Request $request): array

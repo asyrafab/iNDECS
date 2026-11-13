@@ -1,8 +1,14 @@
-# eOSC+ — OSC meeting room for iNDECS
+# NADI — Navigation, Analysis, Decisions & Intelligence
 
-> **Status:** Design v1.1 **approved by the owner 2026-10-29** (builder check done). Plan 1 (foundation and agenda) built on branch `feat/eosc-foundation`, not yet merged. Plan 2 (map) built on branch `feat/eosc-map`, not yet merged. Next: Plan 3 (decision panel).
+> **Current direction — 9 November 2026:** [NADI product direction](nadi-direction.md) governs identity, scope and product boundaries. **eOSC in iNDECS registers each paper for its assigned meeting; NADI is the application used within the meeting. eOSC is its first module**, with other meeting types open for later needs. The v1.1 details below remain the OSC functional/build baseline; old eOSC branding and the all-inside-iNDECS architecture are historical wherever they conflict with this direction. Runtime, storage and integration choices remain open.
+
+
+> **AI ecosystem alignment — 9 November 2026:** [Current roles and integration boundaries](ai-ecosystem-alignment.md). AMIRA remains application assistance; MATRIX is the planned document specialist; MINDA is internal intelligence. Existing authority, free-precheck and payment gates remain.
+
+
+> **Historical baseline:** Design v1.1 **approved by the owner 2026-10-29** (builder check done); product direction revised 2026-11-09. Prior implementation status recorded at the time: Plan 1 (foundation and agenda) built on branch `feat/eosc-foundation`, not yet merged. Plan 2 (map) built on branch `feat/eosc-map`, not yet merged. Next: Plan 3 (decision panel).
 > Owner: JTIK (builds). Operated by OSC, Jabatan Perancang Bandar and Jabatan Bangunan.
-> Decision records: ADR-212 (concurrent modules), ADR-213 (eOSC+ inside iNDECS) in `docs/bangunan/16-decision-log.md`.
+> Decision records: ADR-378 (current NADI boundary; see [NADI direction](nadi-direction.md)); ADR-212 and ADR-213 are historical implementation context in the iNDECS decision log.
 > Mirror copy: `C:\Users\Asyra\Documents\eOSC+\docs\eosc-plus-design.md`. Both are updated together.
 >
 > Marking: **[owner]** = confirmed by the owner. **[call]** = the designer's call, open to owner correction
@@ -12,13 +18,11 @@
 
 ## 1. What this is and why
 
-eOSC+ is the screen the **Jawatankuasa OSC** meeting runs on. Applications are tabled, discussed on a map
-with their papers and plans, and decided by the chairperson in the system. Members follow and comment on
-their own phones. The PSP or Owner can be brought in by video call when the committee needs clarification.
+**NADI** is the advanced meeting workspace: Navigation, Analysis, Decisions & Intelligence. People use it within the meeting to navigate papers and evidence, examine issues, present, discuss and capture authorised outcomes. **eOSC is the first specialised module [owner]**; other meeting types remain possible without committing their features now.
 
-It is built **inside iNDECS** as the meeting-room screens of core capability **C10 Meetings and decisions**
-(`docs/bangunan/11-indecs-core-roadmap.md`) **[owner]**. It replaces the legacy eOSC / MJKP system
-(`O:\Projects\mjkp`: PHP circa 2010, Access `mpsp_mjkp.mdb`, MapGuide 6.5 ActiveX viewer).
+**eOSC within iNDECS registers each paper for its assigned meeting [owner].** NADI consumes that assigned meeting context for use in the meeting, without requiring duplicate paper registration. iNDECS retains official development-control records and workflow; the integration must return authorised OSC outcomes without competing decisions.
+
+The earlier all-inside-iNDECS C10 design (ADR-213) is the implementation baseline to reconcile, not the product boundary going forward. NADI hosting, repository, persistence and integration contracts remain **[open]**. The OSC experience modernises the legacy eOSC / MJKP meeting system (`O:\Projects\mjkp`, PHP circa 2010, Access `mpsp_mjkp.mdb`, MapGuide 6.5 ActiveX viewer).
 
 The legacy system still works, but:
 
@@ -41,17 +45,17 @@ trace.
 
 1. Any application type can be tabled, including types whose iNDECS module does not exist yet.
 2. The agenda is built from what departments put forward in the system, not from emailed lists.
-3. A map that is current and useful enough that members stay in eOSC+.
+3. A map that is current and useful enough that members stay in NADI during OSC meetings.
 4. The chairperson's decision is recorded in the system, in a fixed sequence, and is final when given.
-5. Attendees, internal and external, use eOSC+ on their own phones, securely.
+5. Attendees, internal and external, use NADI on their own phones, securely.
 6. The PSP or Owner can be called in by video for clarification.
 7. The meeting runs even when ArcGIS Enterprise is down.
 
 **Non-goals**
 
-- eOSC+ is not where applications are registered or assessed; that stays in the iNDECS department modules.
-- eOSC+ does not draw application boundaries (section 9.3).
-- eOSC+ is not the master GIS; ArcGIS Enterprise stays the master.
+- NADI does not register or assess development-control applications; that stays in the iNDECS department modules. Paper registration and meeting assignment stay in eOSC within iNDECS.
+- NADI displays application boundaries registered through iNDECS (section 9.3).
+- NADI is not the master GIS; ArcGIS Enterprise stays the master.
 - No native mobile app in an app store.
 
 **Anti-goals (failure even if it technically works)**
@@ -62,27 +66,24 @@ trace.
 - The chairperson can press a decision button before the presenting officer's proposal exists, or a decision
   is changed after it was given.
 - AI text is presented as a decision (AGENTS.md: AI suggests, the officer decides).
-- eOSC+ becomes a separate system with its own login, database or look.
+- NADI requires duplicate paper registration, bypasses iNDECS permissions, or creates competing official application decisions.
 
 ## 3. Constraints
 
-- **Inside iNDECS** **[owner]**: Laravel, PostgreSQL 16+ with PostGIS, iNDECS identity (C1), RBAC (C2),
-  append-only audit and history (ADR-306), documents (C4), letters and e-approval (C9), notifications (C8).
-  Follow `AGENTS.md` and `docs/DESIGN-DIRECTION.md` exactly: Calm Intelligence tokens, Google Sans, Lucide
-  icons, Bahasa Melayu interface, light/dark by token only, existing classes in `public/css/indecs.css`.
-- **Core, not a department module.** Meetings serve every department, so eOSC+ tables live in the `core`
-  schema. Department data stays in department extension tables; cross-module effects go through domain
-  events (C11).
-- **Naming.** `DESIGN-DIRECTION.md` section 1 has no route or table prefix for meetings. The builder records
-  one in an ADR before writing code **[builder]**; the product name shown to users is **eOSC+**.
+- **Product boundary [owner]:** eOSC in iNDECS handles paper registration and meeting assignment; NADI is the in-meeting application. eOSC is its first module. Future meeting types must not inherit mandatory OSC application/map/decision rules.
+- **Implementation baseline:** the existing Laravel/PostgreSQL/PostGIS implementation, shared identity, RBAC, audit, document, notification and signature capabilities remain available for reuse. Their final relationship to NADI requires an integration/transition decision; no separate database or deployment is mandated here.
+- **Visual baseline:** retain the Calm Intelligence family direction, Bahasa Melayu interface, shared tokens and accessibility rules for reused screens. NADI artwork and navigation changes require their own implementation work.
+- **Naming:** NADI is the meeting application identity; eOSC remains the iNDECS paper-registration identity. Keep existing route, table, permission and class identifiers until migration is designed.
 - **Never depend on ArcGIS Enterprise during a meeting** **[owner]** (portal at `spgis.mbsp.gov.my`
   disconnects often).
-- **Concurrent delivery** **[owner]** (ADR-212): eOSC+ is built at the same time as the department modules.
+- **Concurrent delivery** **[owner]** (ADR-212): eOSC is built at the same time as the department modules.
   It must work before PKM, Kejuruteraan, Landskap or a Penamaan Jalan module are on the workflow engine.
 - **Web only** **[owner]**: a responsive web application, installable to the home screen.
 - **Decisions are written before code** in `docs/adr/` (AGENTS.md).
 
 ## 4. People and roles
+
+Sections 4–18 retain the OSC module baseline. References to eOSC live-meeting screens describe the earlier implementation; apply the NADI boundary above before new implementation. OSC-specific finality, outcomes, application linkage and signatures are not defaults for future meeting modules.
 
 | Role | Who | Signs in with | Can do |
 |---|---|---|---|
@@ -102,7 +103,7 @@ roles in a meeting (e.g. an officer presents one item and is a member for the re
 
 | Concept | Meaning |
 |---|---|
-| Meeting type | A kind of committee with its own default members, chair, quorum rule and application types. Only Jawatankuasa OSC is needed (its decision is final **[owner]**); other committees can be added later on the same model **[call]** |
+| Meeting type | An extensible kind of meeting in NADI; eOSC is the first module, and other types are defined only when needed. The remaining rules here describe OSC. A kind of committee with its own default members, chair, quorum rule and application types. Only Jawatankuasa OSC is needed (its decision is final **[owner]**); other committees can be added later on the same model **[call]** |
 | Meeting (Mesyuarat) | One sitting: number (e.g. Bil. 21/2026), date, time, venue, chair, secretary, status |
 | Agenda item (Perkara) | One thing tabled: **one agenda item = one application [owner]** (combined developments are not tabled as one item for now). Either **linked** to an iNDECS application, or **standalone** (title, department, application type, location, paper) for types with no iNDECS module yet, e.g. Penamaan Jalan & Taman **[call]**. A standalone item can be linked to an application later |
 | Paper (Kertas) | Kertas pembentangan plus attachments (plans, photos, reports) for an item, versioned |
@@ -172,14 +173,14 @@ attendee access they need (section 10).
 **Today:** Perancang and Bangunan each send the STENO a list of titles about a week before; she builds the
 agenda; full papers can arrive the day before.
 
-**In eOSC+:**
+**Preparation in eOSC / iNDECS; consumption in NADI:**
 
 1. The secretary creates a meeting: type, number, date, time, venue, chair, cut-off date for putting items
    forward, cut-off for papers **[call]**.
 2. Officers put items forward for a chosen meeting:
    - **Linked item:** from the application's **Mesyuarat** tab in the iNDECS workspace (the tab already exists
      in the 17-tab shell). Title, location, boundary and documents come from the application.
-   - **Standalone item:** from eOSC+ directly, for types without a module: title, department, application
+   - **Standalone item:** registered in eOSC within iNDECS, for types without a module: title, department, application
      type, reference, location (boundary drawn by the presenting officer, section 9.3), paper.
 3. **Who may put an item forward, and whether a head of department must approve it first, is [open]**: the
    owner will settle it later. Build it as permissions plus an optional per-department approval step that can
@@ -187,7 +188,8 @@ agenda; full papers can arrive the day before.
 4. The secretary sees one combined list, accepts or returns items, orders them (grouped by department and
    type by default), and publishes. Publishing notifies invitees. Re-publishing after a change creates a new
    agenda version and tells attendees what changed **[call]**.
-5. A title may be on the agenda before its paper. Items without a paper by the paper cut-off are flagged on
+5. NADI opens the published meeting and its authorised paper versions for presentation, analysis, discussion and decision capture. Agenda preparation/publication screen ownership and exchange with NADI remain to be reconciled; there is no second paper-registration flow in NADI.
+6. A title may be on the agenda before its paper. Items without a paper by the paper cut-off are flagged on
    the secretary's screen and the attendee agenda **[call]**.
 
 ### 8.2 F7 Map
@@ -254,10 +256,10 @@ indicator using the meeting type's rule (rule **[open]**, configurable), and con
 per item: a member who declares is marked and excluded from that item's comments **[call]**.
 
 **After the decision:** for a linked item, a domain event moves the application's iNDECS workflow (F12) and the
-decision appears on the application's **Keputusan** tab. **The eOSC+ decision is the only authoritative
+decision appears on the application's **Keputusan** tab. **The eOSC decision is the only authoritative
 committee decision from the first live meeting [call].** Until full F12 is built, a minimal version ships with
 F9: the decision is written to the application's record, and the department module's own committee-decision
-entry for that application becomes read-only, showing the eOSC+ decision. Officers never re-enter it. For a standalone item, the decision is recorded on the
+entry for that application becomes read-only, showing the eOSC decision. Officers never re-enter it. For a standalone item, the decision is recorded on the
 item and carried over when it is later linked to an application **[call]**.
 
 ## 9. Other features (summary for planning)
@@ -281,10 +283,10 @@ item and carried over when it is later linked to an application **[call]**.
 - **F10** STENO notes per item; optional per-item timer shown to the secretary and chair.
 - **F11** Video call: section 11.
 
-### 9.3 Boundaries and positioned layout plans (in iNDECS registration, used by eOSC+)
+### 9.3 Boundaries and positioned layout plans (in iNDECS registration, used by eOSC)
 
 **[owner]** Application boundaries are drawn at registration in iNDECS, on the application, by the
-registration officer **or** by the PSP / Owner when they submit. eOSC+ only displays them. This needs a
+registration officer **or** by the PSP / Owner when they submit. eOSC only displays them. This needs a
 map-drawing tool in core C13 GIS, used by every module's registration form and by the public submission path.
 **[call]** Standalone items get their boundary drawn by the presenting officer when put forward. **[call]**
 Scanned layout plans are positioned the same way, with a simple control-point tool (pick matching points on the
@@ -303,7 +305,7 @@ plan and on the map).
 
 **Invitations [owner]:** before each meeting, attendees receive an invitation by email or letter with a unique
 link or QR code. Opening it, they register for that meeting with their **own phone number**, confirmed by
-**OTP**. eOSC+ is web-based.
+**OTP**. eOSC is web-based.
 
 **Two kinds of link:**
 
@@ -342,7 +344,7 @@ OTP is sent by SMS through the core notification adapter (C8); the SMS gateway i
 
 ## 11. Video call to PSP or Owner (F11)
 
-- **Technology [call]:** a self-hosted **Jitsi Meet** server at MBSP, opened from inside eOSC+. No per-user
+- **Technology [call]:** a self-hosted **Jitsi Meet** server at MBSP, opened from inside eOSC. No per-user
   licence; calls stay in-house. If MBSP already licenses Microsoft Teams or Google Meet, the owner may choose
   that instead; the integration point is the same (create a room, hand out a link).
 - The secretary or presenting officer starts a call for one item. The PSP / Owner receives a **single-use link**
@@ -375,18 +377,18 @@ existing responsive patterns **[builder]**.
 | C8 notifications | Invitations, agenda published, OTP SMS, call links |
 | C13 GIS | Boundary drawing and plan positioning at registration; PostGIS layers |
 | ArcGIS Enterprise | Source of replicated layers only; never called during a meeting |
-| OSC3Plus | No direct link in the first release; applications reach eOSC+ through their iNDECS modules **[call]** |
-| Sistem Bangunan 2.0 | Its `PmnKeputusanOSC` field is replaced by eOSC+ decisions at Bangunan cut-over. Because the OSC decision is final **[owner]**, there is no separate YDP decision in eOSC+; legacy `PmnKeputusanYDP` values are migrated as history only **[call]** |
+| OSC3Plus | No direct link in the first release; applications reach eOSC through their iNDECS modules **[call]** |
+| Sistem Bangunan 2.0 | Its `PmnKeputusanOSC` field is replaced by eOSC decisions at Bangunan cut-over. Because the OSC decision is final **[owner]**, there is no separate YDP decision in eOSC; legacy `PmnKeputusanYDP` values are migrated as history only **[call]** |
 
 ## 14. Legacy migration
 
-| Source | Content | Into eOSC+ |
+| Source | Content | Into eOSC |
 |---|---|---|
 | `O:\Projects\mjkp\DB\mpsp_mjkp.mdb`, table `Kertas_kerja` | 7,694 historical records (sync log 2026-10-28), of which 2,288 have no XY; title, status, comment, mukim, seksyen, attachment names | Historical meetings and items with decisions mapped: 1 → Lulus dengan Syarat (tambahan), 2 → Lulus dengan Syarat (teknikal), 3 → Tangguh, 4 → Tolak |
 | `O:\Projects\mjkp\web\doc`, `plan`, `gambar` | ~5,700 papers, ~15,000 plans, ~13,000 photos | Attachments of the historical items, with checksums |
 | Georeferenced `.jgw` / `.tfw` images | ~4,300 + ~280 | Layer 2 scanned layout imagery |
 | `O:\Projects\mjkp\Data\DWG`, `SHP` | Drawings and site shapefiles | Evaluated; site shapes become boundaries where they match **[builder]** |
-| `sync_mjkp.py` | MDB → ArcGIS feature-layer sync | Retired when eOSC+ holds the records |
+| `sync_mjkp.py` | MDB → ArcGIS feature-layer sync | Retired when eOSC holds the records |
 
 Records without XY (the sync already exports them as `missing_xy_*.csv`) are migrated without a location and
 listed for cleanup **[call]**. The coordinate system of the legacy XY is determined from the shapefile `.prj`
@@ -415,7 +417,7 @@ migration rules.
    OTP sign-in, safeguards S1–S9 and S12, audit.
 
    **Core dependencies [call].** Under ADR-212 a core capability is built by the first module that needs it, so
-   the eOSC+ work builds the parts it needs, inside `core`, generically: C13 boundary drawing and PostGIS
+   the eOSC work builds the parts it needs, inside `core`, generically: C13 boundary drawing and PostGIS
    geometry, the C9 signature/hash/QR and staff MFA re-prompt, the C8 SMS adapter, and C11 domain events.
    Where one is not ready, these reduced first versions are acceptable:
    - F9 records final decisions before the signed plan exists; signing is added when C9 is ready, and no
@@ -456,7 +458,7 @@ within the build steps.
 These were decided by the designer, not the owner. Each can be changed.
 
 1. Standalone agenda items for types without an iNDECS module, linkable later.
-2. Meeting types as configuration (Jawatankuasa OSC first, Mesyuarat YDP and others later).
+2. Meeting types as configuration (Jawatankuasa eOSC first, Mesyuarat YDP and others later).
 3. Agenda versioning on re-publish; missing-paper flags; paper cut-off.
 4. Tangguh items offered automatically for a later meeting.
 5. Chair may choose a different decision from the officer's proposal; MFA re-prompt and a summary before the
@@ -475,7 +477,7 @@ These were decided by the designer, not the owner. Each can be changed.
 17. Scale and responsiveness targets in section 15.
 18. Chair override handled by the officer revising the proposal on the spot before the chair gives it.
 19. STENO notes visible to staff only until minutes are drafted.
-20. eOSC+ decision authoritative from day one; the module's own committee-decision entry becomes read-only.
-21. eOSC+ work builds the core pieces it needs; reduced first versions listed in section 16.
+20. eOSC decision authoritative from day one; the module's own committee-decision entry becomes read-only.
+21. eOSC work builds the core pieces it needs; reduced first versions listed in section 16.
 22. Tabling purposes as a configurable list; an application's current decision is its latest tabling's decision.
 23. Legacy `PmnKeputusanYDP` migrated as history only.

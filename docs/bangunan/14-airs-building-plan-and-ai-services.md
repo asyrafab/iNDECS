@@ -1,5 +1,10 @@
 # 14. AIRS Building Plan Module and Internal AI Services
 
+> **AI ecosystem alignment — 9 November 2026:** [Current roles and integration boundaries](18-ai-ecosystem-alignment.md). AMIRA remains application assistance; MATRIX is the planned document specialist; MINDA is internal intelligence. Existing authority, free-precheck and payment gates remain.
+
+
+> **Integration policy update — 2026-11-04:** [ADR-352](../adr/ADR-352-indecs-airs-submission-and-precheck.md) and the [shared contract](../integration/indecs-airs-contract.md) govern the single iNDECS submission journey. Free applicant precheck is bounded checklist/file/text/local-OCR preparation with no paid AI; payment clears before formal acceptance, then AIRS technical review runs. iNDECS owns operational workflow and decisions; scores are advisory. Fees and correction-round charging remain undecided. Conflicting earlier tariffs, standalone AIRS operational ownership and paid AI intake auto-fill before submission are superseded. Historical milestones are not implementation claims.
+
 Version 2.0, 2026-09-18. Decision records: ADR-205, ADR-206. Replaces the version 1 AI strategy.
 
 ## 1. Division of AI responsibility
@@ -50,7 +55,7 @@ Scanned hardcopy is common for PBK and permits. AIRS's OCR is prepared but not w
 
 ### 3.5 Interface
 
-Defined in document 12 section 3: create review, status and completion webhooks, findings retrieval, feedback write-back, and a single-document classify-and-extract endpoint for intake auto-fill. AIRS needs token authentication for system clients (currently session-only), module-level configuration of fees and SLA so `BUILDING_PLAN` does not inherit LJUP's RM150 and three-day values, and OIDC login against iNDECS.
+Defined in document 12 section 3: create review, status and completion webhooks, findings retrieval, feedback write-back, and a single-document classify-and-extract endpoint for formal-review extraction. Draft auto-fill is restricted to local text/OCR suggestions under the shared contract. AIRS now has a dedicated scoped service-token version-one API under ADR-354; browser OIDC login against iNDECS remains pending. Fees, payment gates, SLA and official submission live in iNDECS core and must not inherit LJUP staging amounts/timings. Free applicant preparation uses bounded local text/OCR only; paid AI extraction/technical review follows cleared payment and accepted formal submission. Service interfaces must preserve exact document/review versions and officer feedback.
 
 ## 4. iNDECS internal AI services
 
@@ -83,3 +88,7 @@ Data model additions follow the iNDECS overview section 22.4: `ai.model_versions
 3. Bangunan reference group of officers to confirm rules. Owner: Pengarah. Needed by: Phase B.
 4. Digital copies of MBSP guidelines and UKBS 1984 with Penang amendments. Owner: product owner. Needed by: Phase B.
 5. Annual application volume per family to size the AI budget. Owner: product owner. Needed by: Phase A.
+
+## Independent AMIRA backend (2026-11-04)
+
+AMIRA backend ownership was moved to C:\Users\Asyra\Documents\AMIRA under ADR-353 (2026-11-04). It is an independent prepared-guidance/catalogue service; conversation, model inference and record retrieval remain unimplemented. AIRS retains its review AiProvider and UI/assets. iNDECS keeps local guidance with no new remote dependency. Future assistant APIs belong to AMIRA, with scoped source APIs and iNDECS identity; free applicant guidance stays local and uses no paid AI.

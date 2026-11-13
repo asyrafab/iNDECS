@@ -8,7 +8,7 @@
 | iNDECS Bangunan | The Jabatan Bangunan module of iNDECS. The subject of this programme. Never abbreviated to "PB" |
 | iNDECS Perancang, Kejuruteraan, Landskap | The other department modules: planning permission, earthworks and drainage, landscape |
 | AIRS | AI Review Studio. In-house Laravel sub-system that reviews submitted plans against versioned rule packs and returns evidence-linked findings |
-| AMIRA | AI Multidocument Interpretation and Review Assistant, the AIRS assistant persona |
+| AMIRA | AI Multidocument Interpretation and Review Assistant. Independent assistant backend under ADR-353, consumed through host-system interfaces; iNDECS/Bangunan currently provide local guidance, with live conversation still unavailable |
 | LJUP | Pelan Lampu Jalan Untuk Pembangunan, street-lighting plan; the first AIRS module |
 | E-Submission, E-Plan Submission System | Esri Malaysia vendor system on ArcGIS Portal where PSPs submit CAD and Excel for ETL into GIS |
 | Sistem Bangunan 2.0 | Legacy WiseCore WinForms application on SQL Server `MPSP_Bangunan`, to be retired |

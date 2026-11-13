@@ -24,8 +24,20 @@ class CounterLayoutTest extends TestCase
             ->assertSee('data-mood="calm"', false)
             ->assertSee('Pegawai Kaunter Maya')
             ->assertSee('Perbualan AI belum tersedia')
-            ->assertSee('AMIRA membantu. Pegawai memutuskan.')
+            // Owner, 2026-11-06: the panel footer was removed; "officers decide" now lives in the AMIRA agreement.
+            ->assertDontSee('amira-counter-footer', false)
             ->assertDontSee('id="amira-panel"', false);
+    }
+
+    /** Owner, 2026-11-06: AMIRA's panel slides in from the left once per session and can be resized by dragging. */
+    public function test_panel_has_a_resize_handle_and_restores_width_before_paint(): void
+    {
+        $this->actingAs($this->applicant())->get(route('portal.home'))->assertOk()
+            ->assertSee('data-amira-resize', false)
+            ->assertSee('role="separator"', false)
+            ->assertSee('aria-label="Ubah lebar panel AMIRA"', false)
+            ->assertSee('indecs.amira.width', false)
+            ->assertSee('amiraArrive', false);
     }
 
     public function test_counter_has_phone_bar_controlling_amira_sheet(): void

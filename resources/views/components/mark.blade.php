@@ -1,1 +1,1 @@
-<span {{ $attributes->class(['indecs-mark']) }} aria-hidden="true"><span></span><span></span><span></span></span>
+<span {{ $attributes->class(['indecs-mark']) }} aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="25.6 25.6 229.6 229.6" focusable="false">@include('partials.indecs-mark-shapes')</svg></span>

@@ -119,7 +119,7 @@
                 <section class="about-section" id="identiti" aria-labelledby="identity-title">
                     <span class="eyebrow">07 · Identiti</span>
                     <h2 id="identity-title">Tiga lapisan, satu hubungan pembangunan</h2>
-                    <div class="content-card about-identity"><x-mark /><div><p>Logo iNDECS mengambil bentuk bumbung, dinding dan jejak bangunan dari pandangan atas. Tiga segi empat yang beranjak merangkum hubungan antara pelan, bangunan dan tapaknya.</p><p>Ia turut mencerminkan permohonan yang berdiri sendiri, pasangan permohonan berkaitan dan kelompok urusan bagi satu pembangunan.</p></div></div>
+                    <div class="content-card about-identity"><x-mark /><div><p>Tiga segi empat yang beranjak dalam logo iNDECS mewakili Perancang, Bangunan dan Kejuruteraan. Kanopi bulat di bahagian kanan bawah mewakili Landskap, melengkapkan empat jabatan dalam satu sistem kawalan pembangunan.</p><p>Petunjuk hubungan satu, dua atau tiga segi empat pula mencerminkan permohonan yang berdiri sendiri, pasangan permohonan berkaitan dan kelompok urusan bagi satu pembangunan.</p></div></div>
                 </section>
                 <section class="about-section" id="akses" aria-labelledby="access-title">
                     <span class="eyebrow">08 · Akses</span>

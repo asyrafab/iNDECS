@@ -1,10 +1,14 @@
 # 11. iNDECS Core Roadmap
 
+> **NADI alignment — 9 November 2026:** [Current direction](../eosc/nadi-direction.md): **NADI > eOSC**. iNDECS registers papers under eOSC for assigned meetings and communicates with NADI, the application used within meetings. Other meeting types may become sibling NADI modules later. The committee remains Jawatankuasa OSC. Earlier all-inside-iNDECS meeting descriptions are historical where they conflict; integration implementation remains to be designed.
+
+> **Integration policy update — 2026-11-04:** [ADR-352](../adr/ADR-352-indecs-airs-submission-and-precheck.md) and the [shared contract](../integration/indecs-airs-contract.md) govern the single iNDECS submission journey. Free applicant precheck is bounded checklist/file/text/local-OCR preparation with no paid AI; payment clears before formal acceptance, then AIRS technical review runs. iNDECS owns operational workflow and decisions; scores are advisory. Fees and correction-round charging remain undecided. Conflicting earlier tariffs, standalone AIRS operational ownership and paid AI intake auto-fill before submission are superseded. Historical milestones are not implementation claims.
+
 Version 2.2, 2026-10-29. Decision records: ADR-201 to ADR-213. Department modules are built concurrently (ADR-212).
 
 ## 1. Purpose
 
-iNDECS core today is a registration and completeness slice for PKM. Bangunan needs far more from the platform: a workflow engine, real RBAC, payments, notifications, SLA, letters, and a units registry. Management has brought Bangunan forward, and the department modules (Perancang, Bangunan, Kejuruteraan, Landskap) and eOSC+ are now built **concurrently** (ADR-212): each capability is built when the first module needs it, in the core, generic enough that every other module inherits it without rework.
+iNDECS currently supports PKM registration/completeness and Bangunan registration/document verification, with shared scoped RBAC, workflow, private document revisions and append-only history. Payments, later operational capabilities and live AIRS/AMIRA integrations remain future increments. Management has brought Bangunan forward, and the department modules (Perancang, Bangunan, Kejuruteraan, Landskap) and eOSC are built **concurrently** (ADR-212): each capability is built when the first module needs it, in the core, generic enough that every other module inherits it without rework. The capability table below records the programme scope, not a claim that every item is already implemented.
 
 This document lists those capabilities, the order they are built, and the platform baseline (database, security) that comes first.
 
@@ -47,7 +51,7 @@ The "why" column records the original Bangunan driver. Under ADR-212 a capabilit
 | C7 | **Units registry** | The Unique ID for every building unit, needed at Bangunan CCC and by Penilaian, Pelesenan, Penamaan Jalan | `core.units` (ULID, `unit_id` like `UB-SPT-0001234-7`, lot, kind, status, official address, CCC date, geometry). Lifecycle planned, approved, under construction, CCC issued, altered, demolished. Every transition publishes a domain event. Duplicate detection tooling for legacy lots and parties using `pg_trgm` | M |
 | C8 | **Tasks, SLA, notifications** | Piagam Pelanggan enforcement and applicant notices | Tasks with due dates already exist in embryo; add working-day calendar (weekends, Penang holidays, editable), stop reasons that pause the clock, escalation ladder, and a notification adapter for email and SMS with templates and delivery log. AIRS's `notification_deliveries` design is the model | M |
 | C9 | **Letters and e-approval** | SKP series, CCC, permits | HTML templates rendered to PDF (dompdf, already used in AIRS; move to a headless Chromium renderer if fidelity is insufficient), approval with MFA re-prompt, document hash, verification token, public QR verification page. AIRS's `review_letters` and `verify-letter` design is lifted into core | M |
-| C10 | **Meetings and decisions** | Jawatankuasa OSC and Mesyuarat YDP | Per the iNDECS overview: meetings, meeting cases, decisions with conditions; agenda and kertas pembentangan generation. The meeting-room screens (eOSC+: agenda builder, map, chairperson's decision panel, attendee mobile view, PSP video call) are designed in `docs/eosc/README.md` (draft) | M |
+| C10 | **Meeting registration and official decisions** | Committee tabling and outcome records | eOSC in iNDECS registers papers for assigned meetings and communicates with NADI. NADI > eOSC supplies the in-meeting experience; future meeting types may be sibling modules. Preserve official iNDECS records and human authority. Contract/topology to be designed under ADR-378 | M |
 | C11 | **Domain events and integration bus** | Unit events to other departments, AIRS handoff, OSC3Plus | `core.domain_events` append-only table, Laravel events and queued listeners, outbound webhooks with retry and dead-letter, replay tool | S |
 | C12 | **Dashboards and reports** | Management visibility, KPKT returns | Saved report definitions with parameters, CSV and PDF export, role-based dashboards | M |
 | C13 | **GIS** | Lot geometry, footprints, map search | PostGIS storage; ArcGIS Enterprise feature services consumed for cadastral lookup and published for building layer; E-Submission feature references stored on applications | M |
@@ -55,7 +59,7 @@ The "why" column records the original Bangunan driver. Under ADR-212 a capabilit
 
 ## 4. Sequencing
 
-**Concurrent delivery (ADR-212, 2026-10-29).** iNDECS Perancang, Bangunan, Kejuruteraan, Landskap and eOSC+ are built at the same time on the shared core. Each project keeps its own documentation folder under `docs/` with its own specification, backlog and acceptance. The sequential module rollout below (ADR-211) is superseded and kept for history; milestones A to E remain as platform milestones and as the Bangunan delivery plan, not as a department order.
+**Concurrent delivery (ADR-212, 2026-10-29).** iNDECS Perancang, Bangunan, Kejuruteraan, Landskap and eOSC are built at the same time on the shared core. Each project keeps its own documentation folder under `docs/` with its own specification, backlog and acceptance. The sequential module rollout below (ADR-211) is superseded and kept for history; milestones A to E remain as platform milestones and as the Bangunan delivery plan, not as a department order.
 
 Superseded: the module rollout order was **Phase 1: Bangunan**, followed by **Phase 2: PKM (Perancang)** (ADR-211, 2026-10-27).
 

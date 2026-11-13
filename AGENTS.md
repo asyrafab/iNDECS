@@ -1,5 +1,11 @@
 # AGENTS.md — iNDECS
 
+> **NADI direction — 9 November 2026:** [ADR-378](docs/adr/ADR-378-nadi-meeting-application-boundary.md) updates the earlier ADR-213 product boundary. **eOSC within iNDECS registers each paper for its assigned meeting. NADI — Navigation, Analysis, Decisions & Intelligence — is the application used within the meeting**, with eOSC as its first module and other meeting types open for later needs. Earlier descriptions of the entire live meeting as eOSC inside C10 are historical where they conflict. Existing code/identifiers remain; NADI deployment and integration require design. See [current direction](docs/eosc/nadi-direction.md).
+
+
+> **AI ecosystem alignment — 9 November 2026:** [Current roles and integration boundaries](docs/integration/ai-ecosystem.md). AMIRA remains application assistance; MATRIX is the planned document specialist; MINDA is internal intelligence. Existing authority, free-precheck and payment gates remain.
+
+
 ## AIRS integration and applicant submission (accepted 2026-11-04)
 
 [ADR-352](docs/adr/ADR-352-indecs-airs-submission-and-precheck.md) and the [shared integration contract](docs/integration/indecs-airs-contract.md) govern the target journey. iNDECS owns identity, drafts, formal submission, authoritative document versions, payments, corrections, assignment/SLA, notifications, official decisions and letters. AIRS is its review subsystem and owns review rules, evidence, findings and AI-run history; AMIRA assists within record permissions.
@@ -49,14 +55,11 @@ not used anywhere. Route prefixes, table prefixes and reference formats are in
 - **Core before module:** workflow engine, RBAC, fees, payments, notifications, SLA, letters,
   meetings, units registry and domain events are built in `core`, generically, when the first
   module needs them. Department modules are extension tables plus configuration.
-- **Concurrent modules (ADR-212):** Perancang, Bangunan, Kejuruteraan, Landskap and eOSC+
+- **Concurrent modules (ADR-212):** Perancang, Bangunan, Kejuruteraan, Landskap and eOSC
   are built at the same time. Each project's documentation lives in its own `docs/` folder
   (`docs/bangunan/`, `docs/eosc/`, `docs/perancang/` …). A core change made for one module
   must keep every other module's tests green.
-- **eOSC+ (ADR-213):** the OSC meeting room (agenda, map, chairperson's decisions, attendee
-  mobile view, PSP video call) is core capability C10 inside this codebase, not a separate
-  system. Its meeting map reads only replicated PostGIS layers, never live ArcGIS. Design in
-  `docs/eosc/README.md`.
+- **eOSC / NADI (ADR-378, revising ADR-213):** eOSC in this codebase registers papers for assigned meetings. NADI is the in-meeting application; eOSC is its first module. Existing C10 agenda/map code is the reuse baseline, not a settled NADI topology. Preserve technical identifiers and meeting-map resilience (replicated layers, never live ArcGIS). Current direction: `docs/eosc/nadi-direction.md`; OSC design baseline: `docs/eosc/README.md`.
 - **AI:** cloud-hosted models behind the provider-neutral `AiProvider` contract shared with
   AIRS; provider identifiers confined to audit tables; self-hosted later. AI suggests, the
   officer decides. No AI output changes state.
@@ -123,19 +126,39 @@ Light and dark modes are token-only: `data-theme` on `<html>`, switched by
 
 ## Assets
 
+- ADR-376 adopts the owner-supplied transparent `public/img/eosc-temporary.png` as temporary eOSC identity. Use `<x-eosc-icon compact />` for 32px workspace navigation/header identity and the original image at 64px in the chooser. Preserve its colours, alpha and proportions; keep action icons Lucide and system branding unchanged. Provenance is in `eosc-temporary.README.md`.
+
+- ADR-375 activates the E-Plan Submission chooser link to the owner-supplied `https://spgis.mbsp.gov.my/ePlanSubmission`, using same-tab native navigation and the existing administrator visibility check. It is a direct external link only; do not add credentials, tokens or record parameters, or imply SSO/API integration.
+
+- ADR-374 supersedes Esri's fixed white identity ground: `.application-icon-esri` is transparent and borderless. `--filter-esri-logo` displays the original black SVG normally in light mode and white in dark mode. Keep theme differences token-only and the full globe/wordmark geometry intact.
+
+- ADR-373: E-Plan Submission uses the unchanged full `public/img/esri-logo.svg`, with Esri attribution/provenance in `esri-logo.README.md`. `.application-icon-esri` supplies a token-based fixed white ground and neutral border for the black logo in both themes; preserve its aspect ratio and full wordmark. This provider identity exception does not activate the planned entry or alter its access checks.
+
+- ADR-372: AIRS's application chooser entry uses the unchanged official `public/img/airs-icon.svg` (`application-brand-logo` inside `.application-icon-brand`), with provenance in `airs-icon.README.md`. Its original gradient/colours are a brand identity exception. No extra tint, recolouring or added shadow; access checks and the AIRS route are unchanged.
+
+- ADR-371 adopts department artwork in existing permission-filtered application tiles (64px), workspace switcher entries/summary and departmental topbar context (compact 32px). `.application-icon-department` removes the extra rounded/tinted icon container. Planned K/L tiles remain unlinked and keep existing visibility checks. System/public branding and nondepartment entries keep their identities; action icons stay Lucide. This supersedes the initial preview-only delivery boundary below.
+
+- K subsequently follows the same raster-backed approach as L: `scripts/brand/kejuruteraan-soft.png` preserves the owner's supplied K reference with quieter blueprint lines (ADR-370). Its supplied dimension labels are decorative artwork only. K/L use embedded images in the shared SVG wrappers; P/B remain vector. Do not regenerate K from the superseded authored bridge geometry.
+
+- L artwork update under ADR-370: use the owner's supplied `scripts/brand/landskap-approved.png` directly through the generated L SVG wrappers. This is intentionally raster-backed artwork preserving the exact reference, not a pure-vector redraw. Do not replace it with the rejected procedural botanical patterns. P/B/K remain vector.
+
+- Department identity artwork (ADR-370) uses `<x-department-icon department="perancang|bangunan|kejuruteraan|landskap" />`, with `compact` for small sizes and optional accessible `label` when no adjacent name exists. `.department-icon` and its department/size variants live in `indecs.css`; colours, patterns and shadows use `tokens.css`. Sharp squares, same-hue dark frames, gradients, centred outlined letters and interior patterns are owner-approved identity exceptions. P uses asymmetrical topography; B tiled hipped roof; K bridge drafting without numerical dimensions; L large detailed leaves. See `public/img/departments/README.md` for rebuild/preview. This first increment does not replace live navigation. Teal and the system mark (three squares plus the circular Landskap canopy, ADR-380) remain the system/public identity.
+
 - `.button-google` is the Google sign-in provider button (ADR-356), using the unchanged official `public/img/google-g.png` and `--color-google-*`/Google sizing tokens. Its centred label, fixed light provider treatment and official multicolour logo are owner-requested identity exceptions; other buttons/icons/accents retain the normal rules. Provenance is in `public/img/google-g.README.md`.
 - In the welcome dialog, `.welcome-login-divider` separates password/Google login with `atau`; `.google-login-option` and `.google-login-logo` place the unchanged G outside the action outline on a white round ground, preserving its left alignment (ADR-357).
 
-- `public/img/indecs-mark.svg` — the mark (three offset squares). Recolour the leading
-  square to the teal accent when the tokens change; the geometry stays.
+- `public/img/indecs-mark.svg` — the unchanged owner-supplied logo (ADR-380): three offset squares
+  and an integrated circular Landskap canopy. Preserve the source geometry and colours;
+  use dedicated `--color-mark-*` tokens for inline branding. Provenance: `public/img/brand/indecs-approved.README.md`.
 - `public/img/indecs-mark-reversed.svg` — for dark grounds
 - `public/img/indecs-lockup.svg` — mark + wordmark + BM name
 - `public/img/mbsp.png` — the MBSP crest. Crest always LEADS, then a rule, then iNDECS. Use
   on login, letterhead, printed approvals — not in the app header.
 
-The mark represents roof, walls and building footprint viewed from above (ADR-316).
-Its three squares double as the relationship indicator: one square = standalone
-application, two = linked pair, three = development case.
+The three squares represent Perancang, Bangunan and Kejuruteraan; the lower-right
+circular canopy represents Landskap (ADR-380, superseding ADR-379 and ADR-316's primary explanation).
+The architectural reveal remains the visual origin story. The separate relationship
+indicator uses one square = standalone application, two = linked pair, three = development case.
 
 ## Working rules
 
@@ -144,8 +167,8 @@ application, two = linked pair, three = development case.
   remembered in `localStorage` key `indecs.sidebar` and applied by `theme.js` before paint); below 901px it is the
   off-canvas menu as before. `.workspace-switcher` exposes authorised departments only;
   `.workspace-body`, `.topbar-actions`, `.workspace-footer`, `.record-tabs` and
-  `.catalogue-tools` organise existing screens. `.indecs-mark` renders the unchanged
-  three-square geometry; `mark-reversed`, `mark-small` and `mark-entry` are its variants.
+  `.catalogue-tools` organise existing screens. `.indecs-mark` renders the three squares
+  and the circular canopy using shared SVG paths (ADR-380); `mark-reversed`, `mark-small` and `mark-entry` are its variants.
 - `<x-icon>` uses the local Lucide sprite and `<x-mark>` uses shared token colours.
   The upstream icon licence and pinned version live in `public/vendor/`.
 - `.amira-panel`, `.amira-context`, `.amira-prompts`, `.amira-answer` and
@@ -231,7 +254,7 @@ application, two = linked pair, three = development case.
   inert only during the finite introduction. Public tracking remains unavailable.
   The inline `.landing-introduction` uses `.building-mark`, `.building-layer`,
   `.building-texture` and `.building-symbol` for the architectural reveal; its
-  three local photographic layers fade into the unchanged SVG geometry.
+  three local photographic layers fade into the final SVG mark, including the Landskap canopy (ADR-380).
   ADR-318 adds `.building-roof-tile`, `.building-door`, `.building-dust` and
   `.building-dust-particle`: finite roof assembly, hinged door and restrained
   impact/movement dust inside this introduction only, with token timings.
@@ -266,14 +289,14 @@ application, two = linked pair, three = development case.
   with section navigation and native FAQ details. Explain the system, departments,
   roles and access; distinguish available services from planned public capabilities.
 
-- eOSC+ screens (`resources/views/osc/`) use `.agenda-list`, `.agenda-row`, `.agenda-row-number`,
+- eOSC screens (`resources/views/osc/`) use `.agenda-list`, `.agenda-row`, `.agenda-row-number`,
   `.agenda-row-body`, `.agenda-row-meta`, `.agenda-row-actions`, `.inline-form` and `.panel-stack`
   in `indecs.css`; rows collapse to one column on phones.
 
-- Map mode: a page that sets `@section('body-class', 'map-mode')` (the eOSC+ meeting map) fills the space under the topbar
+- Map mode: a page that sets `@section('body-class', 'map-mode')` (the eOSC meeting map) fills the space under the topbar
   and beside the sidebar with the map; everything else floats over it. Its `[data-header-toggle]` arrow tab collapses the topbar
   with a height transition (`html[data-header="collapsed"]`, `localStorage` key `indecs.header`, applied by `theme.js`).
-- The eOSC+ meeting map (`resources/views/osc/map.blade.php`, `public/js/gis-map.js`, `public/js/osc-map.js`, OpenLayers
+- The eOSC meeting map (`resources/views/osc/map.blade.php`, `public/js/gis-map.js`, `public/js/osc-map.js`, OpenLayers
   vendored in `public/vendor/openlayers/`, version in `VERSION`) uses `.map-page`, `.map-layout`, `.map-stage`, `.map-canvas`,
   `.header-edge-toggle` (navy arrow tab centred on the map's top edge that collapses the topbar), `.map-title` (floating top-centre meeting title with the MBSP crest, linking back to the meeting), `.map-panel` / `.map-sheet` (floating list from 768px with `.map-panel-head`, `.map-panel-collapse` folding `.map-panel-body` to its heading; bottom sheet below 768px), `.map-sheet-toggle`, `.map-tools` (floating icon toolbar at the top right of the map: measure distance, measure area, compare, zoom to site; the measurement shows beside it in `.map-measure-output`),
   `.map-measure-output`, `.map-layers` (floating at the bottom left of the map: `.map-layers-toggle` icon button opens `.map-layers-panel`, which fades and rises in; Escape closes it), `.map-layer-list`, `.map-layer-row` (with `.map-layer-grip` drag handle and `.map-layer-move` up/down buttons on every layer except base maps, which sit under a `.map-layer-group` "Peta asas" heading), `.map-item-list`, `.map-item-button` (Bil. in `.map-item-bil`, then `.map-item-body`: type | paper reference, title, developer; with `.map-item-muted` and a `.status-badge` for items not yet accepted), `.map-layout-toggle`
@@ -351,6 +374,26 @@ The phone layout uses `.amira-counter-bar` plus a sheet driven by `portal.js`.
 `public/js/amira-bubble.js` animates `[data-amira-bubble]` from token colours only.
 Its gradient/glow is the only permitted exception.
 
+ADR-365 refines the canvas avatar to a fluid uneven body, faint mist, one tilted
+orbiting voice wave and at most six small bubbles that bud, drift and pop at
+varied intervals. All effects stay inside the avatar canvas. Response activity
+animates the orbit via `AmiraBubble.setSpeaking` while the reply appears;
+this is local guidance feedback, not audio or live AI. Durations and avatar
+sizes are tokens. Offscreen/hidden avatars pause; reduced motion draws a still
+frame without satellite bubbles. Compact phone-bar avatars omit satellites.
+
+ADR-366 centres the avatar, heading and subtitle within `.amira-counter-identity`
+(an owner-approved text-alignment exception) and removes the wave extension
+toward the conversation. The response wave stays around the bubble.
+
+ADR-367 adds fast text reveal and a gentle enlargement/fade for each requested
+local-guidance exchange, shared by the drawer and counter through
+`animateAmiraReply` in `indecs.js`. Reserve final text height during reveal;
+cancel prior reveals on a new request. `aria-busy` defers live-region output
+until the complete reply. Reduced motion and hidden pages finish immediately.
+Use the `--duration-amira-character`, `--duration-amira-reply-max`,
+`--duration-amira-message-enter` and `--scale-amira-message-enter` tokens.
+
 ADR-360 adds a sibling `.portal-type-download` icon to each `.portal-type-row`.
 It opens a type-labelled `.portal-download-dialog` above the chooser, with two
 disabled `.portal-download-options` (Senarai semak / Garis panduan), marked
@@ -400,6 +443,26 @@ or repurpose internal catalogue files. Closing returns focus to the download ico
 - **Readiness.** `DraftChecklist::for($draft)['ready']` is the single
   readiness signal that payment (step 5) must use.
 
+## AMIRA conversation (2026-11-06)
+
+ADR-369 and `docs/runbooks/amira-chat.md`.
+
+- Conversation logic lives in the AMIRA backend (stateless). iNDECS stores the conversations, enforces the limits
+  and pushes a minimised context.
+- AMIRA may receive the signed-in PSP's own account and drafts (`ContextBuilder`). Never send credentials, staff
+  fields, document contents or another user's data.
+- AMIRA never changes state. Proposals are cards the PSP applies and saves; re-validate anything AMIRA proposes
+  with `ProposalSanitiser`.
+- Every failure becomes `FallbackGuidance` ("Panduan asas"); never leave a question pending.
+- Label AI replies "Jawapan AI". Keep the officer line for outcome words.
+- Keep `AMIRA_ENABLED=false` in tests and fake `Http` for the AMIRA client.
+
 ## AIRS connector (2026-11-04)
 
 The shared service connector, review workspace and payment/version guards are implemented under [ADR-354](docs/adr/ADR-354-airs-review-connector.md); see the [integration runbook](docs/runbooks/airs-integration.md). No public paid intake or departmental review rule pack is activated by this increment. AMIRA remains separate.
+
+## Opening landscape material (ADR-381, 2026-11-12)
+
+The architectural introduction adds `.building-garden`: natural grass inside the lower-right circular landscape element, with a stone walking path along its arc. SVG clips/masks follow the approved logo footprint; the path is wider inward during the material phase for legibility. It fades into the unchanged shared logo at the existing symbol transition. Preserve existing planting and timing. Reduced motion hides the material garden and shows the final mark. The lawn and stone texture join the existing asset decode/failure fallback. Provenance is in `public/img/brand/README.md`.
+
+ADR-382 refines the opening garden with `.building-garden-edging`, `.building-garden-joints` and `.building-garden-contact`: narrow textured stone borders within the existing footprint, fine paving joints and a restrained grass contact seam. They share the garden animation; the final mark and timing stay unchanged.

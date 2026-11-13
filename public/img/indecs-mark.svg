@@ -1,5 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" fill="none">
-  <rect x="4" y="60" width="56" height="56" stroke="#102a43" stroke-width="8"></rect>
-  <rect x="32" y="32" width="56" height="56" stroke="#102a43" stroke-width="8"></rect>
-  <rect x="56" y="0" width="64" height="64" fill="#2c9da0"></rect>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 280.8 280.8">
+  <!-- Generator: Adobe Illustrator 30.2.1, SVG Export Plug-In . SVG Version: 2.1.1 Build 1)  -->
+  <defs>
+    <style>
+      .st0 {
+        fill: #231f20;
+      }
+
+      .st1 {
+        fill: #14676b;
+      }
+    </style>
+  </defs>
+  <path class="st0" d="M142.9,255.2H25.6v-117.3h117.3v117.3ZM30.6,250.2h107.3v-107.3H30.6v107.3Z"/>
+  <path class="st0" d="M199.1,199.1h-117.3v-117.3h117.3v117.3ZM86.8,194.1h107.3v-107.3h-107.3v107.3Z"/>
+  <path class="st0" d="M196.6,255.2c-32.3,0-58.7-26.3-58.7-58.7h5c0,29.6,24.1,53.7,53.7,53.7s53.7-24.1,53.7-53.7-24.1-53.7-53.7-53.7v-5c32.3,0,58.7,26.3,58.7,58.7s-26.3,58.7-58.7,58.7Z"/>
+  <rect class="st1" x="137.9" y="25.6" width="117.3" height="117.3"/>
 </svg>

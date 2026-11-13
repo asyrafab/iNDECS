@@ -31,6 +31,26 @@ return [
 
     'connections' => [
 
+        'airs' => [
+            'driver' => 'database',
+            'connection' => env('DB_QUEUE_CONNECTION'),
+            'table' => env('DB_QUEUE_TABLE', 'jobs'),
+            'queue' => 'airs',
+            'retry_after' => 180,
+            'after_commit' => false,
+        ],
+
+        // ADR-369: AMIRA answers (180 s) and library indexing (300 s). retry_after must exceed both timeouts,
+        // or a slow answer is re-reserved and the PSP gets a fallback and a real answer.
+        'amira' => [
+            'driver' => 'database',
+            'connection' => env('DB_QUEUE_CONNECTION'),
+            'table' => env('DB_QUEUE_TABLE', 'jobs'),
+            'queue' => 'amira',
+            'retry_after' => 330,
+            'after_commit' => false,
+        ],
+
         'sync' => [
             'driver' => 'sync',
         ],

@@ -4,15 +4,32 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="referrer" content="no-referrer">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Portal Awam') · iNDECS</title>
     <link rel="icon" href="{{ asset('img/indecs-mark.svg') }}" type="image/svg+xml">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <script src="{{ asset('js/theme.js') }}"></script>
+    @hasSection('counter')
+    <script>
+        document.documentElement.dataset.amiraEntrance = 'pending';
+        try {
+            // Owner, 2026-11-06: the panel slides in from the left once per sign-in session, at the width the PSP chose.
+            const width = Number(localStorage.getItem('indecs.amira.width'));
+            if (width >= 300 && width <= 720) document.documentElement.style.setProperty('--width-counter-amira', width + 'px');
+            if (!sessionStorage.getItem('indecs.amira.arrived')) {
+                document.documentElement.dataset.amiraArrive = 'slide';
+                sessionStorage.setItem('indecs.amira.arrived', '1');
+            }
+        } catch (error) { /* Storage blocked: default width, no slide. */ }
+        window.amiraEntranceRecovery = setTimeout(() => { delete document.documentElement.dataset.amiraEntrance; }, 9000);
+    </script>
+    @endif
     <link rel="stylesheet" href="{{ asset('css/indecs.css') }}">
     <script src="{{ asset('js/indecs.js') }}" defer></script>
     <script src="{{ asset('js/portal.js') }}" defer></script>
     <script src="{{ asset('js/amira-bubble.js') }}" defer></script>
+    @hasSection('counter')<script src="{{ asset('js/amira-counter.js') }}" defer></script><script src="{{ asset('js/amira-chat.js') }}" defer></script>@endif
 </head>
 <body class="portal-page">
     <a class="skip-link" href="#main-content">Langkau ke kandungan</a>

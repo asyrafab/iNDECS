@@ -29,7 +29,7 @@ class AuthenticatedSessionController extends Controller
             return back()->withErrors(['email' => 'Akaun ini tidak mempunyai akses kepada ruang kerja staf iNDECS.']);
         }
 
-        return redirect()->intended($user->staffHomeRoute());
+        return redirect()->intended($request->input('_welcome_login') === '1' ? route('home') : $user->staffHomeRoute());
     }
 
     public function destroy(Request $request): RedirectResponse
@@ -38,6 +38,6 @@ class AuthenticatedSessionController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login');
+        return redirect()->route('home')->with('skip_welcome_introduction', true);
     }
 }

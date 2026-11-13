@@ -1,6 +1,9 @@
-# GIS layers and the eOSC+ meeting map
+# GIS layers and the eOSC meeting map
 
-Implemented increment: eOSC+ Plan 2 (map), 2026-10-29, on branch `feat/eosc-map` (not yet merged; built on `feat/eosc-foundation`). Decision record: ADR-315. GIS is core capability C13; the meeting map belongs to eOSC+ (C10). This runbook covers replicating the MBSP ArcGIS layers into PostGIS, the legacy MJKP import and the settings the map needs.
+> **NADI direction — 9 November 2026:** [Current product boundary](../eosc/nadi-direction.md): eOSC in iNDECS registers papers for assigned meetings; NADI is the in-meeting application, eOSC first. This runbook describes the existing iNDECS implementation and retains its routes, commands and configuration. It is not a NADI deployment guide; migration/reuse remains to be designed. Historical branch/merge status below has not been re-verified.
+
+
+Implemented increment: eOSC Plan 2 (map), 2026-10-29, on branch `feat/eosc-map` (not yet merged; built on `feat/eosc-foundation`). Decision record: ADR-315. GIS is core capability C13; the meeting map belongs to eOSC (C10). This runbook covers replicating the MBSP ArcGIS layers into PostGIS, the legacy MJKP import and the settings the map needs.
 
 ## How it works
 
@@ -11,7 +14,7 @@ Implemented increment: eOSC+ Plan 2 (map), 2026-10-29, on branch `feat/eosc-map`
 - Every layer except the base maps (**Peta asas**: satellite imagery, street map, orthophoto) can be reordered in the layer list, by dragging its handle or with its up and down buttons; the list order is the drawing order. Base maps always stay underneath. The order resets when the page is reloaded.
 - Each layer is copied into a dated snapshot (`core.gis_layer_snapshots`). A layer points at its active snapshot. A failed import never replaces it, so the map keeps the last good copy.
 - Reference data can be up to one refresh old. The `/osc` page lists the last snapshot time per layer for managers (see "Refresh button").
-- Tiles are served only to active staff accounts that can reach eOSC+, Perancang PKM registration or a Bangunan workspace (`canUseGisTiles`); others get 403.
+- Tiles are served only to active staff accounts that can reach eOSC, Perancang PKM registration or a Bangunan workspace (`canUseGisTiles`); others get 403.
 
 ## Settings in `.env`
 

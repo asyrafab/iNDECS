@@ -1,5 +1,7 @@
 # iNDECS — Design direction
 
+> **NADI alignment — 9 November 2026:** [Current direction](eosc/nadi-direction.md): **NADI > eOSC**. iNDECS registers papers under eOSC for assigned meetings and communicates with NADI, the application used within meetings. Other meeting types may become sibling NADI modules later. The committee remains Jawatankuasa OSC. Earlier all-inside-iNDECS meeting descriptions are historical where they conflict; integration implementation remains to be designed.
+
 ## AIRS integration and applicant submission (accepted 2026-11-04)
 
 [ADR-352](adr/ADR-352-indecs-airs-submission-and-precheck.md) and the [shared integration contract](integration/indecs-airs-contract.md) govern the target journey. iNDECS owns identity, drafts, formal submission, authoritative document versions, payments, corrections, assignment/SLA, notifications, official decisions and letters. AIRS is its review subsystem and owns review rules, evidence, findings and AI-run history; AMIRA assists within record permissions.
@@ -18,7 +20,7 @@ direction shared with AIRS and to the programme in `docs/bangunan/`. Department 
 | Bangunan | iNDECS Bangunan | Bangunan | `/bangunan` | `APP_PB_` | PB, PBK, PBS, PMT, TEL | `PB/2026/00310`, `PBK/2026/00042`, `TEL/2026/00007` |
 | Kejuruteraan | iNDECS Kejuruteraan | Kejuruteraan | `/kejuruteraan` | `APP_PKT_`, `APP_PKP_` | PKT, PKP | `PKT/2026/00054` |
 | Landskap | iNDECS Landskap | Landskap | `/landskap` | `APP_PL_` | PL | `PL/2026/00021` |
-| eOSC+ | eOSC+ (Mesyuarat OSC) | eOSC+ | `/osc` | `core.osc_` | — | `Bil. 21/2026` |
+| eOSC | eOSC (Pendaftaran kertas; NADI > eOSC untuk mesyuarat) | eOSC | `/osc` | `core.osc_` | — | `Bil. 21/2026` |
 
 Bangunan type codes: PB pelan bangunan penuh; PBK Pelan Tambahan / Ubahsuai Kecil; PBS
 Pelan Bangunan Sementara and Permit Sementara Seksyen 19; PMT permits (meletak bahan
@@ -104,7 +106,7 @@ engine, fees, letters, meetings and units, legacy retired, months 3 to 10; Phase
 portal, AIRS Building Plan review, E-Submission and OSC3Plus links, months 10 to 15;
 Phase D intelligence and linkage, months 15 to 21. Since 2026-10-29 (ADR-212,
 superseding ADR-211) the department modules — Perancang, Bangunan, Kejuruteraan,
-Landskap — and eOSC+ are built concurrently, each documented in its own `docs/` folder
+Landskap — and eOSC paper-registration capability are built concurrently, each documented in its own `docs/` folder
 (`docs/bangunan/`, `docs/eosc/`, and `docs/perancang/`, `docs/kejuruteraan/`,
 `docs/landskap/` as they start). PKM workflow migration runs alongside Bangunan;
 neither gates the other. Each module's scope and dates are estimated separately.
@@ -142,6 +144,18 @@ render it as the attribute on `<html>` in `layouts/app.blade.php`, and POST the 
 from `theme.js`'s setter.
 
 ## 8. Tokens
+
+ADR-370 adds department identity artwork as a narrow owner-approved exception:
+sharp square P/B/K/L identifiers in indigo/terracotta/steel blue/forest green,
+same-hue dark frames, diagonal gradients, soft shadows and fine interior patterns.
+Use `<x-department-icon>` and the shared department tokens; the detailed and
+compact SVG sources and preview workflow are in `public/img/departments/README.md`.
+These identity colours do not change status or interaction colours. System/public
+surfaces keep teal and the iNDECS mark (three squares plus the circular Landskap canopy,
+ADR-380). ADR-371 adopts the
+reviewed artwork in departmental chooser tiles and compact workspace navigation
+and topbar context. Permission checks, available routes and planned-module
+visibility are unchanged; nondepartment entries retain their existing identities.
 
 `public/css/tokens.css` carries, at minimum:
 
@@ -190,10 +204,12 @@ rail. `.record-tabs` links only to sections and routes that actually exist. Exis
 Bangunan, document-catalogue, verification, Perancang and legacy pages share them.
 The public account surface remains unframed and carries the MBSP crest first.
 
-`<x-mark>` repeats the exact three-square geometry in sidebar, workspace header,
-footer and identity surfaces. The mark represents roof, walls and footprint viewed
-from above. On the landing page, an inline finite animation separates realistic
-building layers diagonally before fading them into the exact mark (ADR-316).
+`<x-mark>` repeats the three squares and integrated lower-right circular canopy in sidebar,
+workspace header, footer and identity surfaces (ADR-380). The squares represent
+Perancang, Bangunan and Kejuruteraan; the circular canopy represents Landskap. On the
+landing page, an inline finite animation separates realistic building layers
+diagonally before fading them into the final mark, including the canopy.
+The architectural reveal remains the visual origin story (ADR-316).
 Reduced motion displays the final symbol immediately; replay and skip are provided.
 ADR-318 adds finite roof-piece assembly, an opening door and restrained material
 dust to this introduction. The roof and walls separate together (ADR-317).
@@ -421,6 +437,33 @@ motion draws a still frame, and without JavaScript a flat token circle shows.
 `window.AmiraBubble.setMood(el, mood)` and `setSpeaking(el, on)` drive the
 avatar.
 
+ADR-365 replaces the three rings with one tilted orbiting wave, a fluid uneven
+body, faint mist and bounded random satellite bubbles that bud, drift and pop.
+The larger avatar uses `--size-amira-bubble`; compact avatars omit satellites.
+`--color-amira-body-*` and the mood-specific light/deep tokens preserve material
+lighting in both themes. `AmiraBubble.setSpeaking(el, on)` pulses the orbit while
+local guidance appears. This is visual feedback only.
+Effects stay inside the canvas exception. Reduced motion draws a still frame;
+offscreen and hidden avatars pause. Release, lifetime and response timings use
+`--duration-amira-*` tokens.
+
+ADR-366 centres the avatar and its name/subtitle in `.amira-counter-identity`,
+an owner-approved identity alignment exception. The orbit stays around the
+bubble, with no line extending toward chat messages.
+
+ADR-367 reveals requested guidance replies quickly in grapheme order, with each
+user/reply box enlarging and fading into view. The final reply height is reserved
+while typing. The counter reply uses the shared raised panel colour and rounded
+message shape. A new exchange cancels the previous reveal. Reduced motion and
+hidden pages show complete text immediately; the polite live region is busy
+until completion. Timings and entrance scale come from AMIRA tokens.
+
 ## Independent AMIRA backend (2026-11-04)
 
 AMIRA backend ownership was moved to C:\Users\Asyra\Documents\AMIRA under ADR-353 (2026-11-04). It is an independent prepared-guidance/catalogue service; conversation, model inference and record retrieval remain unimplemented. AIRS retains its review AiProvider and UI/assets. iNDECS keeps local guidance with no new remote dependency. Future assistant APIs belong to AMIRA, with scoped source APIs and iNDECS identity; free applicant guidance stays local and uses no paid AI.
+
+ADR-380 adopts the owner-supplied `iNDECS_New.svg` as the authoritative logo. Preserve its exact paths and supplied dark teal; shared inline geometry uses `--color-mark-outline` and `--color-mark-fill`, with token-only outline reversal for dark grounds. See `public/img/brand/indecs-approved.README.md`.
+
+ADR-381 adds a circular grass garden with an enclosing stone walking path to the opening material sequence. `.building-garden` uses natural image textures clipped to the approved landscape footprint, appears during layer separation and fades during the existing symbol transition. The final logo stays unfilled inside its circular outline; reduced-motion and asset-failure behaviour remain unchanged.
+
+ADR-382 adds small stone edging on both sides of the opening garden path. Reuse the stone material at a finer scale, with restrained joints and a contact seam beside the grass. All detail stays inside the existing garden footprint and fades with the material layer.

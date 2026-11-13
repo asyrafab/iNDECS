@@ -1,5 +1,7 @@
 # 12. Identity and Integration Contracts
 
+> **Integration policy update — 2026-11-04:** [ADR-352](../adr/ADR-352-indecs-airs-submission-and-precheck.md) and the [shared contract](../integration/indecs-airs-contract.md) govern the single iNDECS submission journey. Free applicant precheck is bounded checklist/file/text/local-OCR preparation with no paid AI; payment clears before formal acceptance, then AIRS technical review runs. iNDECS owns operational workflow and decisions; scores are advisory. Fees and correction-round charging remain undecided. Conflicting earlier tariffs, standalone AIRS operational ownership and paid AI intake auto-fill before submission are superseded. Historical milestones are not implementation claims.
+
 Version 2.0, 2026-09-18. Decision records: ADR-203, ADR-204.
 
 ## 1. Principles
@@ -23,7 +25,7 @@ Version 2.0, 2026-09-18. Decision records: ADR-203, ADR-204.
 ### 2.2 AIRS as a relying party
 
 - AIRS replaces its local login with OIDC against iNDECS. Its `users` table becomes a local cache keyed by iNDECS subject ID. Its roles (`MBSP_CLERK`, `MBSP_OFFICER`, `MBSP_APPROVAL_OFFICER`, `ADMIN`, `PUBLIC_APPLICANT`) are mapped from iNDECS permission groups.
-- Standalone mode: if the iNDECS identity provider is unreachable, AIRS accepts existing sessions and falls back to its cached staff authenticator for staff only. Public login waits.
+- Outage mode: AIRS may continue authorised work on cases it already holds, subject to session validity and local permissions. Do not introduce a staff-authentication fallback or privilege provisioning that bypasses iNDECS authorisation. New public intake remains in iNDECS; public login waits if its identity service is unavailable.
 
 ### 2.3 E-Submission linkage
 
@@ -33,16 +35,18 @@ Version 2.0, 2026-09-18. Decision records: ADR-203, ADR-204.
 
 ## 3. iNDECS to AIRS: plan review contract
 
+This table is a target contract, not a list of implemented endpoints. Formal technical review is dispatched only for the paid/waived, accepted iNDECS submission. Include exact application/document-set and review versions plus idempotency/correlation identifiers. Preserve stale results as history and never overwrite current findings/checklists from a superseded submission. Free precheck uses bounded local text/OCR and manual mapping; it does not call paid AI. See the shared contract for quotas, queue/cache isolation and acceptance gates.
+
 | Step | Direction | Call | Payload |
 |---|---|---|---|
-| 1 | iNDECS to AIRS | `POST /api/v1/reviews` | iNDECS application ID and reference, review module code (`BUILDING_PLAN`), family and building type for rule applicability, document manifest with signed download URLs, callback URL |
+| 1 | iNDECS to AIRS | `POST /api/v1/reviews` | iNDECS application ID and reference, review module code (`BUILDING_PLAN`), family and building type for rule applicability, checksum-pinned manifest and multipart files (ADR-354); polling correlation |
 | 2 | AIRS to iNDECS | Webhook `review.status_changed` | AIRS case ID, processing state, progress percentage |
 | 3 | AIRS to iNDECS | Webhook `review.completed` | AIRS case ID, overall result, finding count by status, report URL, findings summary array (rule ID, status, confidence, severity, evidence count) |
 | 4 | iNDECS to AIRS | `GET /api/v1/reviews/{id}/findings` | Full findings with evidence references for display inside the iNDECS application workspace |
 | 5 | Officer action | In AIRS or iNDECS | Officer confirms or corrects findings. If done in iNDECS, `POST /api/v1/reviews/{id}/findings/{fid}/feedback` writes back to AIRS so the calibration signal is not lost |
 | 6 | iNDECS | Internal | Confirmed findings become a compliance checklist on the application; the decision stays in iNDECS |
 
-Additional intake use: `POST /api/v1/documents/classify-and-extract` sends a single uploaded document and receives document type, extracted application profile fields with confidence and evidence pages. iNDECS uses this for auto-fill with officer confirmation. AIRS must expose its existing classification and profile extraction as this endpoint.
+Formal-review extraction: the proposed `POST /api/v1/documents/classify-and-extract` may expose paid AI classification/profile extraction only within an accepted formal review, with authorised confirmation. It must not provide paid AI auto-fill before payment/submission. Draft precheck uses embedded text, bounded local OCR and fixed matching, with applicant confirmation of suggested particulars and document/page provenance.
 
 AIRS stays the system of record for review cases, evidence, rules and AI runs. iNDECS stores the AIRS case ID, result, and the confirmed checklist.
 
@@ -64,7 +68,7 @@ A change request to the Esri scope is likely needed for the webhook and the iNDE
 | System | Direction | Purpose | Mechanism | Phase |
 |---|---|---|---|---|
 | OSC3Plus | Inbound submissions, outbound decisions | Full building plans and planning permission routed via the national OSC | Unknown; three scenarios (web service, database extract, file import) as in version 1 | C, discovery in A |
-| MBSPpay | Outbound invoice, inbound callback | All fees and deposits | Signed redirect, idempotent webhook, settlement reconciliation. AIRS's billing design (RM150 gate, waiver rules, three-month cancellation) becomes the core pattern | B |
+| MBSPpay | Outbound invoice, inbound callback | All fees and deposits | Signed redirect, idempotent webhook, settlement reconciliation. iNDECS core enforces payment before accepted formal submission; fee amounts and correction-round charges remain undecided. Legacy AIRS billing is reuse material, not the approved tariff/expiry policy | B |
 | Penilaian | Outbound events | New or altered unit for assessment | `unit.ccc_issued`, `unit.altered`, `unit.demolished` webhooks, or pull via read API | D |
 | Penamaan Jalan dan Penomboran Bangunan | Outbound event, inbound address | Official address for a new unit | Webhook plus callback; `unit.address_assigned` republished | D |
 | Pelesenan | Inbound lookup | Valid CCC and approved use for a premise | Read API by Unit ID or address | D |
@@ -88,3 +92,11 @@ All outbound events share one envelope: event ID (ULID), event type, occurred-at
 2. Will Esri accept a change request for status webhooks and an iNDECS reference field? Owner: programme owner. Needed by: Phase B month 6.
 3. OSC3Plus integration scenario. Owner: programme owner with state OSC unit. Needed by: Phase C.
 4. Whether Penguatkuasaan has a case system. Owner: product owner. Needed by: Phase B notis cut-over.
+
+## Independent AMIRA backend (2026-11-04)
+
+AMIRA backend ownership was moved to C:\Users\Asyra\Documents\AMIRA under ADR-353 (2026-11-04). It is an independent prepared-guidance/catalogue service; conversation, model inference and record retrieval remain unimplemented. AIRS retains its review AiProvider and UI/assets. iNDECS keeps local guidance with no new remote dependency. Future assistant APIs belong to AMIRA, with scoped source APIs and iNDECS identity; free applicant guidance stays local and uses no paid AI.
+
+## Implemented AIRS transport (ADR-354)
+
+The [connector runbook](../runbooks/airs-integration.md) describes implemented service authentication, multipart intake, polling/findings, feedback and guarded evidence. Status/completion webhooks in the earlier target table remain future transport options. Dispatch requires immutable payment-cleared accepted-submission proof; existing staff registration is not proof. Browser OIDC and public payment intake remain future capabilities.

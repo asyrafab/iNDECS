@@ -1,12 +1,27 @@
 # iNDECS
 
+> **NADI direction — 9 November 2026:** [ADR-378](docs/adr/ADR-378-nadi-meeting-application-boundary.md) updates the earlier ADR-213 product boundary. **eOSC within iNDECS registers each paper for its assigned meeting. NADI — Navigation, Analysis, Decisions & Intelligence — is the application used within the meeting**, with eOSC as its first module and other meeting types open for later needs. Earlier descriptions of the entire live meeting as eOSC inside C10 are historical where they conflict. Existing code/identifiers remain; NADI deployment and integration require design. See [current direction](docs/eosc/nadi-direction.md).
+
+
+> **AI ecosystem alignment — 9 November 2026:** [Current roles and integration boundaries](docs/integration/ai-ecosystem.md). AMIRA remains application assistance; MATRIX is the planned document specialist; MINDA is internal intelligence. Existing authority, free-precheck and payment gates remain.
+
+
+## AIRS integration and applicant submission (accepted 2026-11-04)
+
+[ADR-352](docs/adr/ADR-352-indecs-airs-submission-and-precheck.md) and the [shared integration contract](docs/integration/indecs-airs-contract.md) govern the target journey. iNDECS owns identity, drafts, formal submission, authoritative document versions, payments, corrections, assignment/SLA, notifications, official decisions and letters. AIRS is its review subsystem and owns review rules, evidence, findings and AI-run history; AMIRA assists within record permissions.
+
+Free applicant precheck covers checklist/file usability and bounded embedded-text/local-OCR retrieval, with manual confirmation and resource limits. No paid generative AI/cloud processing, technical compliance review or readiness score is allowed before submission. Payment must clear before formal acceptance (only approved audited policy waivers); accepted submission then dispatches formal AIRS review. Fee amounts and correction-round charging remain undecided. Scores are advisory; they never reject, hide findings or change state. This documents agreed direction, not completed public submission/payment/integration functionality.
+
+The welcome page's **Ketahui lebih lanjut** link opens the public system guide at
+`/tentang-indecs`, covering departments, roles, access, current availability and FAQs.
+
 **iNDECS — Intergrated Development Control System** (**Sistem Bersepada Kawalan Pembangunan**) is MBSP's configurable platform and main portal for development-control applications. It is one shared core with four departmental modules (Perancang, Bangunan, Kejuruteraan, Landskap), and the identity provider for a family of cooperating systems: AIRS (AI Review Studio) for plan review and the Esri E-Plan Submission System for spatial submissions.
 
 The product vision is in [docs/OVERVIEW.md](docs/OVERVIEW.md). The binding design rules are in [AGENTS.md](AGENTS.md) and [docs/DESIGN-DIRECTION.md](docs/DESIGN-DIRECTION.md). The current programme, which brings **iNDECS Bangunan** forward and builds the core alongside it, is documented in [docs/bangunan/](docs/bangunan/README.md).
 
 ## Current capability
 
-**Department modules are built concurrently (ADR-212, 2026-10-29): Perancang, Bangunan, Kejuruteraan, Landskap and eOSC+ (the OSC meeting room, [docs/eosc/](docs/eosc/README.md)) share the core and progress in parallel.** Bangunan is the most advanced. The operational Bangunan increment now includes registration for PB/PBK/PBS/PMT/TEL, case lists and scoped access, shared reference sequences and workflow, department-confirmed document catalogues, scanned private document revisions, officer verification, correction/resubmission, and guarded progression to fee assessment. Open `/bangunan` with an authorised staff account. Fees, payments and approvals remain future increments. See the [registration runbook](docs/runbooks/bangunan-registration.md) and [document-verification runbook](docs/runbooks/bangunan-document-verification.md).
+**Department modules are built concurrently (ADR-212, 2026-10-29): Perancang, Bangunan, Kejuruteraan, Landskap and eOSC (the OSC meeting room, [docs/eosc/](docs/eosc/README.md)) share the core and progress in parallel.** Bangunan is the most advanced. The operational Bangunan increment now includes registration for PB/PBK/PBS/PMT/TEL, case lists and scoped access, shared reference sequences and workflow, department-confirmed document catalogues, scanned private document revisions, officer verification, correction/resubmission, and guarded progression to fee assessment. Open `/bangunan` with an authorised staff account. Fees, payments and approvals remain future increments. See the [registration runbook](docs/runbooks/bangunan-registration.md) and [document-verification runbook](docs/runbooks/bangunan-document-verification.md).
 
 Existing PKM capability is retained: the repository contains the first working slice of the **Permohonan Kebenaran Merancang (PKM)** module. Implementation decisions and discovery items for this slice are in [docs/PKM-FIRST-SLICE.md](docs/PKM-FIRST-SLICE.md).
 
@@ -62,9 +77,14 @@ php artisan serve
 
 Open `http://127.0.0.1:8000`.
 
-Guests see the public iNDECS landing page adapted from the existing Bangunan
-concept: a navy skyline hero, six service cards, service guidance and public/staff
-access links (ADR-313). Signed-in users keep their authorised dashboard routing.
+Guests see the full-height iNDECS welcome entrance with three actions, a finite
+architectural introduction and interactive photographic layers (ADR-335).
+Homepage login opens a permission-filtered application chooser with distinct icons.
+Staff 18811 uses the existing `system_admin` role for all implemented applications.
+Planned modules and integrations appear as muted, unlinked tiles. Direct staff login and
+protected-link redirects retain their destinations; the dashboard is at `/dashboard`.
+Use `php artisan staff:superadmin 18811` for an audited, idempotent promotion of an
+existing active linked staff account on another environment.
 Public submission, payment and tracking remain pending; the landing page labels
 this availability explicitly.
 
@@ -90,3 +110,11 @@ php artisan view:cache
 ## Important deployment note
 
 This is an internal pilot slice, not a production release. Local authentication and PKM role/department authorization are implemented, but MBSP single sign-on, document malware scanning, production object storage, key management, retention rules, backup policy, and ArcGIS credentials must be implemented before the application is exposed beyond a controlled development environment. The programme documentation under `docs/bangunan/` sets out how and when each is delivered.
+
+## Independent AMIRA backend (2026-11-04)
+
+AMIRA backend ownership was moved to C:\Users\Asyra\Documents\AMIRA under ADR-353 (2026-11-04). It is an independent prepared-guidance/catalogue service; conversation, model inference and record retrieval remain unimplemented. AIRS retains its review AiProvider and UI/assets. iNDECS keeps local guidance with no new remote dependency. Future assistant APIs belong to AMIRA, with scoped source APIs and iNDECS identity; free applicant guidance stays local and uses no paid AI.
+
+## AIRS connector (2026-11-04)
+
+The shared service connector, review workspace and payment/version guards are implemented under [ADR-354](docs/adr/ADR-354-airs-review-connector.md); see the [integration runbook](docs/runbooks/airs-integration.md). No public paid intake or departmental review rule pack is activated by this increment. AMIRA remains separate.

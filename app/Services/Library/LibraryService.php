@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Library;
 
+use App\Jobs\IndexLibraryVersion;
 use App\Models\AuditLog;
 use App\Models\LibraryDocument;
 use App\Models\LibraryDocumentVersion;
@@ -137,6 +138,8 @@ final class LibraryService
             'original_name' => mb_substr($file->getClientOriginalName(), 0, 255), 'path' => $path,
             'size_bytes' => $file->getSize(), 'sha256' => hash_file('sha256', $file->getRealPath()),
             'notes' => $notes, 'uploaded_by' => $actor->id, 'created_at' => now()])->save();
+        // ADR-369: make the new version searchable for AMIRA once the upload is committed.
+        IndexLibraryVersion::dispatch($record->id)->afterCommit();
 
         return $record;
     }
