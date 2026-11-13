@@ -19,7 +19,10 @@ final class WorkingCalendar
         return ! $local->isWeekend() && ! PublicHoliday::query()->whereKey($local->toDateString())->exists();
     }
 
-    /** End (23:59:59 local) of the Nth working day after $from; $from's own day never counts. */
+    /**
+     * End (23:59:59 Malaysia time) of the Nth working day after $from; $from's own day never counts.
+     * Returned as a UTC instant (ADR-314: store UTC, display local).
+     */
     public function addWorkingDays(CarbonImmutable $from, int $days): CarbonImmutable
     {
         $day = $from->setTimezone(self::ZONE)->startOfDay();
@@ -31,6 +34,6 @@ final class WorkingCalendar
             }
         }
 
-        return $day->endOfDay()->startOfSecond();
+        return $day->endOfDay()->startOfSecond()->utc();
     }
 }

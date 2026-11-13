@@ -19,6 +19,6 @@ final class AcceptedSubmission extends Model
 
     protected function casts(): array
     {
-        return ['document_manifest' => 'array', 'payment_cleared_at' => 'datetime', 'accepted_at' => 'datetime'];
+        return ['document_manifest' => 'array', 'missing_required_documents' => 'array', 'payment_cleared_at' => 'datetime', 'accepted_at' => 'datetime'];
     }
 }

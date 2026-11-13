@@ -7,6 +7,9 @@ namespace App\Services\PaidCheck;
 use App\Airs\CheckClearance;
 use App\Airs\CheckService;
 use App\Airs\Events\AirsCheckCompleted;
+use App\Airs\Models\ReviewVersion;
+use App\Airs\Models\SystemConfigSnapshot;
+use App\Models\AcceptedSubmission;
 use App\Enums\ApplicationStage;
 use App\Enums\ApplicationStatus;
 use App\Enums\DocumentVerificationStatus;
@@ -147,7 +150,10 @@ final class PaidCheckJourneyService
         $this->handOver($journey, 1);
     }
 
-    /** Hands the application to the responsible department with the final check. Idempotent. */
+    /**
+     * Hands the application to the responsible department with the final check (idempotent). Writes the
+     * immutable accepted-submission record; missing required documents are flagged, never rejected.
+     */
     public function handOver(PaidCheckJourney $journey, int $finalCheckNumber): void
     {
         DB::transaction(function () use ($journey, $finalCheckNumber): void {
@@ -155,9 +161,32 @@ final class PaidCheckJourneyService
             if ($locked->state === PaidCheckState::HandedOver) {
                 return;
             }
+            $version = ReviewVersion::query()->where('check_number', $finalCheckNumber)
+                ->whereHas('reviewCase', fn ($query) => $query->where('application_id', $locked->application_id))->firstOrFail();
+            $manifest = (array) (SystemConfigSnapshot::query()->where('review_version_id', $version->id)->value('config_json')['document_manifest'] ?? []);
+            $missing = app(ApplicantCheckPresenter::class)->missingRequired($locked, $finalCheckNumber);
+            $payment = $locked->payment;
+            AcceptedSubmission::query()->create([
+                'application_id' => $locked->application_id, 'document_manifest' => $manifest, 'document_set_hash' => $version->document_set_hash,
+                'clearance_kind' => 'paid', 'payment_clearance_reference' => $payment->reference, 'payment_cleared_at' => $payment->paid_at,
+                'accepted_at' => now(), 'missing_required_documents' => $missing,
+            ]);
+            $locked->application->update(['current_stage' => ApplicationStage::TechnicalCirculation, 'current_status' => ApplicationStatus::Submitted]);
             $locked->forceFill(['state' => PaidCheckState::HandedOver, 'final_check_number' => $finalCheckNumber, 'handed_over_at' => now()])->save();
-            $this->audit($locked, 'paid_check_handed_over', null, ['final_check_number' => $finalCheckNumber], null);
+            $this->audit($locked, 'paid_check_handed_over', null, ['final_check_number' => $finalCheckNumber, 'missing_required_documents' => $missing], null);
         });
+    }
+
+    /** Hands over every journey whose amendment window ended without an amendment (check 1 final). */
+    public function handOverExpired(): int
+    {
+        $expired = PaidCheckJourney::query()->where('state', PaidCheckState::AwaitingApplicant)->whereNull('amended_at')
+            ->where('amendment_due_at', '<', now())->orderBy('amendment_due_at')->limit(100)->get();
+        foreach ($expired as $journey) {
+            $this->handOver($journey, 1);
+        }
+
+        return $expired->count();
     }
 
     /** Listener for AirsCheckCompleted: opens the amendment window after check 1, hands over after check 2. */

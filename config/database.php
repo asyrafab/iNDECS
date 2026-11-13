@@ -84,6 +84,9 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'search_path' => 'public,core,bangunan,integration,airs',
+            // ADR-314: the application timezone is UTC; Laravel writes timestamps without an offset, so the
+            // session must also be UTC or timestamptz values shift by the server's local offset.
+            'timezone' => env('DB_TIMEZONE', 'UTC'),
             'sslmode' => env('DB_SSLMODE', 'prefer'),
         ],
 
