@@ -75,5 +75,7 @@ return [
         'review_budget_usd' => (float) env('AIRS_MATRIX_REVIEW_BUDGET_USD', 5),
         'max_images' => 8,
         'max_image_bytes' => 5 * 1024 * 1024,
+        // Candidate lessons (officer corrections) for MATRIX evaluation; kept in iNDECS storage, never in the MATRIX repo.
+        'lessons_path' => env('AIRS_MATRIX_LESSONS_PATH', storage_path('app/airs/lessons')),
     ],
 ];
