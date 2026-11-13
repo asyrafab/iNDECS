@@ -31,6 +31,18 @@ final class DocumentCatalogueService
         };
     }
 
+    /** Document-type code for a catalogue item, e.g. bina_tel_geran or kej_ljup_pelan_lampu. */
+    public static function documentTypeCode(string $type, string $itemCode): string
+    {
+        return (self::scope($type)['prefix'] ?? 'bina_').strtolower($type).'_'.$itemCode;
+    }
+
+    /** Inverse of documentTypeCode(). */
+    public static function itemCode(string $type, string $documentTypeCode): string
+    {
+        return (string) preg_replace('/^'.preg_quote((self::scope($type)['prefix'] ?? 'bina_').strtolower($type).'_', '/').'/', '', $documentTypeCode);
+    }
+
     public static function canConfigure(User $actor, string $type): bool
     {
         return match (self::scope($type)['department'] ?? null) {
@@ -74,7 +86,7 @@ final class DocumentCatalogueService
             }
             DocumentRequirement::query()->where('application_type_id', $type)->whereNull('permission_category')->whereNull('permission_type')->update(['is_active' => false]);
             foreach ($data['items'] as $index => $item) {
-                $documentType = DocumentType::query()->updateOrCreate(['code' => $scope['prefix'].strtolower($type).'_'.$item['code']], [
+                $documentType = DocumentType::query()->updateOrCreate(['code' => self::documentTypeCode($type, $item['code'])], [
                     'name' => $item['name'], 'allowed_extensions' => 'pdf,jpg,jpeg,png', 'max_file_size_kb' => 20480, 'is_active' => true,
                 ]);
                 DocumentRequirement::query()->updateOrCreate(['application_type_id' => $type, 'permission_category' => null,

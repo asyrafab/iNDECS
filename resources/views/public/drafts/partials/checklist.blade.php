@@ -41,10 +41,30 @@
                 </li>
             @endforeach
         </ul>
+        @php($airsEnabled = (config('airs.modules.'.$draft->application_type_id.'.enabled') ?? false) === true)
+        @php($fee = \App\Services\PaidCheck\CheckPaymentService::feeSen())
         <div class="precheck-gate {{ $checklist['ready'] ? 'is-ready' : '' }}">
-            <div><strong>{{ $checklist['ready'] ? 'Sedia untuk semakan AIRS' : 'Lengkapkan dokumen wajib untuk meneruskan' }}</strong>
-                <small>Semakan AIRS berbayar dan pengesahan pegawai akan dibuka dalam fasa seterusnya.</small></div>
-            <button class="button button-primary" type="button" disabled>Bayar semakan AIRS · dibuka tidak lama lagi</button>
+            @if (! $airsEnabled)
+                <div><strong>{{ $checklist['ready'] ? 'Sedia untuk semakan AIRS' : 'Lengkapkan dokumen wajib untuk meneruskan' }}</strong>
+                    <small>Semakan AIRS berbayar dan pengesahan pegawai akan dibuka dalam fasa seterusnya.</small></div>
+                <button class="button button-primary" type="button" disabled>Bayar semakan AIRS · dibuka tidak lama lagi</button>
+            @elseif ($fee === null)
+                <div><strong>{{ $checklist['ready'] ? 'Sedia untuk semakan AIRS' : 'Lengkapkan dokumen wajib untuk meneruskan' }}</strong>
+                    <small>Semakan AIRS berbayar dibuka sebaik fi ditetapkan oleh MBSP.</small></div>
+                <button class="button button-primary" type="button" disabled>Fi semakan belum ditetapkan</button>
+            @else
+                <form method="POST" action="{{ route('portal.drafts.payment.start', $draft) }}" class="precheck-pay">
+                    @csrf
+                    <div><strong>{{ $checklist['ready'] ? 'Sedia untuk semakan AIRS' : 'Lengkapkan dokumen wajib untuk meneruskan' }}</strong>
+                        <small>Satu bayaran meliputi semakan AIRS dan satu semakan semula selepas pindaan. Keputusan dipaparkan sebelum penyerahan muktamad.</small></div>
+                    @unless ($checklist['ready'])
+                        <label class="checkbox-field"><input type="checkbox" name="acknowledge_missing" value="1" required><span>Saya faham dokumen wajib belum lengkap dan pegawai akan menilainya.</span></label>
+                    @endunless
+                    @error('acknowledge_missing')<p class="field-error" role="alert">{{ $message }}</p>@enderror
+                    @error('payment')<p class="field-error" role="alert">{{ $message }}</p>@enderror
+                    <button class="button button-primary" type="submit">Bayar semakan AIRS (RM{{ number_format($fee / 100, 2) }})</button>
+                </form>
+            @endif
         </div>
     @endif
 </section>

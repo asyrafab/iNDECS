@@ -30,6 +30,10 @@ return [
     ],
 
     // Advisory only: the threshold yields a recorded shadow outcome, never a rejection.
+    // Paid-check fee in sen (undecided policy: unset disables payment). Only the staging driver exists.
+    'fee_sen' => env('AIRS_CHECK_FEE_SEN'),
+    'payment_driver' => env('AIRS_PAYMENT_DRIVER', 'staging'),
+
     'score_threshold' => (int) env('AIRS_SCORE_THRESHOLD', 50),
 
     'python' => [

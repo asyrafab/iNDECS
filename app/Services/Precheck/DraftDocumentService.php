@@ -36,7 +36,7 @@ final class DraftDocumentService
         if ($item === null) {
             throw ValidationException::withMessages(['file' => 'Dokumen ini tidak diperlukan untuk projek anda.']);
         }
-        $type = DocumentType::query()->where('code', 'bina_'.strtolower($draft->application_type_id).'_'.$itemCode)->firstOrFail();
+        $type = DocumentType::query()->where('code', \App\Services\DocumentCatalogueService::documentTypeCode($draft->application_type_id, $itemCode))->firstOrFail();
         $extensions = array_values(array_intersect($type->allowedExtensions(), array_keys(self::MIMES)));
         $mimes = array_values(array_unique(array_map(fn ($ext) => self::MIMES[$ext], $extensions)));
         Validator::make(['file' => $file], ['file' => ['required', 'file', 'mimes:'.implode(',', $extensions),

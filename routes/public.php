@@ -3,6 +3,7 @@
 use App\Http\Controllers\AmiraChatController;
 use App\Http\Controllers\Auth\GoogleLoginController;
 use App\Http\Controllers\Auth\PublicAccessController;
+use App\Http\Controllers\PortalCheckPaymentController;
 use App\Http\Controllers\PortalDraftDocumentController;
 use App\Http\Controllers\PublicPortalController;
 use App\Http\Controllers\PortalGuidanceController;
@@ -45,6 +46,10 @@ Route::prefix('portal')->name('portal.')->group(function (): void {
         Route::post('/amira', [AmiraChatController::class, 'ask'])->middleware('throttle:10,1')->name('amira.ask');
         Route::get('/drafts/{draft}/amira/thread', [AmiraChatController::class, 'thread'])->whereUlid('draft')->middleware('throttle:60,1')->name('drafts.amira.thread');
         Route::post('/drafts/{draft}/amira', [AmiraChatController::class, 'ask'])->whereUlid('draft')->middleware('throttle:10,1')->name('drafts.amira.ask');
+        // Paid AIRS check: fee payment (staging gateway only until the MBSP gateway is integrated).
+        Route::post('/drafts/{draft}/payment', [PortalCheckPaymentController::class, 'start'])->whereUlid('draft')->middleware('throttle:10,1')->name('drafts.payment.start');
+        Route::get('/payments/{payment}/staging', [PortalCheckPaymentController::class, 'staging'])->whereUlid('payment')->name('payments.staging');
+        Route::post('/payments/{payment}/staging/confirm', [PortalCheckPaymentController::class, 'confirmStaging'])->whereUlid('payment')->middleware('throttle:10,1')->name('payments.staging.confirm');
         Route::put('/drafts/{draft}', [PublicPortalController::class, 'update'])->whereUlid('draft')->middleware('throttle:20,1')->name('drafts.update');
         Route::post('/account', [PublicAccessController::class, 'claim'])->middleware('throttle:5,1')->name('claim');
         Route::get('/account/google', [GoogleLoginController::class, 'redirect'])->name('google.link');

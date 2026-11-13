@@ -62,7 +62,7 @@ final class ChecklistRuleEvaluator
             ->orderBy('sort_order')->get()
             ->filter(fn (DocumentRequirement $item) => self::matches($item->conditions, $particulars))
             ->map(fn (DocumentRequirement $item) => [
-                'code' => (string) preg_replace('/^bina_'.preg_quote(strtolower($applicationTypeId), '/').'_/', '', $item->documentType->code),
+                'code' => \App\Services\DocumentCatalogueService::itemCode($applicationTypeId, $item->documentType->code),
                 'name' => $item->documentType->name,
                 'guidance' => $item->guidance,
                 'is_required' => $item->is_required,
