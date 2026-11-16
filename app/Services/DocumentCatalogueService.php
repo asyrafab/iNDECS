@@ -68,8 +68,9 @@ final class DocumentCatalogueService
         abort_unless(self::canConfigure($actor, $type), 403);
         $data = Validator::make($data, [
             'version' => ['required', 'integer', 'min:0'], 'source_reference' => ['required', 'string', 'max:500'],
-            'items' => ['required', 'array', 'min:1', 'max:50'], 'items.*' => ['array:code,name,is_required,guidance,conditions,precheck_keywords,max_file_size_kb'],
+            'items' => ['required', 'array', 'min:1', 'max:50'], 'items.*' => ['array:code,name,is_required,guidance,conditions,precheck_keywords,max_file_size_kb,max_files'],
             'items.*.max_file_size_kb' => ['nullable', 'integer', 'min:1', 'max:102400'],
+            'items.*.max_files' => ['nullable', 'integer', 'min:1', 'max:10'],
             'items.*.precheck_keywords' => ['nullable', 'array', 'max:10'],
             'items.*.precheck_keywords.*' => ['nullable', 'string', 'max:60'],
             'items.*.code' => ['required', 'regex:/^[a-z][a-z0-9_]{0,35}$/', 'distinct'],
@@ -94,7 +95,7 @@ final class DocumentCatalogueService
                     'permission_type' => null, 'document_type_id' => $documentType->id],
                     ['is_required' => $item['is_required'], 'sort_order' => $index + 1, 'is_active' => true,
                         'guidance' => $item['guidance'] ?? null, 'conditions' => ChecklistRuleEvaluator::normalise($item['conditions'] ?? null),
-                        'precheck_keywords' => self::keywords($item['precheck_keywords'] ?? null)]);
+                        'precheck_keywords' => self::keywords($item['precheck_keywords'] ?? null), 'max_files' => (int) ($item['max_files'] ?? 1)]);
             }
             $version = (int) ($catalogue?->version ?? 0) + 1;
             DB::table('core.document_catalogues')->updateOrInsert(['application_type_id' => $type], [

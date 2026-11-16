@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'conditions',
     'guidance',
     'precheck_keywords',
+    'max_files',
 ])]
 class DocumentRequirement extends Model
 {
@@ -38,6 +39,7 @@ class DocumentRequirement extends Model
             'is_active' => 'boolean',
             'conditions' => 'array',
             'precheck_keywords' => 'array',
+            'max_files' => 'integer',
         ];
     }
 }

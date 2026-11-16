@@ -30,19 +30,21 @@ final class DraftChecklist
             return ['available' => false, 'items' => [], 'unsorted' => [], 'required_total' => 0, 'required_ready' => 0, 'ready' => false];
         }
         $documents = ApplicantDraftDocument::query()->where('draft_id', $draft->id)->orderBy('sequence')->orderBy('created_at')->orderBy('id')->get();
-        $latest = $documents->whereNotNull('item_code')->keyBy('item_code');
+        $byItem = $documents->whereNotNull('item_code')->groupBy('item_code');
         $items = $this->rules->documentsFor($draft->application_type_id, $draft->particulars())
-            ->map(function (array $item) use ($latest): array {
-                $document = $latest->get($item['code']);
+            ->map(function (array $item) use ($byItem): array {
+                $current = self::current($byItem->get($item['code'], collect()), $item['max_files']);
+                $labels = array_map(fn (ApplicantDraftDocument $document) => self::label($document, $item['keywords']), $current);
 
-                return $item + ['document' => $document, 'label' => self::label($document, $item['keywords'])];
+                return $item + ['documents' => $current, 'document' => $current === [] ? null : end($current), 'label' => self::worst($labels)];
             })->values()->all();
         $required = array_filter($items, fn (array $item) => $item['is_required']);
         $ready = count(array_filter($required, fn (array $item) => $item['label'] === PrecheckLabel::Attached));
         // The tray: files never placed, plus the current file of any item that no longer applies.
         $applicable = array_column($items, 'code');
-        $unsorted = $documents->whereNull('item_code')->values()
-            ->concat($latest->reject(fn ($document, $code) => in_array($code, $applicable, true))->values())->all();
+        $stale = $byItem->reject(fn ($rows, $code) => in_array($code, $applicable, true))
+            ->flatMap(fn ($rows, $code) => self::current($rows, self::maxFilesForType((int) $rows->last()->document_type_id)));
+        $unsorted = $documents->whereNull('item_code')->values()->concat($stale->values())->all();
 
         return ['available' => true, 'items' => $items, 'unsorted' => $unsorted, 'required_total' => count($required), 'required_ready' => $ready,
             'ready' => count($required) > 0 && $ready === count($required)];
@@ -63,6 +65,36 @@ final class DraftChecklist
                 'keywords' => array_values($item->precheck_keywords ?? []),
                 'document_type_id' => (int) $item->document_type_id,
             ])->values()->all();
+    }
+
+    /**
+     * An item's current files: the newest max_files rows (oldest first). Older rows are superseded history,
+     * so a single-file item keeps "re-upload replaces" and a lowered limit hides, never deletes, files.
+     *
+     * @param  \Illuminate\Support\Collection<int, ApplicantDraftDocument>  $rows  ordered by sequence
+     * @return list<ApplicantDraftDocument>
+     */
+    public static function current(\Illuminate\Support\Collection $rows, int $maxFiles): array
+    {
+        return $rows->sortBy('sequence')->slice(-max(1, $maxFiles))->values()->all();
+    }
+
+    /** How many current files the active catalogue item of this document type holds (1 when unknown). */
+    public static function maxFilesForType(?int $documentTypeId): int
+    {
+        return max(1, (int) (DocumentRequirement::query()->where('document_type_id', $documentTypeId)->where('is_active', true)->value('max_files') ?? 1));
+    }
+
+    /** The item's label is its worst file's: reading, then unreadable, then needs checking, then attached. */
+    private static function worst(array $labels): PrecheckLabel
+    {
+        foreach ([PrecheckLabel::Pending, PrecheckLabel::Unreadable, PrecheckLabel::NeedsConfirmation] as $label) {
+            if (in_array($label, $labels, true)) {
+                return $label;
+            }
+        }
+
+        return $labels === [] ? PrecheckLabel::Missing : PrecheckLabel::Attached;
     }
 
     /** @param list<string> $keywords */

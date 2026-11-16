@@ -68,6 +68,7 @@ final class ChecklistRuleEvaluator
                 'is_required' => $item->is_required,
                 'conditional' => $item->conditions !== null && $item->conditions !== [],
                 'keywords' => array_values($item->precheck_keywords ?? []),
+                'max_files' => max(1, (int) $item->max_files),
             ])->values();
     }
 

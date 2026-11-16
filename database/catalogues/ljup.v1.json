@@ -12,7 +12,8 @@
                 "STREET LIGHTING",
                 "JADUAL LAMPU"
             ],
-            "max_file_size_kb": 51200
+            "max_file_size_kb": 51200,
+            "max_files": 5
         },
         {
             "code": "pelan_kebenaran_merancang",
@@ -26,7 +27,8 @@
                 "PELAN TAPAK",
                 "SITE PLAN"
             ],
-            "max_file_size_kb": 51200
+            "max_file_size_kb": 51200,
+            "max_files": 5
         },
         {
             "code": "pelan_jalan_parit",
@@ -39,7 +41,8 @@
                 "ROAD AND DRAINAGE",
                 "DRAINAGE"
             ],
-            "max_file_size_kb": 51200
+            "max_file_size_kb": 51200,
+            "max_files": 5
         },
         {
             "code": "surat_jurutera_cs",
@@ -50,7 +53,8 @@
                 "JURUTERA KOMPETEN",
                 "COMPETENT ENGINEER",
                 "C&S"
-            ]
+            ],
+            "max_files": 5
         },
         {
             "code": "pengesahan_tnb",
@@ -60,7 +64,8 @@
             "precheck_keywords": [
                 "TNB",
                 "TENAGA NASIONAL"
-            ]
+            ],
+            "max_files": 5
         },
         {
             "code": "borang_ljup1",
@@ -72,7 +77,8 @@
                 "LJUP 1",
                 "SYARAT-SYARAT KHUSUS",
                 "SYARAT-SYARAT UMUM"
-            ]
+            ],
+            "max_files": 5
         },
         {
             "code": "gambar_tapak",
@@ -84,7 +90,8 @@
                 "SITE PHOTO",
                 "FOTO TAPAK"
             ],
-            "max_file_size_kb": 51200
+            "max_file_size_kb": 51200,
+            "max_files": 5
         },
         {
             "code": "laporan_fotometrik",
@@ -97,7 +104,8 @@
                 "DIALUX",
                 "LUX"
             ],
-            "max_file_size_kb": 51200
+            "max_file_size_kb": 51200,
+            "max_files": 5
         },
         {
             "code": "borang_pengemukaan",
@@ -108,7 +116,8 @@
                 "BORANG PENGEMUKAAN",
                 "SURAT PERMOHONAN",
                 "SOP 4"
-            ]
+            ],
+            "max_files": 5
         }
     ]
 }
