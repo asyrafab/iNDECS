@@ -1,0 +1,60 @@
+{
+    "version": 0,
+    "source_reference": "Borang Pengemukaan Pelan Lampu Jalan untuk Pembangunan, SOP 4-LJUP/KJT Lamp. 1, Keluaran No.3 (01.01.2025), Jabatan Kejuruteraan MBSP; disusun untuk iNDECS, menunggu pengesahan JKEJ",
+    "items": [
+        {
+            "code": "pelan_lampu_jalan",
+            "name": "Pelan Lampu Jalan",
+            "is_required": true,
+            "guidance": "Item 1 borang SOP 4: pelan lampu jalan lengkap dengan jadual lampu. Muat naik satu PDF; empat (4) set bercetak berlipat saiz A4 diserahkan apabila diminta oleh pegawai."
+        },
+        {
+            "code": "pelan_kebenaran_merancang",
+            "name": "Pelan Kebenaran Merancang yang diluluskan, atau Pelan Bangunan (pelan tapak) yang diluluskan",
+            "is_required": true,
+            "guidance": "Item 2 dan 3 borang SOP 4: satu salinan Pelan Kebenaran Merancang yang diluluskan. Jika tiada Pelan Kebenaran Merancang berlulus, lampirkan Pelan Bangunan yang diluluskan (pelan tapak sahaja)."
+        },
+        {
+            "code": "pelan_jalan_parit",
+            "name": "Pelan Jalan dan Parit",
+            "is_required": true,
+            "guidance": "Item 4 borang SOP 4: satu salinan Pelan Jalan dan Parit yang diluluskan, ATAU pelan yang diperakukan oleh Jurutera Kompeten (profesional) C&S. Jika pelan masih dalam pertimbangan MBSP dan JKR, lampirkan juga surat Jurutera Kompeten C&S."
+        },
+        {
+            "code": "surat_jurutera_cs",
+            "name": "Surat Jurutera Kompeten C&S (jika Pelan Jalan dan Parit belum diluluskan)",
+            "is_required": false,
+            "guidance": "Item 4 borang SOP 4: surat daripada Jurutera Kompeten (profesional) C&S yang dilantik menyatakan Pelan Jalan dan Parit dalam peringkat pertimbangan untuk kelulusan MBSP dan JKR."
+        },
+        {
+            "code": "pengesahan_tnb",
+            "name": "Pengesahan kedudukan tiang oleh TNB",
+            "is_required": false,
+            "guidance": "Item 5 borang SOP 4: cop pengesahan kedudukan tiang yang dipersetujui di atas pelan oleh Tenaga Nasional Berhad. Diperlukan bagi tiang TNB/konkrit; muat naik pelan atau surat yang bercop TNB."
+        },
+        {
+            "code": "borang_ljup1",
+            "name": "Borang semakan Pelan Lampu Jalan untuk pembangunan (LJUP 1)",
+            "is_required": false,
+            "guidance": "Item 6 borang SOP 4. Lampirkan borang LJUP Umum/Khusus yang telah diisi jika ada; senarai semakan LJUP juga disemak oleh AIRS."
+        },
+        {
+            "code": "gambar_tapak",
+            "name": "Gambar tapak cadangan (4 keping, sudut berbeza)",
+            "is_required": true,
+            "guidance": "Item 7 borang SOP 4: empat (4) gambar tapak dari sudut yang berbeza. Gabungkan keempat-empat gambar dalam satu PDF."
+        },
+        {
+            "code": "laporan_fotometrik",
+            "name": "Laporan fotometrik / pengiraan lux",
+            "is_required": false,
+            "guidance": "Tidak disenaraikan dalam borang SOP 4 tetapi digunakan dalam semakan teknikal AIRS (padanan bilangan dan kuasa lampu dengan pelan). Sangat digalakkan."
+        },
+        {
+            "code": "borang_pengemukaan",
+            "name": "Borang Pengemukaan Pelan Lampu Jalan dan surat permohonan (bertandatangan dan bercop perunding)",
+            "is_required": true,
+            "guidance": "Borang SOP 4-LJUP/KJT Lamp. 1 yang telah ditanda, bersama surat permohonan, ditandatangani dan dicop oleh orang yang mengemukakan (Submitting Person)."
+        }
+    ]
+}
