@@ -151,15 +151,15 @@ final class DraftDropServiceTest extends TestCase
         $this->assertSame(1, ApplicantDraftDocument::query()->count());
     }
 
-    public function test_infected_file_is_rejected(): void
+    public function test_drop_does_not_scan_in_the_request(): void
     {
+        // Pilot: ClamAV needs ~7 s per run and ~55 s for an 80 MB package, far past the 30 s request limit.
         $this->scanner(false);
         $draft = $this->draft();
         $result = app(DraftDropService::class)->accept($this->owner($draft), $draft, $this->pdf('geran.pdf', 'v'));
 
-        $this->assertSame([['name' => 'geran.pdf', 'reason' => 'Fail dikesan tidak selamat.']], $result->rejected);
-        $this->assertSame(0, ApplicantDraftDocument::query()->count());
-        $this->assertSame([], Storage::disk('local')->allFiles());
+        $this->assertCount(1, $result->accepted);
+        $this->assertTrue($result->accepted[0]->fresh()->scan_pending);
     }
 
     public function test_renamed_non_pdf_is_rejected(): void

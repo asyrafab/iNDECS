@@ -136,7 +136,8 @@
     const started = Date.now();
     const poll = () => {
         const section = document.querySelector('[data-precheck-pending][data-precheck-url]');
-        if (!section || Date.now() - started > 300000) return;
+        // A large drop is scanned and read file by file in the background (pilot: 12 files in ~7 min).
+        if (!section || Date.now() - started > 1200000) return;
         // Never throw away the applicant's work: wait while a file is picked or focus is inside the list.
         const busy = [...section.querySelectorAll('input[type="file"]')].some(input => input.files && input.files.length > 0)
             || section.contains(document.activeElement);

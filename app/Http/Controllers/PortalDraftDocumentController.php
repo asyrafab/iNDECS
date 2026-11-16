@@ -118,6 +118,8 @@ final class PortalDraftDocumentController extends Controller
     public function download(Request $request, string $draft, string $document): StreamedResponse
     {
         $record = $this->document($this->draft($request, $draft), $document);
+        // An unscanned or refused drop is never served back.
+        abort_if($record->scan_pending || $record->rejected_reason !== null, 404);
         abort_unless(Storage::disk('local')->exists($record->path), 404);
 
         return Storage::disk('local')->download($record->path, $record->original_name, [

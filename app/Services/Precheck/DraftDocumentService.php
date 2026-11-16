@@ -106,6 +106,12 @@ final class DraftDocumentService
         if (! collect($checklist['unsorted'])->contains(fn (ApplicantDraftDocument $tray) => $tray->id === $document->id)) {
             throw ValidationException::withMessages(['file' => 'Fail ini sudah berada dalam senarai semak.']);
         }
+        if ($document->scan_pending) {
+            throw ValidationException::withMessages(['file' => 'Tunggu imbasan keselamatan fail ini selesai.']);
+        }
+        if ($document->rejected_reason !== null) {
+            throw ValidationException::withMessages(['file' => 'Fail ini ditolak oleh imbasan keselamatan dan perlu dibuang.']);
+        }
         if (collect($checklist['items'])->firstWhere('code', $itemCode) === null) {
             throw ValidationException::withMessages(['file' => 'Dokumen ini tidak diperlukan untuk projek anda.']);
         }

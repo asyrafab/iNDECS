@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
+use App\Contracts\DocumentScanner;
 use App\Contracts\TextExtractor;
 use App\Models\ApplicantDraft;
 use App\Models\ApplicantDraftDocument;
@@ -16,6 +17,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Throwable;
 
 /**
@@ -65,6 +67,16 @@ final class PrecheckDraftDocument implements ShouldQueue
                 return;
             }
         }
+        if ($document->scan_pending) {
+            try {
+                app(DocumentScanner::class)->assertClean(Storage::disk('local')->path($document->path));
+            } catch (ValidationException $exception) {
+                self::reject($document, (string) collect($exception->errors())->flatten()->first());
+
+                return;
+            }
+            $document->forceFill(['scan_pending' => false])->save();
+        }
         // Beyond the draft's reading budget a dropped file is sorted by its name only and left for the applicant to confirm.
         $result = $this->read
             ? $extractor->extract(Storage::disk('local')->path($document->path), $document->mime)
@@ -92,7 +104,23 @@ final class PrecheckDraftDocument implements ShouldQueue
     /** A killed or timed-out check must never leave the applicant on "Sedang disemak". */
     public function failed(?Throwable $exception = null): void
     {
+        $unscanned = ApplicantDraftDocument::query()->whereKey($this->documentId)->where('scan_pending', true)->first();
+        if ($unscanned !== null) {
+            // Fail closed: a file that was never scanned is never kept.
+            self::reject($unscanned, 'Imbasan keselamatan tidak dapat diselesaikan. Fail dibuang; sila muat naik semula.');
+
+            return;
+        }
         ApplicantDraftDocument::query()->whereKey($this->documentId)->where('precheck_status', 'pending')
             ->update(['precheck_status' => 'done', 'readable' => null, 'ocr_unavailable' => true, 'updated_at' => now()]);
+    }
+
+    /** A dropped file the scanner refused: its bytes are deleted and the row stays in the tray with the reason until removed. */
+    private static function reject(ApplicantDraftDocument $document, string $reason): void
+    {
+        Storage::disk('local')->delete($document->path);
+        $document->forceFill(['item_code' => null, 'document_type_id' => null, 'sequence' => 0, 'scan_pending' => false,
+            'rejected_reason' => mb_substr($reason !== '' ? $reason : 'Dokumen ditolak oleh imbasan keselamatan.', 0, 200),
+            'precheck_status' => 'done', 'readable' => false, 'matched_keywords' => []])->save();
     }
 }

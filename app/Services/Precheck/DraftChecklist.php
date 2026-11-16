@@ -70,6 +70,7 @@ final class DraftChecklist
     {
         return match (true) {
             $document === null => PrecheckLabel::Missing,
+            $document->rejected_reason !== null => PrecheckLabel::Unreadable,
             $document->precheck_status === 'pending' => PrecheckLabel::Pending,
             $document->readable === false => PrecheckLabel::Unreadable,
             $document->confirmed_at !== null => PrecheckLabel::Attached,

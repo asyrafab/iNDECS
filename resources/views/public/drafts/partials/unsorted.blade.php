@@ -11,11 +11,13 @@
             @php($label = \App\Services\Precheck\DraftChecklist::label($file, []))
             <li class="precheck-item">
                 <div class="precheck-item-head">
-                    <div><h3><a href="{{ route('portal.drafts.documents.download', [$draft, $file]) }}">{{ $file->original_name }}</a></h3></div>
+                    <div><h3>@if ($file->scan_pending || $file->rejected_reason){{ $file->original_name }}@else<a href="{{ route('portal.drafts.documents.download', [$draft, $file]) }}">{{ $file->original_name }}</a>@endif</h3>
+                        @if ($file->rejected_reason)<p>{{ $file->rejected_reason }} Buang fail ini.</p>@elseif ($file->scan_pending)<p>Sedang diimbas untuk keselamatan.</p>@endif</div>
                     <span class="status-badge {{ $label->badgeClass() }}">{{ $label === \App\Enums\PrecheckLabel::Pending ? $label->value : 'Belum diisih' }}</span>
                 </div>
                 @if ($editable ?? true)
                 <div class="precheck-actions">
+                    @unless ($file->rejected_reason)
                     <form class="unsorted-assign" method="POST" action="{{ route('portal.drafts.documents.assign', [$draft, $file]) }}">
                         @csrf
                         <label><span class="sr-only">Dokumen senarai semak untuk {{ $file->original_name }}</span><select name="item_code" required>
@@ -24,6 +26,7 @@
                         </select></label>
                         <button class="button button-secondary button-small" type="submit"><x-icon name="check" />Letak</button>
                     </form>
+                    @endunless
                     <form method="POST" action="{{ route('portal.drafts.documents.remove', [$draft, $file]) }}">@csrf @method('DELETE')<button class="button button-secondary button-small" type="submit"><x-icon name="x" />Buang</button></form>
                 </div>
                 @endif

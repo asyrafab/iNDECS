@@ -7,7 +7,6 @@ namespace App\Services\Precheck;
 use App\Airs\DocumentProcessing\ZipSafety;
 use App\Airs\Exceptions\NoRelevantDocumentException;
 use App\Airs\Exceptions\UnsafeArchiveException;
-use App\Contracts\DocumentScanner;
 use App\Jobs\PrecheckDraftDocument;
 use App\Models\ApplicantDraft;
 use App\Models\ApplicantDraftDocument;
@@ -26,12 +25,11 @@ use ZipArchive;
 /**
  * Upload-first drafts: loose files and ZIP entries dropped by the applicant are stored as unsorted
  * draft documents and queued for the free local pre-check, which sorts them (ADR-363, no AI).
- * Each file passes the same checks as a per-item upload; one bad file never blocks the others.
+ * Each file passes the same type, size and duplicate checks as a per-item upload; the virus scan follows
+ * in the job before the file can be opened or placed. One bad file never blocks the others.
  */
 final class DraftDropService
 {
-    public function __construct(private readonly DocumentScanner $scanner) {}
-
     public function createDraft(User $owner, string $applicationTypeId): ApplicantDraft
     {
         abort_unless($owner->email_verified_at !== null, 403, 'Sahkan emel anda melalui halaman Akaun saya sebelum menyediakan draf.');
@@ -135,7 +133,7 @@ final class DraftDropService
             if (ApplicantDraftDocument::query()->where('draft_id', $draft->id)->count() >= (int) config('kaunter.precheck.max_documents_per_draft', 60)) {
                 throw ValidationException::withMessages(['files' => 'Had muat naik bagi draf ini telah dicapai.']);
             }
-            $this->scanner->assertClean($path);
+            // The virus scan runs in the pre-check job: ClamAV is too slow for many files in one request.
         } catch (ValidationException $e) {
             return new DropResult([], [['name' => $name, 'reason' => (string) collect($e->errors())->flatten()->first()]]);
         }
@@ -154,7 +152,7 @@ final class DraftDropService
                 $document = new ApplicantDraftDocument;
                 $document->forceFill(['draft_id' => $draft->id, 'item_code' => null, 'document_type_id' => null, 'sequence' => 0,
                     'original_name' => $name, 'path' => $stored, 'mime' => $mime, 'size_bytes' => filesize($path), 'sha256' => $sha,
-                    'uploaded_by' => $owner->id, 'precheck_status' => 'pending'])->save();
+                    'uploaded_by' => $owner->id, 'precheck_status' => 'pending', 'scan_pending' => true])->save();
 
                 return [$document, $read];
             } catch (Throwable $e) {

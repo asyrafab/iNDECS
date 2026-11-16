@@ -28,6 +28,25 @@ final class AutoSortTest extends TestCase
         $this->seedTelCatalogue();
         $this->draft = $this->telDraft($this->applicant());
         \Illuminate\Support\Facades\Storage::fake('local');
+        $this->scanner(null);
+    }
+
+    private function scanner(?string $failure): void
+    {
+        $this->app->instance(\App\Contracts\DocumentScanner::class, new class($failure) implements \App\Contracts\DocumentScanner
+        {
+            public int $calls = 0;
+
+            public function __construct(private ?string $failure) {}
+
+            public function assertClean(string $path): void
+            {
+                $this->calls++;
+                if ($this->failure !== null) {
+                    throw \Illuminate\Validation\ValidationException::withMessages(['document' => $this->failure]);
+                }
+            }
+        });
     }
 
     private function dropped(string $name): ApplicantDraftDocument
@@ -37,7 +56,7 @@ final class AutoSortTest extends TestCase
 
         return $this->draftDocument($this->draft, 'x', ['item_code' => null, 'document_type_id' => null, 'sequence' => 0,
             'original_name' => $name, 'path' => $path, 'sha256' => hash('sha256', uniqid('', true)),
-            'precheck_status' => 'pending', 'readable' => null, 'text_chars' => null, 'matched_keywords' => null]);
+            'precheck_status' => 'pending', 'readable' => null, 'text_chars' => null, 'matched_keywords' => null, 'scan_pending' => true]);
     }
 
     private function check(ApplicantDraftDocument $document, string $text, bool $read = true): ApplicantDraftDocument
@@ -162,5 +181,39 @@ final class AutoSortTest extends TestCase
 
         $this->assertSame('geran', $weak->fresh()->item_code);
         $this->assertNull($strong->item_code);
+    }
+
+    public function test_dropped_file_is_scanned_by_the_job_before_sorting(): void
+    {
+        $doc = $this->check($this->dropped('geran.pdf'), 'SURAT HAKMILIK');
+
+        $this->assertSame(1, app(\App\Contracts\DocumentScanner::class)->calls);
+        $this->assertFalse($doc->scan_pending);
+        $this->assertSame('geran', $doc->item_code);
+    }
+
+    public function test_infected_dropped_file_is_deleted_and_explained_in_the_tray(): void
+    {
+        $this->scanner('Dokumen ditolak oleh imbasan keselamatan.');
+        $dropped = $this->dropped('geran.pdf');
+        $doc = $this->check($dropped, 'SURAT HAKMILIK');
+
+        $this->assertNull($doc->item_code);
+        $this->assertFalse($doc->scan_pending);
+        $this->assertSame('Dokumen ditolak oleh imbasan keselamatan.', $doc->rejected_reason);
+        $this->assertSame('done', $doc->precheck_status);
+        \Illuminate\Support\Facades\Storage::disk('local')->assertMissing($dropped->path);
+        $this->assertSame([$doc->id], array_map(fn ($d) => $d->id, app(DraftChecklist::class)->for($this->draft)['unsorted']));
+    }
+
+    public function test_failed_job_rejects_an_unscanned_file(): void
+    {
+        $dropped = $this->dropped('geran.pdf');
+        (new PrecheckDraftDocument($dropped->id))->failed();
+
+        $doc = $dropped->fresh();
+        $this->assertNotNull($doc->rejected_reason);
+        $this->assertFalse($doc->scan_pending);
+        \Illuminate\Support\Facades\Storage::disk('local')->assertMissing($dropped->path);
     }
 }

@@ -263,4 +263,27 @@ final class DropUploadPagesTest extends TestCase
             ->assertSessionHasErrors('application_type_id');
         $this->assertSame(0, ApplicantDraft::query()->count());
     }
+
+    public function test_unscanned_file_cannot_be_downloaded_or_placed(): void
+    {
+        $owner = $this->applicant();
+        $draft = $this->telDraft($owner);
+        $file = $this->tray($draft, 'baru.pdf', ['precheck_status' => 'pending', 'scan_pending' => true]);
+
+        $this->actingAs($owner)->get(route('portal.drafts.documents.download', [$draft, $file]))->assertNotFound();
+        $this->actingAs($owner)->post(route('portal.drafts.documents.assign', [$draft, $file]), ['item_code' => 'geran'])->assertSessionHasErrors('file');
+        $this->assertNull($file->fresh()->item_code);
+    }
+
+    public function test_tray_shows_why_a_file_was_rejected(): void
+    {
+        $owner = $this->applicant();
+        $draft = $this->telDraft($owner);
+        $file = $this->tray($draft, 'virus.pdf', ['rejected_reason' => 'Dokumen ditolak oleh imbasan keselamatan.']);
+
+        $this->actingAs($owner)->get(route('portal.drafts.edit', $draft))->assertOk()
+            ->assertSee('virus.pdf')->assertSee('Dokumen ditolak oleh imbasan keselamatan.')
+            ->assertDontSee(route('portal.drafts.documents.assign', [$draft, $file]), false);
+        $this->actingAs($owner)->get(route('portal.drafts.documents.download', [$draft, $file]))->assertNotFound();
+    }
 }
