@@ -15,11 +15,12 @@ use Illuminate\Validation\ValidationException;
  */
 final class DraftDocumentPlacer
 {
-    /** @param list<array{code: string, score: int}> $ranked */
+    /** @param list<array{code: string, score: int, name_score: int}> $ranked */
     public function autoPlace(ApplicantDraftDocument $document, array $ranked): bool
     {
         $winner = $ranked[0] ?? null;
-        if ($winner === null || $winner['score'] < (int) config('kaunter.precheck.sort_threshold', 3)) {
+        // The file name must support the match: LJUP forms all mention "Pelan Lampu Jalan", so text alone is not enough.
+        if ($winner === null || $winner['score'] < (int) config('kaunter.precheck.sort_threshold', 3) || ($winner['name_score'] ?? 0) < 1) {
             return false;
         }
         if (isset($ranked[1]) && $winner['score'] - $ranked[1]['score'] < (int) config('kaunter.precheck.sort_margin', 2)) {

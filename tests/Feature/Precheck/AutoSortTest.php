@@ -120,6 +120,14 @@ final class AutoSortTest extends TestCase
         $this->assertSame($manual->id, $this->item('geran')['document']->id);
     }
 
+    public function test_text_only_match_stays_unsorted(): void
+    {
+        // Pilot: every LJUP form mentions "Pelan Lampu Jalan"; text alone must not place a file with an uninformative name.
+        $doc = $this->check($this->dropped('dokumen (2).pdf'), 'SURAT HAKMILIK NO. LOT 4412');
+
+        $this->assertNull($doc->item_code);
+    }
+
     public function test_unread_file_is_sorted_by_name_and_needs_confirmation(): void
     {
         $doc = $this->check($this->dropped('geran_hakmilik.pdf'), 'TIDAK DIBACA', read: false);

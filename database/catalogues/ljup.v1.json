@@ -7,6 +7,11 @@
             "name": "Pelan Lampu Jalan",
             "is_required": true,
             "guidance": "Item 1 borang SOP 4: pelan lampu jalan lengkap dengan jadual lampu. Muat naik satu PDF; empat (4) set bercetak berlipat saiz A4 diserahkan apabila diminta oleh pegawai.",
+            "precheck_keywords": [
+                "LAMPU JALAN",
+                "STREET LIGHTING",
+                "JADUAL LAMPU"
+            ],
             "max_file_size_kb": 51200
         },
         {
@@ -14,6 +19,13 @@
             "name": "Pelan Kebenaran Merancang yang diluluskan, atau Pelan Bangunan (pelan tapak) yang diluluskan",
             "is_required": true,
             "guidance": "Item 2 dan 3 borang SOP 4: satu salinan Pelan Kebenaran Merancang yang diluluskan. Jika tiada Pelan Kebenaran Merancang berlulus, lampirkan Pelan Bangunan yang diluluskan (pelan tapak sahaja).",
+            "precheck_keywords": [
+                "KEBENARAN MERANCANG",
+                "PELAN KM",
+                "PELAN BANGUNAN",
+                "PELAN TAPAK",
+                "SITE PLAN"
+            ],
             "max_file_size_kb": 51200
         },
         {
@@ -21,31 +33,57 @@
             "name": "Pelan Jalan dan Parit",
             "is_required": true,
             "guidance": "Item 4 borang SOP 4: satu salinan Pelan Jalan dan Parit yang diluluskan, ATAU pelan yang diperakukan oleh Jurutera Kompeten (profesional) C&S. Jika pelan masih dalam pertimbangan MBSP dan JKR, lampirkan juga surat Jurutera Kompeten C&S.",
+            "precheck_keywords": [
+                "JALAN PARIT",
+                "JALAN DAN PARIT",
+                "ROAD AND DRAINAGE",
+                "DRAINAGE"
+            ],
             "max_file_size_kb": 51200
         },
         {
             "code": "surat_jurutera_cs",
             "name": "Surat Jurutera Kompeten C&S (jika Pelan Jalan dan Parit belum diluluskan)",
             "is_required": false,
-            "guidance": "Item 4 borang SOP 4: surat daripada Jurutera Kompeten (profesional) C&S yang dilantik menyatakan Pelan Jalan dan Parit dalam peringkat pertimbangan untuk kelulusan MBSP dan JKR."
+            "guidance": "Item 4 borang SOP 4: surat daripada Jurutera Kompeten (profesional) C&S yang dilantik menyatakan Pelan Jalan dan Parit dalam peringkat pertimbangan untuk kelulusan MBSP dan JKR.",
+            "precheck_keywords": [
+                "JURUTERA KOMPETEN",
+                "COMPETENT ENGINEER",
+                "C&S"
+            ]
         },
         {
             "code": "pengesahan_tnb",
             "name": "Pengesahan kedudukan tiang oleh TNB",
             "is_required": false,
-            "guidance": "Item 5 borang SOP 4: cop pengesahan kedudukan tiang yang dipersetujui di atas pelan oleh Tenaga Nasional Berhad. Diperlukan bagi tiang TNB/konkrit; muat naik pelan atau surat yang bercop TNB."
+            "guidance": "Item 5 borang SOP 4: cop pengesahan kedudukan tiang yang dipersetujui di atas pelan oleh Tenaga Nasional Berhad. Diperlukan bagi tiang TNB/konkrit; muat naik pelan atau surat yang bercop TNB.",
+            "precheck_keywords": [
+                "TNB",
+                "TENAGA NASIONAL"
+            ]
         },
         {
             "code": "borang_ljup1",
             "name": "Borang semakan Pelan Lampu Jalan untuk pembangunan (LJUP 1)",
             "is_required": false,
-            "guidance": "Item 6 borang SOP 4. Lampirkan borang LJUP Umum/Khusus yang telah diisi jika ada; senarai semakan LJUP juga disemak oleh AIRS."
+            "guidance": "Item 6 borang SOP 4. Lampirkan borang LJUP Umum/Khusus yang telah diisi jika ada; senarai semakan LJUP juga disemak oleh AIRS.",
+            "precheck_keywords": [
+                "BORANG SEMAKAN",
+                "LJUP 1",
+                "SYARAT-SYARAT KHUSUS",
+                "SYARAT-SYARAT UMUM"
+            ]
         },
         {
             "code": "gambar_tapak",
             "name": "Gambar tapak cadangan (4 keping, sudut berbeza)",
             "is_required": true,
             "guidance": "Item 7 borang SOP 4: empat (4) gambar tapak dari sudut yang berbeza. Gabungkan keempat-empat gambar dalam satu PDF.",
+            "precheck_keywords": [
+                "GAMBAR TAPAK",
+                "SITE PHOTO",
+                "FOTO TAPAK"
+            ],
             "max_file_size_kb": 51200
         },
         {
@@ -53,13 +91,24 @@
             "name": "Laporan fotometrik / pengiraan lux",
             "is_required": false,
             "guidance": "Tidak disenaraikan dalam borang SOP 4 tetapi digunakan dalam semakan teknikal AIRS (padanan bilangan dan kuasa lampu dengan pelan). Sangat digalakkan.",
+            "precheck_keywords": [
+                "FOTOMETRIK",
+                "PHOTOMETRIC",
+                "DIALUX",
+                "LUX"
+            ],
             "max_file_size_kb": 51200
         },
         {
             "code": "borang_pengemukaan",
             "name": "Borang Pengemukaan Pelan Lampu Jalan dan surat permohonan (bertandatangan dan bercop perunding)",
             "is_required": true,
-            "guidance": "Borang SOP 4-LJUP/KJT Lamp. 1 yang telah ditanda, bersama surat permohonan, ditandatangani dan dicop oleh orang yang mengemukakan (Submitting Person)."
+            "guidance": "Borang SOP 4-LJUP/KJT Lamp. 1 yang telah ditanda, bersama surat permohonan, ditandatangani dan dicop oleh orang yang mengemukakan (Submitting Person).",
+            "precheck_keywords": [
+                "BORANG PENGEMUKAAN",
+                "SURAT PERMOHONAN",
+                "SOP 4"
+            ]
         }
     ]
 }

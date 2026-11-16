@@ -44,4 +44,13 @@ final class LjupCatalogueFileTest extends TestCase
             ['code' => 'pelan', 'name' => 'Pelan', 'is_required' => true, 'max_file_size_kb' => 204800],
         ]], $senior);
     }
+
+    public function test_every_item_has_sorting_keywords(): void
+    {
+        $catalogue = json_decode((string) file_get_contents(base_path('database/catalogues/ljup.v1.json')), true);
+        foreach ($catalogue['items'] as $item) {
+            $this->assertNotEmpty($item['precheck_keywords'] ?? [], $item['code'].' has no sorting keywords.');
+        }
+        $this->assertContains('LUX', collect($catalogue['items'])->firstWhere('code', 'laporan_fotometrik')['precheck_keywords']);
+    }
 }

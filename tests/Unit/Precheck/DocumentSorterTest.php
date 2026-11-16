@@ -20,8 +20,8 @@ final class DocumentSorterTest extends TestCase
         $ranked = (new DocumentSorter)->rank('Lampu Jalan Rev B.pdf', 'LAPORAN FOTOMETRIK', self::ITEMS);
 
         // filename keyword LAMPU JALAN (3) + code words LAMPU, JALAN (2) = 5; text FOTOMETRIK (2) = 2.
-        $this->assertSame(['code' => 'pelan_lampu_jalan', 'score' => 5], $ranked[0]);
-        $this->assertSame(['code' => 'laporan_fotometrik', 'score' => 2], $ranked[1]);
+        $this->assertSame(['code' => 'pelan_lampu_jalan', 'score' => 5, 'name_score' => 5], $ranked[0]);
+        $this->assertSame(['code' => 'laporan_fotometrik', 'score' => 2, 'name_score' => 0], $ranked[1]);
     }
 
     public function test_tie_orders_by_code(): void
@@ -51,6 +51,6 @@ final class DocumentSorterTest extends TestCase
     {
         $ranked = (new DocumentSorter)->rank('x.pdf', "SURAT\nNo.  Lot 4412", self::ITEMS);
 
-        $this->assertSame(['code' => 'geran', 'score' => 2], $ranked[0]);
+        $this->assertSame(['code' => 'geran', 'score' => 2, 'name_score' => 0], $ranked[0]);
     }
 }

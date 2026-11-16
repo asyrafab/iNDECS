@@ -13,7 +13,7 @@ final class DocumentSorter
 {
     /**
      * @param  list<array{code: string, keywords: list<string>}>  $items
-     * @return list<array{code: string, score: int}>
+     * @return list<array{code: string, score: int, name_score: int}> name_score is the file-name part of score
      */
     public function rank(string $fileName, string $text, array $items): array
     {
@@ -22,19 +22,20 @@ final class DocumentSorter
         $text = self::normalise($text);
         $ranked = [];
         foreach ($items as $item) {
-            $score = 0;
+            $nameScore = 0;
+            $textScore = 0;
             foreach ($item['keywords'] as $keyword) {
                 $keyword = self::normalise($keyword);
                 if ($keyword === '') {
                     continue;
                 }
-                $score += str_contains($name, ' '.$keyword.' ') ? 3 : 0;
-                $score += $text !== '' && str_contains($text, $keyword) ? 2 : 0;
+                $nameScore += str_contains($name, ' '.$keyword.' ') ? 3 : 0;
+                $textScore += $text !== '' && str_contains($text, $keyword) ? 2 : 0;
             }
             foreach (explode('_', mb_strtoupper($item['code'])) as $word) {
-                $score += mb_strlen($word) >= 4 && isset($tokens[$word]) ? 1 : 0;
+                $nameScore += mb_strlen($word) >= 4 && isset($tokens[$word]) ? 1 : 0;
             }
-            $ranked[] = ['code' => $item['code'], 'score' => $score];
+            $ranked[] = ['code' => $item['code'], 'score' => $nameScore + $textScore, 'name_score' => $nameScore];
         }
         usort($ranked, fn (array $a, array $b) => [$b['score'], $a['code']] <=> [$a['score'], $b['code']]);
 
