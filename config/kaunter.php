@@ -37,6 +37,13 @@ return [
         'total_budget' => (int) env('KAUNTER_PRECHECK_TOTAL_BUDGET', 240),
         'min_text_chars' => (int) env('KAUNTER_PRECHECK_MIN_TEXT_CHARS', 30),
         'max_documents_per_draft' => (int) env('KAUNTER_PRECHECK_MAX_DOCUMENTS', 60),
+        // Upload-first drafts: the first N dropped files of a draft are read in full; later ones are sorted by file name only.
+        'read_files_per_draft' => (int) env('KAUNTER_PRECHECK_READ_FILES_PER_DRAFT', 20),
+        // Auto-sorting: a file is placed only when its best item scores at least the threshold and beats the runner-up by the margin.
+        'sort_threshold' => (int) env('KAUNTER_PRECHECK_SORT_THRESHOLD', 3),
+        'sort_margin' => (int) env('KAUNTER_PRECHECK_SORT_MARGIN', 2),
+        // A dropped ZIP must stay under PHP post_max_size (128M).
+        'max_zip_kb' => (int) env('KAUNTER_PRECHECK_MAX_ZIP_KB', 122880),
         'pdftotext' => env('KAUNTER_PDFTOTEXT_BINARY', 'pdftotext'),
         'ghostscript' => env('KAUNTER_GHOSTSCRIPT_BINARY', PHP_OS_FAMILY === 'Windows' ? 'gswin64c' : 'gs'),
         'tesseract' => env('KAUNTER_TESSERACT_BINARY', 'tesseract'),

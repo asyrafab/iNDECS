@@ -31,7 +31,8 @@ final class PrecheckDraftDocument implements ShouldQueue
 
     public readonly string $draftId;
 
-    public function __construct(public readonly string $documentId)
+    /** @param bool $read false = sort by file name only (beyond the draft's reading budget). */
+    public function __construct(public readonly string $documentId, public readonly bool $read = true)
     {
         $this->draftId = (string) (ApplicantDraftDocument::query()->whereKey($documentId)->value('draft_id') ?? $documentId);
         $this->onQueue('precheck');
