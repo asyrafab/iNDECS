@@ -61,9 +61,7 @@ final class PrecheckDraftDocument implements ShouldQueue
             return;
         }
         if ($document->item_code !== null) {
-            $current = DraftChecklist::current(ApplicantDraftDocument::query()->where('draft_id', $document->draft_id)
-                ->where('item_code', $document->item_code)->get(), DraftChecklist::maxFilesForType($document->document_type_id));
-            if (! in_array($document->id, array_map(fn (ApplicantDraftDocument $row) => $row->id, $current), true)) {
+            if ($document->superseded_at !== null) {
                 // Superseded by a newer upload: the newer file gets its own check.
                 $document->forceFill(['precheck_status' => 'done', 'readable' => null])->save();
 

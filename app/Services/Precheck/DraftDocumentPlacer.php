@@ -39,50 +39,82 @@ final class DraftDocumentPlacer
             } catch (ValidationException) {
                 return false;
             }
-            $maxFiles = DraftChecklist::maxFilesForType((int) $rules['document_type']->id);
-            if ($maxFiles > 1) {
+            $typeId = (int) $rules['document_type']->id;
+            if (DraftChecklist::maxFilesForType($typeId) > 1) {
                 // A multi-file item gains the file while it has room; nothing is ever pushed out of it.
-                $rows = ApplicantDraftDocument::query()->where('draft_id', $draft->id)->where('item_code', $winner['code'])->get();
-                if (count(DraftChecklist::current($rows, $maxFiles)) >= $maxFiles) {
+                if ($this->refusal($draft, $document, $winner['code'], $typeId) !== null) {
                     return false;
                 }
-                $this->move($draft, $document, $winner['code'], (int) $rules['document_type']->id, 'auto', $winner['score']);
+                $this->move($draft, $document, $winner['code'], $typeId, 'auto', $winner['score']);
 
                 return true;
             }
-            $current = $this->current($draft, $winner['code']);
+            $current = $this->currentFiles($draft, $winner['code']);
+            $newest = end($current) ?: null;
             // Never displace a file the applicant placed or confirmed.
-            if ($current !== null && ($current->sort_source !== 'auto' || $current->confirmed_at !== null || (int) $current->sort_score >= $winner['score'])) {
+            if ($newest !== null && ($newest->sort_source !== 'auto' || $newest->confirmed_at !== null || (int) $newest->sort_score >= $winner['score'])) {
                 return false;
             }
-            if ($current !== null) {
-                $current->forceFill(['item_code' => null, 'document_type_id' => null, 'sequence' => 0])->save();
+            foreach ($current as $displaced) {
+                $displaced->forceFill(['item_code' => null, 'document_type_id' => null, 'sequence' => 0])->save();
             }
-            $this->move($draft, $document, $winner['code'], (int) $rules['document_type']->id, 'auto', $winner['score']);
+            $this->move($draft, $document, $winner['code'], $typeId, 'auto', $winner['score']);
 
             return true;
         });
     }
 
-    /** Unconditional placement (the applicant chose the item); an existing file stays as superseded history. */
+    /**
+     * The applicant chose the item. A multi-file item must have room and not hold the same bytes;
+     * a single-file item's current file is marked replaced (kept as history).
+     */
     public function place(ApplicantDraftDocument $document, string $itemCode, string $source): void
     {
         DB::transaction(function () use ($document, $itemCode, $source): void {
             $draft = ApplicantDraft::query()->lockForUpdate()->findOrFail($document->draft_id);
-            $rules = DraftFileRules::forItem($draft, $itemCode);
-            $this->move($draft, ApplicantDraftDocument::query()->lockForUpdate()->findOrFail($document->id), $itemCode, (int) $rules['document_type']->id, $source, null);
+            $document = ApplicantDraftDocument::query()->lockForUpdate()->findOrFail($document->id);
+            $typeId = (int) DraftFileRules::forItem($draft, $itemCode)['document_type']->id;
+            if (DraftChecklist::maxFilesForType($typeId) > 1) {
+                if (($message = $this->refusal($draft, $document, $itemCode, $typeId)) !== null) {
+                    throw ValidationException::withMessages(['file' => $message]);
+                }
+            } else {
+                self::supersede($this->currentFiles($draft, $itemCode));
+            }
+            $this->move($draft, $document, $itemCode, $typeId, $source, null);
         });
     }
 
-    private function current(ApplicantDraft $draft, string $itemCode): ?ApplicantDraftDocument
+    /** Why a multi-file item cannot take this file now (checked under the draft lock), or null. */
+    public function refusal(ApplicantDraft $draft, ApplicantDraftDocument $document, string $itemCode, int $typeId): ?string
     {
-        return ApplicantDraftDocument::query()->where('draft_id', $draft->id)->where('item_code', $itemCode)->orderByDesc('sequence')->first();
+        $current = $this->currentFiles($draft, $itemCode);
+        if (collect($current)->contains(fn (ApplicantDraftDocument $file) => $file->id !== $document->id && hash_equals($file->sha256, (string) $document->sha256))) {
+            return 'Fail yang sama telah dimuat naik.';
+        }
+        $max = DraftChecklist::maxFilesForType($typeId);
+
+        return count($current) >= $max ? "Dokumen ini sudah mempunyai {$max} fail. Buang satu fail sebelum menambah." : null;
+    }
+
+    /** @param list<ApplicantDraftDocument> $files */
+    public static function supersede(array $files): void
+    {
+        foreach ($files as $file) {
+            $file->forceFill(['superseded_at' => now()])->save();
+        }
+    }
+
+    /** @return list<ApplicantDraftDocument> */
+    public function currentFiles(ApplicantDraft $draft, string $itemCode): array
+    {
+        return DraftChecklist::current(ApplicantDraftDocument::query()->where('draft_id', $draft->id)->where('item_code', $itemCode)->get());
     }
 
     private function move(ApplicantDraft $draft, ApplicantDraftDocument $document, string $itemCode, int $typeId, string $source, ?int $score): void
     {
         $sequence = (int) ApplicantDraftDocument::query()->where('draft_id', $draft->id)->where('item_code', $itemCode)->max('sequence') + 1;
         $document->forceFill(['item_code' => $itemCode, 'document_type_id' => $typeId, 'sequence' => $sequence,
-            'sort_source' => $source, 'sort_score' => $score])->save();
+            'sort_source' => $source, 'sort_score' => $score, 'superseded_at' => null])->save();
     }
 }

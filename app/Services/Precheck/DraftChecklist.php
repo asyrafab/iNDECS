@@ -33,7 +33,7 @@ final class DraftChecklist
         $byItem = $documents->whereNotNull('item_code')->groupBy('item_code');
         $items = $this->rules->documentsFor($draft->application_type_id, $draft->particulars())
             ->map(function (array $item) use ($byItem): array {
-                $current = self::current($byItem->get($item['code'], collect()), $item['max_files']);
+                $current = self::current($byItem->get($item['code'], collect()));
                 $labels = array_map(fn (ApplicantDraftDocument $document) => self::label($document, $item['keywords']), $current);
 
                 return $item + ['documents' => $current, 'document' => $current === [] ? null : end($current), 'label' => self::worst($labels)];
@@ -42,8 +42,7 @@ final class DraftChecklist
         $ready = count(array_filter($required, fn (array $item) => $item['label'] === PrecheckLabel::Attached));
         // The tray: files never placed, plus the current file of any item that no longer applies.
         $applicable = array_column($items, 'code');
-        $stale = $byItem->reject(fn ($rows, $code) => in_array($code, $applicable, true))
-            ->flatMap(fn ($rows, $code) => self::current($rows, self::maxFilesForType((int) $rows->last()->document_type_id)));
+        $stale = $byItem->reject(fn ($rows, $code) => in_array($code, $applicable, true))->flatMap(fn ($rows) => self::current($rows));
         $unsorted = $documents->whereNull('item_code')->values()->concat($stale->values())->all();
 
         return ['available' => true, 'items' => $items, 'unsorted' => $unsorted, 'required_total' => count($required), 'required_ready' => $ready,
@@ -68,15 +67,15 @@ final class DraftChecklist
     }
 
     /**
-     * An item's current files: the newest max_files rows (oldest first). Older rows are superseded history,
-     * so a single-file item keeps "re-upload replaces" and a lowered limit hides, never deletes, files.
+     * An item's current files (oldest first): every placed row not marked replaced. A single-file item's
+     * re-upload marks the old row replaced; a changed file limit never hides or revives a file.
      *
-     * @param  \Illuminate\Support\Collection<int, ApplicantDraftDocument>  $rows  ordered by sequence
+     * @param  \Illuminate\Support\Collection<int, ApplicantDraftDocument>  $rows
      * @return list<ApplicantDraftDocument>
      */
-    public static function current(\Illuminate\Support\Collection $rows, int $maxFiles): array
+    public static function current(\Illuminate\Support\Collection $rows): array
     {
-        return $rows->sortBy('sequence')->slice(-max(1, $maxFiles))->values()->all();
+        return $rows->whereNull('superseded_at')->sortBy('sequence')->values()->all();
     }
 
     /** How many current files the active catalogue item of this document type holds (1 when unknown). */

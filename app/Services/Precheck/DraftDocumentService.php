@@ -59,8 +59,20 @@ final class DraftDocumentService
         }
 
         $extension = in_array(strtolower((string) $file->guessExtension()), $extensions, true) ? strtolower((string) $file->guessExtension()) : $extensions[0];
-        $document = DB::transaction(function () use ($owner, $draft, $itemCode, $file, $type, $sha, $extension, $sniffed): ApplicantDraftDocument {
+        $multi = $item['max_files'] > 1;
+        $document = DB::transaction(function () use ($owner, $draft, $itemCode, $file, $type, $sha, $extension, $sniffed, $multi, $item): ApplicantDraftDocument {
             ApplicantDraft::query()->whereKey($draft->id)->lockForUpdate()->firstOrFail();
+            // Re-checked under the draft lock: two tabs or a background sort may have added a file meanwhile.
+            $placer = app(DraftDocumentPlacer::class);
+            $current = $placer->currentFiles($draft, $itemCode);
+            if ($multi) {
+                if (collect($current)->contains(fn (ApplicantDraftDocument $existing) => hash_equals($existing->sha256, $sha))) {
+                    throw ValidationException::withMessages(['file' => 'Fail yang sama telah dimuat naik.']);
+                }
+                self::assertRoom(['max_files' => $item['max_files'], 'documents' => $current]);
+            } else {
+                DraftDocumentPlacer::supersede($current);
+            }
             $sequence = (int) ApplicantDraftDocument::query()->where('draft_id', $draft->id)->where('item_code', $itemCode)->max('sequence') + 1;
             // A unique name: a file that left this item for the tray keeps its old path, so a sequence-based name could overwrite it.
             $path = "drafts/{$draft->id}/{$itemCode}/{$sequence}-".\Illuminate\Support\Str::ulid().".{$extension}";
@@ -147,7 +159,8 @@ final class DraftDocumentService
         $this->authorize($owner, $draft);
         $checklist = $this->checklist->for($draft);
         $inTray = collect($checklist['unsorted'])->contains(fn (ApplicantDraftDocument $tray) => $tray->id === $document->id);
-        $inMultiItem = collect($checklist['items'])->contains(fn (array $item) => $item['max_files'] > 1
+        // One file of an item holding several (a multi-file item, or one whose limit was lowered) may be removed.
+        $inMultiItem = collect($checklist['items'])->contains(fn (array $item) => ($item['max_files'] > 1 || count($item['documents']) > 1)
             && collect($item['documents'])->contains(fn (ApplicantDraftDocument $current) => $current->id === $document->id));
         if (! $inTray && ! $inMultiItem) {
             throw ValidationException::withMessages(['file' => 'Hanya fail yang belum dipadankan boleh dibuang. Gantikan dokumen senarai semak dengan muat naik semula.']);
@@ -160,15 +173,15 @@ final class DraftDocumentService
     }
 
     /**
-     * Older versions of an item that no longer applies would otherwise surface in the tray one by one
-     * after the applicant deals with the current one; they are history of a dropped item and are removed together.
+     * Replaced versions of an item that no longer applies are history of a dropped item and are removed together
+     * once the applicant deals with its files. Its other current files stay in the tray until dealt with one by one.
      */
     private function clearStaleHistory(ApplicantDraft $draft, ?string $itemCode, array $checklist): void
     {
         if ($itemCode === null || collect($checklist['items'])->contains(fn (array $item) => $item['code'] === $itemCode)) {
             return;
         }
-        ApplicantDraftDocument::query()->where('draft_id', $draft->id)->where('item_code', $itemCode)->get()
+        ApplicantDraftDocument::query()->where('draft_id', $draft->id)->where('item_code', $itemCode)->whereNotNull('superseded_at')->get()
             ->each(function (ApplicantDraftDocument $old): void {
                 $path = $old->path;
                 $old->delete();

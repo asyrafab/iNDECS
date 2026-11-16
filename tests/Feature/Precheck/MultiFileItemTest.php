@@ -84,13 +84,84 @@ final class MultiFileItemTest extends TestCase
         $this->assertSame([$newest->id], $this->ids($this->item($draft, 'geran')['documents']));
     }
 
-    public function test_more_files_than_the_limit_keeps_the_newest_current_and_loses_none(): void
+    private function republish(array $maxFiles): void
+    {
+        $admin = User::query()->where('department_id', 'JBANG')->where('role', 'system_admin')->firstOrFail();
+        $version = (int) \Illuminate\Support\Facades\DB::table('core.document_catalogues')->where('application_type_id', 'TEL')->value('version');
+        app(BangunanDocumentCatalogueService::class)->publish('TEL', ['version' => $version, 'source_reference' => 'Ujian', 'items' => [
+            ['code' => 'geran', 'name' => 'Geran tanah', 'is_required' => true, 'precheck_keywords' => ['HAKMILIK'], 'max_files' => $maxFiles['geran'] ?? 1],
+            ['code' => 'pelan_lantai', 'name' => 'Pelan lantai', 'is_required' => true, 'max_files' => $maxFiles['pelan_lantai'] ?? 3],
+            ['code' => 'pelan_struktur', 'name' => 'Pelan struktur', 'is_required' => true, 'conditions' => ['storeys_min' => 3], 'max_files' => 3],
+            ['code' => 'gambar', 'name' => 'Gambar tapak', 'is_required' => false],
+        ]], $admin);
+    }
+
+    public function test_files_over_a_lowered_limit_stay_visible_and_removable(): void
+    {
+        \Illuminate\Support\Facades\Queue::fake();
+        $draft = $this->telDraft($this->applicant());
+        $files = [$this->upload($draft, 'pelan_lantai', 'a'), $this->upload($draft, 'pelan_lantai', 'b'), $this->upload($draft, 'pelan_lantai', 'c')];
+        $this->republish(['pelan_lantai' => 1]);
+
+        $this->assertSame($this->ids($files), $this->ids($this->item($draft, 'pelan_lantai')['documents']));
+        app(\App\Services\Precheck\DraftDocumentService::class)->remove(User::query()->findOrFail($draft->user_id), $files[0]);
+        $this->assertSame([$files[1]->id, $files[2]->id], $this->ids($this->item($draft, 'pelan_lantai')['documents']));
+    }
+
+    public function test_raising_the_limit_does_not_revive_replaced_uploads(): void
+    {
+        \Illuminate\Support\Facades\Queue::fake();
+        $draft = $this->telDraft($this->applicant());
+        $this->upload($draft, 'geran', 'lama');
+        $newest = $this->upload($draft, 'geran', 'baru');
+        $this->republish(['geran' => 5]);
+
+        $this->assertSame([$newest->id], $this->ids($this->item($draft, 'geran')['documents']));
+        app(\App\Services\Precheck\DraftDocumentService::class)->remove(User::query()->findOrFail($draft->user_id), $newest);
+        $this->assertSame([], $this->item($draft, 'geran')['documents'], 'Removing a file never brings back a replaced one.');
+    }
+
+    public function test_removing_one_file_of_a_stale_multi_item_keeps_the_others(): void
+    {
+        $draft = $this->telDraft($this->applicant(), ['storeys' => 4]);
+        $files = collect(['a', 'b', 'c'])->map(function ($marker) use ($draft) {
+            $file = $this->draftDocument($draft, 'pelan_struktur', ['original_name' => $marker.'.pdf']);
+            Storage::disk('local')->put($file->path, 'x');
+
+            return $file;
+        });
+        $draft->forceFill(['storeys' => 1])->save();
+        $service = app(\App\Services\Precheck\DraftDocumentService::class);
+        $owner = User::query()->findOrFail($draft->user_id);
+
+        $service->remove($owner, $files[0]);
+
+        $this->assertEqualsCanonicalizing([$files[1]->id, $files[2]->id], $this->ids(app(DraftChecklist::class)->for($draft->fresh())['unsorted']));
+        $this->assertTrue(Storage::disk('local')->exists($files[1]->path));
+    }
+
+    public function test_place_refuses_a_full_item_and_duplicate_bytes(): void
     {
         $draft = $this->telDraft($this->applicant());
-        $files = collect(range(1, 4))->map(fn () => $this->draftDocument($draft, 'pelan_lantai'));
+        $placer = app(\App\Services\Precheck\DraftDocumentPlacer::class);
+        foreach (['a', 'b', 'c'] as $marker) {
+            $placer->place($this->trayFile($draft, $marker), 'pelan_lantai', 'manual');
+        }
 
-        $this->assertSame($files->slice(1)->pluck('id')->all(), $this->ids($this->item($draft, 'pelan_lantai')['documents']));
-        $this->assertSame(4, $draft->documents()->count());
+        $this->refused(fn () => $placer->place($this->trayFile($draft, 'd'), 'pelan_lantai', 'manual'),
+            'Dokumen ini sudah mempunyai 3 fail. Buang satu fail sebelum menambah.');
+    }
+
+    public function test_duplicate_bytes_from_the_tray_are_not_placed_twice(): void
+    {
+        $draft = $this->telDraft($this->applicant());
+        $placer = app(\App\Services\Precheck\DraftDocumentPlacer::class);
+        $placer->place($this->trayFile($draft, 'a'), 'pelan_lantai', 'manual');
+        $copy = $this->trayFile($draft, 'a-salinan');
+        $copy->forceFill(['sha256' => hash('sha256', 'a')])->save();
+
+        $this->assertFalse($placer->autoPlace($copy, [['code' => 'pelan_lantai', 'score' => 6, 'name_score' => 1]]));
+        $this->refused(fn () => $placer->place($copy, 'pelan_lantai', 'manual'), 'Fail yang sama telah dimuat naik.');
     }
 
     public function test_stale_multi_item_sends_every_file_to_tray(): void

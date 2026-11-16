@@ -54,6 +54,11 @@ trait BuildsLjupJourney
             'size_bytes' => strlen($bytes), 'sha256' => hash('sha256', $bytes), 'uploaded_by' => $draft->user_id,
             'precheck_status' => 'done', 'readable' => true, 'text_chars' => 200, 'matched_keywords' => [], 'confirmed_at' => now(),
         ], $state))->save();
+        // As in the app: a newer file in a single-file item marks the older one replaced.
+        if ($document->item_code !== null && \App\Services\Precheck\DraftChecklist::maxFilesForType($document->document_type_id) === 1) {
+            ApplicantDraftDocument::query()->where('draft_id', $draft->id)->where('item_code', $document->item_code)
+                ->whereKeyNot($document->id)->whereNull('superseded_at')->update(['superseded_at' => now()]);
+        }
 
         return $document;
     }
