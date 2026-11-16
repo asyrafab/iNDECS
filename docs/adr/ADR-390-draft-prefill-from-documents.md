@@ -10,7 +10,7 @@ After an applicant drops files, the background pre-check fills the draft's provi
 address and, for LJUP, empty lighting type from the standard MBSP cover-letter subject
 ("PERMOHONAN … BAGI CADANGAN … DI ATAS LOT … UNTUK TETUAN …"). Reading stays local and free (ADR-363):
 it runs on the text the pre-check job already extracts, and that text is never stored. A lighting type is
-filled only when exactly one of solar, konkrit or besi/galvani is named as the pole or light type.
+filled only when exactly one of solar, konkrit or besi/galvani is named as the pole or light type, outside a list of options ("konkrit atau besi bergalvani" in MBSP's standard conditions names no project type).
 
 ## Rules
 

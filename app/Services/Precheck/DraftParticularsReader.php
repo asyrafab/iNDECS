@@ -43,12 +43,33 @@ final class DraftParticularsReader
                 $found['site_address'] = self::tidy($address[1], self::ADDRESS_MAX);
             }
         }
-        $types = array_keys(array_filter(self::LIGHTING, fn (string $pattern) => preg_match($pattern, $text) === 1));
+        $types = array_keys(array_filter(self::LIGHTING, fn (string $pattern) => self::namedAlone($pattern, $text)));
         if (count($types) === 1) {
             $found['lighting_types'] = $types;
         }
 
         return array_filter($found, fn ($value) => $value !== '' && $value !== []);
+    }
+
+    /**
+     * True when the type is named at least once outside a list of options. MBSP's standard conditions on every
+     * lighting plan read "tiang lampu konkrit atau besi bergalvani …": that lists what is allowed, not what is proposed.
+     */
+    private static function namedAlone(string $pattern, string $text): bool
+    {
+        preg_match_all($pattern, $text, $matches, PREG_OFFSET_CAPTURE);
+        foreach ($matches[0] as [$found, $offset]) {
+            $before = substr($text, max(0, $offset - 40), min(40, $offset));
+            $after = substr($text, $offset + strlen($found), 40);
+            // Only the same sentence counts as context.
+            $before = ($dot = strrpos($before, '.')) === false ? $before : substr($before, $dot + 1);
+            $after = ($dot = strpos($after, '.')) === false ? $after : substr($after, 0, $dot);
+            if (preg_match('/\b(?:ATAU|OR)\b/', $before.' '.$after) !== 1) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static function tidy(string $value, int $max): string

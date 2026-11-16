@@ -69,6 +69,14 @@ final class DraftParticularsReaderTest extends TestCase
         $this->assertArrayNotHasKey('lighting_types', $this->read('TENAGA SURIA'));
     }
 
+    /** MBSP's standard conditions, printed on every lighting plan, list the allowed pole types; that names no project type. */
+    public function test_lighting_type_in_a_list_of_options_does_not_count(): void
+    {
+        $this->assertArrayNotHasKey('lighting_types', $this->read('PENGGUNAAN TIANG LAMPU TERSEBUT PERLULAH DARI JENIS TIANG LAMPU KONKRIT ATAU BESI BERGALVANI ATAU KONKRIT DEKORATIF.'));
+        $this->assertArrayNotHasKey('lighting_types', $this->read('POLE TYPE: CONCRETE POLE OR GALVANISED STEEL POLE'));
+        $this->assertSame(['KONKRIT'], $this->read('SYARAT AM: TIANG KONKRIT ATAU TIANG BESI. CADANGAN: TIANG KONKRIT 10M SETINGGI 10 METER')['lighting_types'] ?? null);
+    }
+
     public function test_values_are_capped(): void
     {
         $found = $this->read('PERMOHONAN BAGI CADANGAN '.str_repeat('KEDAI ', 100).'DI ATAS LOT 1. UNTUK TETUAN X');
