@@ -10,6 +10,8 @@ use App\Models\ApplicantDraft;
 use App\Models\ApplicantDraftDocument;
 use App\Models\DocumentRequirement;
 use App\Services\Precheck\DocumentSorter;
+use App\Services\Precheck\DraftParticularsReader;
+use App\Services\Precheck\DraftPrefiller;
 use App\Services\Precheck\DraftChecklist;
 use App\Services\Precheck\DraftDocumentPlacer;
 use App\Services\Precheck\ExtractedText;
@@ -87,6 +89,10 @@ final class PrecheckDraftDocument implements ShouldQueue
             $items = app(DraftChecklist::class)->catalogueItems((string) ApplicantDraft::query()->whereKey($document->draft_id)->value('application_type_id'));
             app(DraftDocumentPlacer::class)->autoPlace($document, app(DocumentSorter::class)->rank($document->original_name, $text, $items));
             $document->refresh();
+        }
+        if ($this->read && $text !== '') {
+            // Upload-first part 2: fill the draft's still-empty details; the text itself is never stored.
+            app(DraftPrefiller::class)->apply($document, app(DraftParticularsReader::class)->read($text));
         }
         $keywords = $document->document_type_id === null ? [] : array_values(DocumentRequirement::query()->where('document_type_id', $document->document_type_id)
             ->where('is_active', true)->first()?->precheck_keywords ?? []);
