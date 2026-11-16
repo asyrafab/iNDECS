@@ -146,6 +146,8 @@ final class PublicPortalController extends Controller
             $locked->fill($data);
             // The applicant has now typed a real title over the one a drop created.
             $locked->title_provisional = false;
+            // Saving confirms any details filled from the documents.
+            $locked->prefill_sources = null;
             $locked->version++;
             $locked->save();
             $this->recordRevision($locked, $request->user());

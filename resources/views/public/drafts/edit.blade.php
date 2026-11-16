@@ -2,6 +2,7 @@
 @section('title', $draft->exists ? 'Sambung draf' : 'Mulakan draf')
 @section('counter', '1')
 @section('content')
+@php($prefill = $draft->prefill_sources ?? [])
     <x-portal-counter :board="$board" :draft="$draft" guide="Lengkapkan jenis permohonan, tajuk dan butiran projek, kemudian simpan draf. Senarai dokumen mengikut butiran projek anda; muat naik setiap dokumen untuk semakan awal percuma. Bayaran dan penghantaran rasmi belum dibuka."><x-slot:file>
     <div class="page-heading"><a class="back-link" href="{{ route('portal.home') }}"><x-icon name="arrow-left" />Kembali ke Fail saya</a><span class="eyebrow">Persediaan permohonan</span><h1>{{ $draft->exists ? 'Sambung draf' : 'Mulakan draf baharu' }}</h1><p>Simpan maklumat awal cadangan anda. Maklumat boleh dikemas kini kemudian.</p></div>
     @php($paidCheckOpen = $draft->exists && (config('airs.modules.'.$draft->application_type_id.'.enabled') ?? false) === true && \App\Services\PaidCheck\CheckPaymentService::feeSen() !== null)
@@ -26,8 +27,8 @@
                         <optgroup label="{{ $department }}">@foreach($departmentTypes as $type)<option value="{{ $type->id }}" @selected(old('application_type_id', $draft->application_type_id) === $type->id)>{{ $type->id }} · {{ $type->name }}</option>@endforeach</optgroup>
                     @endforeach
                 </select><small>Jenis yang tersedia untuk persediaan awal. Landskap akan menyusul.</small></label>
-                <label class="field field-span-2"><span>Tajuk cadangan <b>*</b></span><input name="title" value="{{ old('title', $draft->title_provisional ? '' : $draft->title) }}" maxlength="500" required @error('title') aria-invalid="true" @enderror><small>@if ($draft->title_provisional)Tajuk sementara diberi semasa fail dimuat naik. Isi tajuk cadangan sebenar dan simpan draf. @endif Contoh: Cadangan mendirikan sebuah rumah di Lot 101, Mukim 6.</small></label>
-                <label class="field field-span-2"><span>Alamat atau lokasi tapak</span><textarea name="site_address" rows="3" maxlength="2000" @error('site_address') aria-invalid="true" @enderror>{{ old('site_address', $draft->site_address) }}</textarea><small>Nyatakan nombor lot, mukim dan daerah jika diketahui.</small></label>
+                <label class="field field-span-2"><span>Tajuk cadangan <b>*</b></span><input name="title" value="{{ old('title', $draft->title_provisional && ! isset($prefill['title']) ? '' : $draft->title) }}" maxlength="500" required @error('title') aria-invalid="true" @enderror>@include('public.drafts.partials.prefill-note', ['field' => 'title'])<small>@if ($draft->title_provisional && ! isset($prefill['title']))Tajuk sementara diberi semasa fail dimuat naik. Isi tajuk cadangan sebenar dan simpan draf. @endif Contoh: Cadangan mendirikan sebuah rumah di Lot 101, Mukim 6.</small></label>
+                <label class="field field-span-2"><span>Alamat atau lokasi tapak</span><textarea name="site_address" rows="3" maxlength="2000" @error('site_address') aria-invalid="true" @enderror>{{ old('site_address', $draft->site_address) }}</textarea>@include('public.drafts.partials.prefill-note', ['field' => 'site_address'])<small>Nyatakan nombor lot, mukim dan daerah jika diketahui.</small></label>
                 <label class="field field-span-2"><span>Catatan persediaan</span><textarea name="notes" rows="4" maxlength="5000" @error('notes') aria-invalid="true" @enderror>{{ old('notes', $draft->notes) }}</textarea><small>Catatan peribadi untuk membantu anda menyambung persediaan.</small></label>
             </div>
         </section>
@@ -51,4 +52,5 @@
         @include('public.drafts.partials.checklist')
     @endif
     </x-slot:file></x-portal-counter>
+<script src="{{ asset('js/draft-prefill.js') }}" defer></script>
 @endsection

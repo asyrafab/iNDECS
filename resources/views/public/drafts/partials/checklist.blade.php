@@ -1,6 +1,7 @@
 {{-- Free pre-check checklist (ADR-363, contract §3). Preparation labels only; no findings or approval wording. --}}
 @php($pending = collect($checklist['items'])->contains(fn ($item) => $item['label'] === \App\Enums\PrecheckLabel::Pending) || collect($checklist['unsorted'] ?? [])->contains(fn ($file) => $file->precheck_status === 'pending'))
 <section class="form-card precheck precheck-window" id="dokumen" data-precheck-url="{{ route('portal.drafts.checklist', $draft) }}" @if ($pending) data-precheck-pending @endif aria-live="polite">
+    @include('public.drafts.partials.prefill-data')
     @if (! $checklist['available'])
         <div class="form-section-heading"><div><h2>Dokumen diperlukan</h2></div></div>
         <p class="precheck-note">Senarai semak belum tersedia untuk jenis permohonan ini.</p>

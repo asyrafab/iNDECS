@@ -8,6 +8,7 @@
                 <label class="checkbox-field"><input type="checkbox" name="lighting_types[]" value="{{ $value }}" @checked(in_array($value, old('lighting_types', $draft->lighting_types ?? []), true))><span>{{ $type['label'] }}</span></label>
             @endforeach
         </fieldset>
+        @include('public.drafts.partials.prefill-note', ['field' => 'lighting_types', 'prefill' => $draft->prefill_sources ?? []])
         @error('lighting_types')<p class="field-error" role="alert">{{ $message }}</p>@enderror
     </div>
 </section>
