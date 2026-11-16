@@ -76,7 +76,8 @@
                 "BORANG SEMAKAN",
                 "LJUP 1",
                 "SYARAT-SYARAT KHUSUS",
-                "SYARAT-SYARAT UMUM"
+                "SYARAT-SYARAT UMUM",
+                "LJUP"
             ],
             "max_files": 5
         },
@@ -115,7 +116,8 @@
             "precheck_keywords": [
                 "BORANG PENGEMUKAAN",
                 "SURAT PERMOHONAN",
-                "SOP 4"
+                "SOP 4",
+                "COVER LETTER"
             ],
             "max_files": 5
         }

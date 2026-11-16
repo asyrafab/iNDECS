@@ -34,7 +34,7 @@ final class LocalTextExtractor implements TextExtractor
         $pages = max(1, (int) config('kaunter.precheck.ocr_max_pages', 10));
         $embedded = '';
         if ($this->installed(config('kaunter.precheck.pdftotext')) && $this->remaining() > 0) {
-            $process = $this->run([config('kaunter.precheck.pdftotext'), '-layout', '-l', (string) $pages, $path, '-']);
+            $process = $this->run([config('kaunter.precheck.pdftotext'), '-layout', '-enc', 'UTF-8', '-l', (string) $pages, $path, '-']);
             if ($process !== null && $process->isSuccessful()) {
                 $embedded = $process->getOutput();
             } elseif ($process !== null && in_array($process->getExitCode(), [1, 2, 3], true)) {
