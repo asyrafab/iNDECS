@@ -12,7 +12,7 @@ pdftotext and OCRs text PDFs).
 
 ## Approaches
 
-- **Chosen (owner): one item, several files** — a catalogue `max_files` per item (default 1; `borang_ljup1` = 5).
+- **Chosen (owner): one item, several files** — a catalogue `max_files` per item (default 1). Owner, 2026-11-16: every LJUP item = 5; the item window shows no file count.
 - Rejected: split LJUP 1 into three items — needs a JKEJ decision on which parts are required.
 
 ## Design

@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Let a catalogue item hold several current files (LJUP 1 = 5), sort Billion Site correctly, and stop text PDFs from reading blank or being OCR'd.
+**Goal:** Let a catalogue item hold several current files (every LJUP item = 5), sort Billion Site correctly, and stop text PDFs from reading blank or being OCR'd.
 
 **Architecture:** `max_files` on document requirements flows through `DraftChecklist` (new `documents` list, worst-file label). Services, placer, job, views and the paid-check copy treat a multi-file item as a set of current files instead of a version chain.
 
@@ -30,11 +30,11 @@
 
 ### Task 1: Catalogue `max_files` and checklist shape
 
-**Files:** migration `2026_11_16_000900_add_max_files_to_document_requirements.php` (smallint default 1); `app/Models/DocumentRequirement.php` (cast); `app/Services/DocumentCatalogueService.php` (whitelist + rule `integer|min:1|max:10`, store); `app/Services/Precheck/DraftChecklist.php` (`documents`, `max_files`, aggregate label, tray includes every file of a stale multi item); `app/Jobs/PrecheckDraftDocument.php` (no superseded skip when the item's `max_files` > 1); `database/catalogues/ljup.v1.json` (`borang_ljup1.max_files = 5`). Test: `tests/Feature/Precheck/MultiFileItemTest.php`.
+**Files:** migration `2026_11_16_000900_add_max_files_to_document_requirements.php` (smallint default 1); `app/Models/DocumentRequirement.php` (cast); `app/Services/DocumentCatalogueService.php` (whitelist + rule `integer|min:1|max:10`, store); `app/Services/Precheck/DraftChecklist.php` (`documents`, `max_files`, aggregate label, tray includes every file of a stale multi item); `app/Jobs/PrecheckDraftDocument.php` (no superseded skip when the item's `max_files` > 1); `database/catalogues/ljup.v1.json` (every item `max_files: 5`, owner decision 2026-11-16). Test: `tests/Feature/Precheck/MultiFileItemTest.php`.
 
 **Produces:** checklist item keys `documents: list<ApplicantDraftDocument>`, `max_files: int`; `DraftChecklist::maxFiles(ApplicantDraft, string $itemCode): int`.
 
-- [ ] Tests: `test_catalogue_stores_max_files`, `test_multi_item_lists_every_placed_file_and_worst_label` (two files, one NeedsConfirmation → item NeedsConfirmation), `test_single_item_still_shows_newest_only`, `test_stale_multi_item_sends_every_file_to_tray`, `test_job_reads_every_file_of_a_multi_item`, `test_ljup_catalogue_lets_ljup1_hold_five`.
+- [ ] Tests: `test_catalogue_stores_max_files`, `test_multi_item_lists_every_placed_file_and_worst_label` (two files, one NeedsConfirmation → item NeedsConfirmation), `test_single_item_still_shows_newest_only`, `test_stale_multi_item_sends_every_file_to_tray`, `test_job_reads_every_file_of_a_multi_item`, `test_every_ljup_item_holds_five`.
 - [ ] Run → FAIL; implement; run → PASS; commit `feat(precheck): checklist items can hold several files`.
 
 ### Task 2: Upload, sort, assign, remove, confirm
@@ -48,7 +48,7 @@
 
 **Files:** `resources/views/public/drafts/partials/checklist.blade.php` (dialog lists `documents`, per-file confirm/Buang, "Tambah fail" when multi and not full; owner has uncommitted edits — stage own hunk only). Test: `tests/Feature/Precheck/MultiFilePagesTest.php`.
 
-- [ ] Tests: dialog shows all three names, three remove forms, "Tambah fail", and `(3/5 fail)`; single item still shows "Muat naik semula".
+- [ ] Tests: dialog shows all three names, three remove forms, and "Tambah fail" (no file count shown — owner decision); single item still shows "Muat naik semula".
 - [ ] Run → FAIL; implement; PASS; commit `feat(portal): item window lists every file of a multi-file item`.
 
 ### Task 4: Paid check and amendment
