@@ -30,5 +30,18 @@ final class LjupCatalogueFileTest extends TestCase
         $this->assertSame(5, $checklist['required_total']);
         $this->assertSame(['pelan_lampu_jalan', 'pelan_kebenaran_merancang', 'pelan_jalan_parit', 'gambar_tapak', 'borang_pengemukaan'],
             array_values(array_map(fn ($item) => $item['code'], array_filter($checklist['items'], fn ($item) => $item['is_required']))));
+        // Approved planning/building plans in the pilot package were 25–30 MB: plan items allow 50 MB.
+        $this->assertSame(51200, (int) DB::table('document_types')->where('code', 'kej_ljup_pelan_kebenaran_merancang')->value('max_file_size_kb'));
+        $this->assertSame(51200, (int) DB::table('document_types')->where('code', 'kej_ljup_pelan_lampu_jalan')->value('max_file_size_kb'));
+    }
+
+    public function test_item_size_limit_is_bounded(): void
+    {
+        $this->seed();
+        $senior = User::factory()->create(['department_id' => 'JKEJ', 'role' => 'senior_engineering_officer']);
+        $this->expectException(\Illuminate\Validation\ValidationException::class);
+        app(\App\Services\DocumentCatalogueService::class)->publish('LJUP', ['version' => 0, 'source_reference' => 'Ujian', 'items' => [
+            ['code' => 'pelan', 'name' => 'Pelan', 'is_required' => true, 'max_file_size_kb' => 204800],
+        ]], $senior);
     }
 }

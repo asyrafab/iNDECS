@@ -130,7 +130,7 @@ final class JourneyReviewFixesTest extends TestCase
         [$draft, $owner, $journey] = $this->paid();
         // Amendment that withdraws every document: check 2 cannot start (empty document set).
         $draft->documents()->delete();
-        $this->actingAs($owner)->post(route('portal.drafts.check.amend', $draft));
+        $this->actingAs($owner)->post(route('portal.drafts.check.amend', $draft), ['confirm_amendment' => '1']);
 
         $this->assertSame(PaidCheckState::Check2Running, $journey->fresh()->state);
         $this->assertSame(0, ReviewVersion::query()->where('check_number', 2)->count());
@@ -142,7 +142,7 @@ final class JourneyReviewFixesTest extends TestCase
     {
         [$draft, $owner, $journey] = $this->paid();
         $draft->documents()->delete();
-        $this->actingAs($owner)->post(route('portal.drafts.check.amend', $draft));
+        $this->actingAs($owner)->post(route('portal.drafts.check.amend', $draft), ['confirm_amendment' => '1']);
         $this->travel(2)->hours();
 
         $this->artisan('paid-check:stuck')->expectsOutputToContain($journey->application->application_reference)->assertSuccessful();

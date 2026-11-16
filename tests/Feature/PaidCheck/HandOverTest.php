@@ -108,7 +108,7 @@ final class HandOverTest extends TestCase
     {
         [$draft, $owner, $journey] = $this->paid();
         $this->travelTo($journey->amendment_due_at->addMinute());
-        $this->actingAs($owner)->post(route('portal.drafts.check.amend', $draft))->assertSessionHasErrors('check');
+        $this->actingAs($owner)->post(route('portal.drafts.check.amend', $draft), ['confirm_amendment' => '1'])->assertSessionHasErrors('check');
         $this->actingAs($owner)->post(route('portal.drafts.check.extend', $draft))->assertSessionHasErrors('check');
         $this->assertSame(0, ReviewVersion::query()->where('check_number', 2)->count());
     }
@@ -117,7 +117,7 @@ final class HandOverTest extends TestCase
     {
         [$draft, $owner, $journey] = $this->paid();
         $this->ljupUpload($draft, 'pelan_lampu');
-        $this->actingAs($owner)->post(route('portal.drafts.check.amend', $draft));
+        $this->actingAs($owner)->post(route('portal.drafts.check.amend', $draft), ['confirm_amendment' => '1']);
 
         $submission = AcceptedSubmission::query()->sole();
         $this->assertSame(ReviewVersion::query()->where('check_number', 2)->sole()->document_set_hash, $submission->document_set_hash);

@@ -6,19 +6,22 @@
             "code": "pelan_lampu_jalan",
             "name": "Pelan Lampu Jalan",
             "is_required": true,
-            "guidance": "Item 1 borang SOP 4: pelan lampu jalan lengkap dengan jadual lampu. Muat naik satu PDF; empat (4) set bercetak berlipat saiz A4 diserahkan apabila diminta oleh pegawai."
+            "guidance": "Item 1 borang SOP 4: pelan lampu jalan lengkap dengan jadual lampu. Muat naik satu PDF; empat (4) set bercetak berlipat saiz A4 diserahkan apabila diminta oleh pegawai.",
+            "max_file_size_kb": 51200
         },
         {
             "code": "pelan_kebenaran_merancang",
             "name": "Pelan Kebenaran Merancang yang diluluskan, atau Pelan Bangunan (pelan tapak) yang diluluskan",
             "is_required": true,
-            "guidance": "Item 2 dan 3 borang SOP 4: satu salinan Pelan Kebenaran Merancang yang diluluskan. Jika tiada Pelan Kebenaran Merancang berlulus, lampirkan Pelan Bangunan yang diluluskan (pelan tapak sahaja)."
+            "guidance": "Item 2 dan 3 borang SOP 4: satu salinan Pelan Kebenaran Merancang yang diluluskan. Jika tiada Pelan Kebenaran Merancang berlulus, lampirkan Pelan Bangunan yang diluluskan (pelan tapak sahaja).",
+            "max_file_size_kb": 51200
         },
         {
             "code": "pelan_jalan_parit",
             "name": "Pelan Jalan dan Parit",
             "is_required": true,
-            "guidance": "Item 4 borang SOP 4: satu salinan Pelan Jalan dan Parit yang diluluskan, ATAU pelan yang diperakukan oleh Jurutera Kompeten (profesional) C&S. Jika pelan masih dalam pertimbangan MBSP dan JKR, lampirkan juga surat Jurutera Kompeten C&S."
+            "guidance": "Item 4 borang SOP 4: satu salinan Pelan Jalan dan Parit yang diluluskan, ATAU pelan yang diperakukan oleh Jurutera Kompeten (profesional) C&S. Jika pelan masih dalam pertimbangan MBSP dan JKR, lampirkan juga surat Jurutera Kompeten C&S.",
+            "max_file_size_kb": 51200
         },
         {
             "code": "surat_jurutera_cs",
@@ -42,13 +45,15 @@
             "code": "gambar_tapak",
             "name": "Gambar tapak cadangan (4 keping, sudut berbeza)",
             "is_required": true,
-            "guidance": "Item 7 borang SOP 4: empat (4) gambar tapak dari sudut yang berbeza. Gabungkan keempat-empat gambar dalam satu PDF."
+            "guidance": "Item 7 borang SOP 4: empat (4) gambar tapak dari sudut yang berbeza. Gabungkan keempat-empat gambar dalam satu PDF.",
+            "max_file_size_kb": 51200
         },
         {
             "code": "laporan_fotometrik",
             "name": "Laporan fotometrik / pengiraan lux",
             "is_required": false,
-            "guidance": "Tidak disenaraikan dalam borang SOP 4 tetapi digunakan dalam semakan teknikal AIRS (padanan bilangan dan kuasa lampu dengan pelan). Sangat digalakkan."
+            "guidance": "Tidak disenaraikan dalam borang SOP 4 tetapi digunakan dalam semakan teknikal AIRS (padanan bilangan dan kuasa lampu dengan pelan). Sangat digalakkan.",
+            "max_file_size_kb": 51200
         },
         {
             "code": "borang_pengemukaan",

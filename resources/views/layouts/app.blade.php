@@ -4,13 +4,15 @@
     $canPerancang = $staff->canAccessPkm();
     $canLegacy = $staff->canAccessBangunanLegacy();
     $canOsc = $staff->canAccessOsc();
+    $canKejuruteraan = $staff->canAccessKejuruteraan();
     $isOsc = request()->routeIs('osc.*');
     $isBangunan = ! $isOsc && request()->routeIs('bangunan.*');
-    $workspaceName = $isOsc ? 'eOSC+' : ($isBangunan ? 'iNDECS Bangunan' : 'iNDECS Perancang');
-    $workspaceShort = $isOsc ? 'eOSC+' : ($isBangunan ? 'Bangunan' : 'Perancang');
-    $workspaceDepartment = $isOsc ? 'Mesyuarat OSC' : ($isBangunan ? 'Jabatan Bangunan' : 'Jabatan Perancang Bandar');
-    $workspaceDepartmentIcon = $isBangunan ? 'bangunan' : 'perancang';
-    $homeUrl = $isOsc ? route('osc.meetings.index') : ($isBangunan ? ($canBangunan ? route('bangunan.index') : route('bangunan.legacy.index')) : ($canBangunan ? route('perancang.index') : route('dashboard')));
+    $isKejuruteraan = ! $isOsc && request()->routeIs('kejuruteraan.*');
+    $workspaceName = $isOsc ? 'eOSC+' : ($isBangunan ? 'iNDECS Bangunan' : ($isKejuruteraan ? 'iNDECS Kejuruteraan' : 'iNDECS Perancang'));
+    $workspaceShort = $isOsc ? 'eOSC+' : ($isBangunan ? 'Bangunan' : ($isKejuruteraan ? 'Kejuruteraan' : 'Perancang'));
+    $workspaceDepartment = $isOsc ? 'Mesyuarat OSC' : ($isBangunan ? 'Jabatan Bangunan' : ($isKejuruteraan ? 'Jabatan Kejuruteraan' : 'Jabatan Perancang Bandar'));
+    $workspaceDepartmentIcon = $isBangunan ? 'bangunan' : ($isKejuruteraan ? 'kejuruteraan' : 'perancang');
+    $homeUrl = $isOsc ? route('osc.meetings.index') : ($isBangunan ? ($canBangunan ? route('bangunan.index') : route('bangunan.legacy.index')) : ($isKejuruteraan ? route('kejuruteraan.index') : ($canBangunan ? route('perancang.index') : route('dashboard'))));
     $canRegisterBangunan = $canBangunan && collect(\App\Models\BangunanApplication::TYPES)->contains(fn ($family) => $staff->canPerformBangunan('access', $family) && $staff->canPerformBangunan('register', $family));
 @endphp
 <!DOCTYPE html>
@@ -42,8 +44,9 @@
                 <summary><span><small>Ruang jabatan</small><strong>@if ($isOsc)<x-eosc-icon compact />@else<x-department-icon :department="$workspaceDepartmentIcon" compact />@endif{{ $workspaceShort }}</strong></span><x-icon name="chevron-down" /></summary>
                 <nav aria-label="Pilih ruang jabatan">
                     <a href="{{ route('home') }}"><x-icon name="layout-dashboard" />Semua aplikasi</a>
-                    @if ($canPerancang)<a href="{{ $canBangunan ? route('perancang.index') : route('dashboard') }}" @if (! $isBangunan && ! $isOsc) aria-current="page" @endif><x-department-icon department="perancang" compact />iNDECS Perancang</a>@endif
+                    @if ($canPerancang)<a href="{{ $canBangunan ? route('perancang.index') : route('dashboard') }}" @if (! $isBangunan && ! $isOsc && ! $isKejuruteraan) aria-current="page" @endif><x-department-icon department="perancang" compact />iNDECS Perancang</a>@endif
                     @if ($canBangunan)<a href="{{ route('bangunan.index') }}" @if ($isBangunan && ! request()->routeIs('bangunan.legacy.*')) aria-current="page" @endif><x-department-icon department="bangunan" compact />iNDECS Bangunan</a>@elseif ($canLegacy)<a href="{{ route('bangunan.legacy.index') }}" aria-current="page"><x-department-icon department="bangunan" compact />Bangunan · Rekod warisan</a>@endif
+                    @if ($canKejuruteraan)<a href="{{ route('kejuruteraan.index') }}" @if ($isKejuruteraan) aria-current="page" @endif><x-department-icon department="kejuruteraan" compact />iNDECS Kejuruteraan</a>@endif
                     @if ($canOsc)<a href="{{ route('osc.meetings.index') }}" @if ($isOsc) aria-current="page" @endif><x-eosc-icon compact />eOSC+</a>@endif
                 </nav>
             </details>
@@ -57,6 +60,8 @@
                     @if ($canLegacy)<a href="{{ route('bangunan.legacy.index') }}" class="nav-link {{ request()->routeIs('bangunan.legacy.*') ? 'active' : '' }}" @if (request()->routeIs('bangunan.legacy.*')) aria-current="page" @endif><x-icon name="archive" />Carian Rekod Warisan</a>@endif
                 @elseif ($isOsc)
                     <a href="{{ route('osc.meetings.index') }}" class="nav-link active" aria-current="page"><x-icon name="folder-open" />Mesyuarat OSC</a>
+                @elseif ($isKejuruteraan)
+                    <a href="{{ route('kejuruteraan.index') }}" class="nav-link active" aria-current="page"><x-icon name="files" />Permohonan LJUP</a>
                 @else
                     @if (! $canBangunan)<a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" @if (request()->routeIs('dashboard')) aria-current="page" @endif><x-icon name="layout-dashboard" />Ringkasan</a>@endif
                     <a href="{{ route('perancang.index') }}" class="nav-link {{ request()->routeIs('perancang.index', 'perancang.show') ? 'active' : '' }}" @if (request()->routeIs('perancang.index', 'perancang.show')) aria-current="page" @endif><x-icon name="files" />Permohonan PKM</a>

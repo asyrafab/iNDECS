@@ -56,7 +56,9 @@ final class PortalDraftDocumentController extends Controller
     {
         $owned = $this->draft($request, $draft);
 
-        return view('public.drafts.partials.checklist', ['draft' => $owned, 'checklist' => $this->checklist->for($owned)]);
+        return view('public.drafts.partials.checklist', ['draft' => $owned, 'checklist' => $this->checklist->for($owned),
+            'editable' => \App\Services\PaidCheck\PaidCheckJourneyService::draftEditable($owned),
+            'checkResult' => $owned->journey()->exists() ? true : null]);
     }
 
     private function draft(Request $request, string $id): ApplicantDraft

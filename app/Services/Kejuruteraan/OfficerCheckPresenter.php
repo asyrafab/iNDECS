@@ -79,8 +79,8 @@ final class OfficerCheckPresenter
         $profileStale = false;
         if ($completed) {
             $report = GeneratedReport::query()->where('review_version_id', $version->id)->latest()->first()?->report_json ?? [];
-            // A corrected profile field can change rule applicability: the officer score is then deferred.
-            $profileStale = (bool) ($this->projection->apply($report)['profile_dependencies_stale'] ?? false);
+            // A corrected profile field defers the officer score only when a rule of this check depends on it.
+            $profileStale = $this->correctionAffectsRules($version, $report);
             if ($profileStale) {
                 $officerScore = null;
             } elseif ($feedback->isNotEmpty()) {
@@ -112,6 +112,37 @@ final class OfficerCheckPresenter
             'fields' => $completed ? $this->fieldsFor($version) : [],
             'usage' => $this->usage->forVersion($version),
         ];
+    }
+
+    /** True when an officer correction changed a profile field that an active rule's applicability reads. */
+    private function correctionAffectsRules(ReviewVersion $version, array $report): bool
+    {
+        $projected = $this->projection->apply($report);
+        if (! ($projected['profile_dependencies_stale'] ?? false)) {
+            return false;
+        }
+        $changed = [];
+        foreach ($projected['profile_field_reviews'] ?? [] as $field => $review) {
+            if (($projected['application_profile'][$field] ?? null) !== ($report['application_profile'][$field] ?? null)) {
+                $changed[] = $field;
+            }
+        }
+        $used = [];
+        $collect = function (mixed $node) use (&$collect, &$used): void {
+            if (! is_array($node)) {
+                return;
+            }
+            foreach ($node as $key => $value) {
+                if (is_string($key) && ! in_array($key, ['any_of', 'all_of', 'not', 'contains', 'contains_any', 'not_contains', 'equals', 'in', 'missing', 'known'], true)) {
+                    $used[$key] = true;
+                }
+                $collect($value);
+            }
+        };
+        \App\Airs\Models\ReviewRule::query()->where('rule_pack', $version->rule_pack)->where('rule_version', $version->rule_version)
+            ->where('active', true)->pluck('applies_when')->each(fn ($when) => $collect($when));
+
+        return array_intersect($changed, array_keys($used)) !== [];
     }
 
     /** MATRIX-extracted profile fields with the latest officer disposition and the next expected revision. */

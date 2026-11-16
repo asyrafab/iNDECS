@@ -66,7 +66,7 @@ final class LjupJourneyEndToEndTest extends TestCase
         $this->ljupUpload($draft, 'pelan_lampu');
         $this->actingAs($owner)->put(route('portal.drafts.update', $draft), ['application_type_id' => 'LJUP', 'title' => 'Lampu jalan Taman Uji',
             'site_address' => 'Lot 101, Mukim 6', 'lighting_types' => ['BESI', 'KONKRIT'], 'version' => $draft->fresh()->version])->assertRedirect();
-        $this->actingAs($owner)->post(route('portal.drafts.check.amend', $draft))->assertRedirect();
+        $this->actingAs($owner)->post(route('portal.drafts.check.amend', $draft), ['confirm_amendment' => '1'])->assertRedirect();
 
         $journey->refresh();
         $this->assertSame(PaidCheckState::HandedOver, $journey->state);
@@ -83,7 +83,7 @@ final class LjupJourneyEndToEndTest extends TestCase
         // Result is read-only afterwards: no amendment, no edits.
         $this->actingAs($owner)->get(route('portal.drafts.check', $draft))->assertOk()->assertSee('Semakan 2')
             ->assertSee('Diserahkan kepada Jabatan Kejuruteraan')->assertDontSee('Hantar pindaan');
-        $this->actingAs($owner)->post(route('portal.drafts.check.amend', $draft))->assertSessionHasErrors('check');
+        $this->actingAs($owner)->post(route('portal.drafts.check.amend', $draft), ['confirm_amendment' => '1'])->assertSessionHasErrors('check');
         $this->actingAs($owner)->put(route('portal.drafts.update', $draft), ['application_type_id' => 'LJUP', 'title' => 'X',
             'lighting_types' => ['BESI'], 'version' => $draft->fresh()->version])->assertForbidden();
     }

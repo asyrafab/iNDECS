@@ -47,7 +47,10 @@ final class PortalCheckResultController extends Controller
 
     public function amend(Request $request, string $draft, PaidCheckJourneyService $journeys): RedirectResponse
     {
-        $journeys->submitAmendment($request->user(), $this->journey($request, $draft));
+        $journey = $this->journey($request, $draft);
+        // The single amendment cannot be undone: the applicant must confirm it explicitly.
+        $request->validate(['confirm_amendment' => ['accepted']], ['confirm_amendment.accepted' => 'Sahkan bahawa anda faham hanya satu pindaan dibenarkan.']);
+        $journeys->submitAmendment($request->user(), $journey);
 
         return to_route('portal.drafts.edit', $draft)->with('status', 'Pindaan dihantar. Semakan semula AIRS sedang dijalankan.');
     }

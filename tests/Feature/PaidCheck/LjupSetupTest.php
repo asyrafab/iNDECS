@@ -94,6 +94,15 @@ final class LjupSetupTest extends TestCase
         $this->assertSame([], ApplicantDraft::query()->sole()->lightingTypes());
     }
 
+    public function test_create_page_offers_lighting_types_revealed_when_ljup_is_chosen(): void
+    {
+        $owner = $this->applicant();
+        $this->actingAs($owner)->get(route('portal.drafts.create'))->assertOk()
+            ->assertSee('data-show-for-type="LJUP"', false)
+            ->assertSee('name="lighting_types[]"', false)
+            ->assertSee('id="jenis-lampu" hidden data-show-for-type', false);
+    }
+
     public function test_edit_page_shows_lighting_type_choices_for_ljup(): void
     {
         $owner = $this->applicant();

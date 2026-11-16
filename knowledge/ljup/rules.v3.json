@@ -1,0 +1,24 @@
+{
+    "manifest": {
+        "rule_pack": "ljup",
+        "rule_version": "v3",
+        "lifecycle_status": "SEMAKAN",
+        "effective_from": "2026-11-16",
+        "published_at": "2026-11-16 00:00:00",
+        "change_reason": "iNDECS portal journey (ADR-383): the check fee is paid and verified in iNDECS before any check runs, so the uploaded payment-document rules no longer apply. Pending JKEJ confirmation with the rest of the pack.",
+        "source": "LJUP Umum, LJUP Khusus and SOP 4 LJUP/KJT Lamp.1 Keluaran No.3 (01.01.2025)"
+    },
+    "extends": "v2",
+    "overrides": [
+        {
+            "rule_id": "LJUP-SUB-008",
+            "active": false,
+            "standard_comment": "Bayaran semakan dikutip dan disahkan melalui portal iNDECS; resit tidak perlu dimuat naik."
+        },
+        {
+            "rule_id": "LJUP-SUB-009",
+            "active": false,
+            "standard_comment": "Bayaran semakan dikutip dan disahkan melalui portal iNDECS; resit tidak perlu dimuat naik."
+        }
+    ]
+}

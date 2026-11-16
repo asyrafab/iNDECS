@@ -28,6 +28,7 @@
                             @endif
                         </p>
                     @endif
+                    @if ($editable ?? true)
                     <div class="precheck-actions">
                         @if ($item['label'] === \App\Enums\PrecheckLabel::NeedsConfirmation)
                             <form method="POST" action="{{ route('portal.drafts.documents.confirm', [$draft, $item['document']]) }}">@csrf<button class="button button-secondary button-small" type="submit"><x-icon name="check" />Saya sahkan dokumen ini betul</button></form>
@@ -38,6 +39,7 @@
                             <button class="button button-secondary button-small" type="submit"><x-icon name="file-plus-2" />{{ $item['document'] ? 'Muat naik semula' : 'Muat naik' }}</button>
                         </form>
                     </div>
+                    @endif
                 </li>
             @endforeach
         </ul>

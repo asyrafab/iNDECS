@@ -99,6 +99,26 @@ final class OfficerWorkspaceTest extends TestCase
         $this->actingAs($this->engineer())->get(route('kejuruteraan.show', $pkm))->assertNotFound();
     }
 
+    public function test_workspace_layout_names_jabatan_kejuruteraan(): void
+    {
+        [$application] = $this->paidLjup();
+        $this->actingAs($this->engineer())->get(route('kejuruteraan.show', $application))->assertOk()
+            ->assertSee('iNDECS Kejuruteraan')->assertSee('Jabatan Kejuruteraan')->assertDontSee('Jabatan Perancang Bandar');
+    }
+
+    public function test_earlier_check_is_collapsed_under_the_final_check(): void
+    {
+        $owner = $this->applicant('psp-collapse@example.test');
+        $draft = $this->readyLjupDraft($owner);
+        [$application, $journey] = $this->paidLjup($draft, false);
+        $this->ljupUpload($draft, 'pelan_lampu');
+        app(\App\Services\PaidCheck\PaidCheckJourneyService::class)->submitAmendment($owner, $journey);
+
+        $html = $this->actingAs($this->engineer())->get(route('kejuruteraan.show', $application))->assertOk()->getContent();
+        $this->assertMatchesRegularExpression('/<details[^>]*id="semakan-1"/', $html);
+        $this->assertDoesNotMatchRegularExpression('/<details[^>]*id="semakan-2"/', $html);
+    }
+
     public function test_launcher_shows_kejuruteraan_for_engineering_officer(): void
     {
         $apps = app(\App\Services\ApplicationLauncher::class)->forUser($this->engineer());

@@ -19,7 +19,12 @@
 @endif
 
 @foreach ($view['checks'] as $check)
+@php($collapsed = $view['final_check_number'] !== null && $view['final_check_number'] !== $check['number'])
+@if ($collapsed)
+<details class="content-card" id="semakan-{{ $check['number'] }}"><summary>Semakan {{ $check['number'] }} — semakan terdahulu (sejarah, baca sahaja)</summary>
+@else
 <section class="content-card" id="semakan-{{ $check['number'] }}">
+@endif
     <div class="card-heading"><h2>Semakan {{ $check['number'] }}@if ($view['final_check_number'] === $check['number']) · muktamad @endif</h2>
         <span class="muted">{{ $check['status'] }}</span></div>
     @if ($check['status'] === 'COMPLETED')
@@ -51,6 +56,6 @@
     @else
         <p>Semakan sedang dijalankan.</p>
     @endif
-</section>
+@if ($collapsed)</details>@else</section>@endif
 @endforeach
 @endsection

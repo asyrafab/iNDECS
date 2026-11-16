@@ -24,6 +24,7 @@ final class RuleRegistryGovernanceTest extends TestCase
 
     public function test_configured_rule_pack_syncs_governance_metadata(): void
     {
+        config(['airs.rule_version' => 'v2']); // governance of the published v2 pack
         $rules = app(RuleRepository::class)->syncConfiguredPack();
 
         $galvanised = $rules->firstWhere('rule_id', 'LJUP-SPC-D-GAL-001');
@@ -44,6 +45,7 @@ final class RuleRegistryGovernanceTest extends TestCase
 
     public function test_published_rule_version_cannot_be_changed_in_place(): void
     {
+        config(['airs.rule_version' => 'v2']);
         $repository = app(RuleRepository::class);
         $repository->syncConfiguredPack();
 

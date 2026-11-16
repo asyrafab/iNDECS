@@ -93,16 +93,33 @@ final class OfficerReviewFixesTest extends TestCase
         $this->artisan('paid-check:stuck')->expectsOutputToContain($payment->reference)->assertSuccessful();
     }
 
-    public function test_officer_score_is_deferred_after_profile_correction(): void
+    public function test_officer_score_is_deferred_when_a_rule_depends_on_the_corrected_field(): void
     {
-        $this->correctedVersion('project_title', 'Tajuk asal', 'Tajuk betul');
+        [, $journey] = $this->paidLjup();
+        $version = ReviewVersion::query()->sole();
+        // A rule of this check's pack whose applicability depends on the profile field 'district'.
+        $rule = \App\Airs\Models\ReviewRule::query()->where('rule_pack', $version->rule_pack)->where('rule_version', $version->rule_version)->where('active', true)->firstOrFail();
+        $rule->forceFill(['applies_when' => ['district' => ['contains' => 'SPT']]])->save();
+        $profile = ApplicationProfile::query()->where('review_version_id', $version->id)->sole();
+        $profile->forceFill(['profile_json' => array_merge($profile->profile_json ?? [], ['district' => 'SPU'])])->save();
+        app(ProfileFieldReviewService::class)->record($this->engineer(), $version, 'district', 'CORRECTED', 'SPT', 'Disemak.', 0);
+
+        $check = app(OfficerCheckPresenter::class)->for($journey->application)['checks'][0];
+
+        $this->assertTrue($check['profile_stale']);
+        $this->assertNull($check['officer_score']);
+        $this->actingAs($this->engineer())->get(route('kejuruteraan.show', $journey->application))->assertOk()->assertSee('Skor ditangguhkan');
+    }
+
+    public function test_correcting_a_field_no_rule_uses_keeps_the_officer_score(): void
+    {
+        $this->correctedVersion('drawing_revision', 'B', 'C');
         $application = PaidCheckJourney::query()->sole()->application;
 
         $check = app(OfficerCheckPresenter::class)->for($application)['checks'][0];
 
-        $this->assertTrue($check['profile_stale']);
-        $this->assertNull($check['officer_score']);
-        $this->actingAs($this->engineer())->get(route('kejuruteraan.show', $application))->assertOk()->assertSee('Skor ditangguhkan');
+        $this->assertFalse($check['profile_stale']);
+        $this->assertSame($check['score'], $check['officer_score']);
     }
 
     public function test_ljup_permissions_follow_the_officers_own_department(): void

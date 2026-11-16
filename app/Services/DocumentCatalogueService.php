@@ -68,7 +68,8 @@ final class DocumentCatalogueService
         abort_unless(self::canConfigure($actor, $type), 403);
         $data = Validator::make($data, [
             'version' => ['required', 'integer', 'min:0'], 'source_reference' => ['required', 'string', 'max:500'],
-            'items' => ['required', 'array', 'min:1', 'max:50'], 'items.*' => ['array:code,name,is_required,guidance,conditions,precheck_keywords'],
+            'items' => ['required', 'array', 'min:1', 'max:50'], 'items.*' => ['array:code,name,is_required,guidance,conditions,precheck_keywords,max_file_size_kb'],
+            'items.*.max_file_size_kb' => ['nullable', 'integer', 'min:1', 'max:102400'],
             'items.*.precheck_keywords' => ['nullable', 'array', 'max:10'],
             'items.*.precheck_keywords.*' => ['nullable', 'string', 'max:60'],
             'items.*.code' => ['required', 'regex:/^[a-z][a-z0-9_]{0,35}$/', 'distinct'],
@@ -87,7 +88,7 @@ final class DocumentCatalogueService
             DocumentRequirement::query()->where('application_type_id', $type)->whereNull('permission_category')->whereNull('permission_type')->update(['is_active' => false]);
             foreach ($data['items'] as $index => $item) {
                 $documentType = DocumentType::query()->updateOrCreate(['code' => self::documentTypeCode($type, $item['code'])], [
-                    'name' => $item['name'], 'allowed_extensions' => 'pdf,jpg,jpeg,png', 'max_file_size_kb' => 20480, 'is_active' => true,
+                    'name' => $item['name'], 'allowed_extensions' => 'pdf,jpg,jpeg,png', 'max_file_size_kb' => (int) ($item['max_file_size_kb'] ?? 20480), 'is_active' => true,
                 ]);
                 DocumentRequirement::query()->updateOrCreate(['application_type_id' => $type, 'permission_category' => null,
                     'permission_type' => null, 'document_type_id' => $documentType->id],

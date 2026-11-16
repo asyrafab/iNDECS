@@ -45,7 +45,10 @@
             <div><strong>Tarikh akhir pindaan: {{ $result['amendment_due_at']?->setTimezone('Asia/Kuala_Lumpur')->format('d/m/Y, g:i a') }}</strong>
                 <small>Anda boleh membuat satu pindaan dan semakan semula. Jika tiada tindakan sebelum tarikh akhir, Semakan 1 menjadi muktamad dan permohonan diserahkan kepada pegawai.</small></div>
             @if ($result['can_amend'])
-                <form method="POST" action="{{ route('portal.drafts.check.amend', $draft) }}">@csrf<button class="button button-primary" type="submit">Hantar pindaan untuk semakan semula</button></form>
+                <form method="POST" action="{{ route('portal.drafts.check.amend', $draft) }}">@csrf
+                    <label class="checkbox-field"><input type="checkbox" name="confirm_amendment" value="1" required><span>Saya faham hanya satu pindaan dibenarkan. Selepas semakan semula, keputusan tidak boleh diubah dan permohonan diserahkan kepada pegawai.</span></label>
+                    @error('confirm_amendment')<p class="field-error" role="alert">{{ $message }}</p>@enderror
+                    <button class="button button-primary" type="submit">Hantar pindaan untuk semakan semula</button></form>
             @endif
             @if ($result['can_submit'])
                 <form method="POST" action="{{ route('portal.drafts.check.submit', $draft) }}">@csrf<button class="button button-secondary" type="submit">Hantar tanpa pindaan</button></form>

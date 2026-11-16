@@ -117,6 +117,7 @@ final class PublicPortalController extends Controller
             'board' => $this->board->for($request->user(), justSaved: $request->session()->has('status'), focus: $draft),
             'checklist' => app(DraftChecklist::class)->for($draft),
             'checkResult' => ($journey = $draft->journey()->first()) ? app(\App\Services\PaidCheck\ApplicantCheckPresenter::class)->for($journey) : null,
+            'editable' => \App\Services\PaidCheck\PaidCheckJourneyService::draftEditable($draft),
         ]);
     }
 

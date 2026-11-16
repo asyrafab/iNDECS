@@ -36,6 +36,18 @@ final class CheckPaymentTest extends TestCase
             ->get(route('portal.drafts.edit', $draft))->assertOk()->assertSee('Fi semakan belum ditetapkan');
     }
 
+    public function test_banner_reflects_whether_the_paid_check_is_open(): void
+    {
+        $draft = $this->readyLjupDraft();
+        $owner = \App\Models\User::find($draft->user_id);
+        $this->actingAs($owner)->get(route('portal.drafts.edit', $draft))->assertOk()
+            ->assertDontSee('Fi, bayaran dan penghantaran rasmi belum dibuka')->assertSee('Semakan AIRS berbayar dibuka')
+            ->assertDontSee('Kejuruteraan dan Landskap akan menyusul')->assertSee('Landskap akan menyusul');
+        config(['airs.fee_sen' => null]);
+        $this->actingAs($owner)->get(route('portal.drafts.edit', $draft))->assertOk()
+            ->assertSee('Fi, bayaran dan penghantaran rasmi belum dibuka');
+    }
+
     public function test_pay_button_shows_fee_when_set(): void
     {
         $draft = $this->readyLjupDraft();

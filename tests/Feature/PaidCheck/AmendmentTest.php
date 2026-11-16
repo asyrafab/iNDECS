@@ -108,7 +108,7 @@ final class AmendmentTest extends TestCase
             ->where('original_name', 'pelan_lampu.pdf')->sole();
         $newUpload = $this->ljupUpload($draft, 'pelan_lampu');
 
-        $this->actingAs($owner)->post(route('portal.drafts.check.amend', $draft))->assertRedirect();
+        $this->actingAs($owner)->post(route('portal.drafts.check.amend', $draft), ['confirm_amendment' => '1'])->assertRedirect();
 
         $journey->refresh();
         $this->assertNotNull($journey->amended_at);
@@ -126,16 +126,44 @@ final class AmendmentTest extends TestCase
     public function test_unchanged_documents_are_not_revised(): void
     {
         [$draft, $owner, $journey] = $this->paid();
-        $this->actingAs($owner)->post(route('portal.drafts.check.amend', $draft));
+        $this->actingAs($owner)->post(route('portal.drafts.check.amend', $draft), ['confirm_amendment' => '1']);
         $this->assertSame(0, ApplicationDocument::query()->whereNotNull('supersedes_id')->count());
         $this->assertSame(2, ApplicationDocument::query()->where('application_id', $journey->application_id)->where('is_current', true)->count());
+    }
+
+    public function test_locked_draft_hides_edit_controls_and_open_window_shows_them(): void
+    {
+        Queue::fake([PrecheckDraftDocument::class, \App\Airs\Jobs\RunAirsCheck::class]);
+        [$draft, $owner] = $this->paid();
+        $this->actingAs($owner)->get(route('portal.drafts.edit', $draft))->assertOk()
+            ->assertDontSee('class="precheck-upload"', false)->assertDontSee('Simpan draf')->assertSee('Draf dikunci');
+        // The precheck poller re-renders the checklist: it must stay locked and without the pay form too.
+        $this->actingAs($owner)->get(route('portal.drafts.checklist', $draft))->assertOk()
+            ->assertDontSee('class="precheck-upload"', false)->assertDontSee('Bayar semakan AIRS');
+    }
+
+    public function test_amendment_window_shows_edit_controls(): void
+    {
+        [$draft, $owner] = $this->paid();
+        $this->actingAs($owner)->get(route('portal.drafts.edit', $draft))->assertOk()
+            ->assertSee('class="precheck-upload"', false)->assertSee('Simpan draf');
+    }
+
+    public function test_amendment_requires_explicit_confirmation(): void
+    {
+        [$draft, $owner, $journey] = $this->paid();
+        $this->actingAs($owner)->post(route('portal.drafts.check.amend', $draft))->assertSessionHasErrors('confirm_amendment');
+        $this->assertNull($journey->fresh()->amended_at);
+        $this->assertSame(1, ReviewVersion::query()->count());
+        $this->actingAs($owner)->get(route('portal.drafts.check', $draft))->assertOk()
+            ->assertSee('name="confirm_amendment"', false)->assertSee('Saya faham hanya satu pindaan dibenarkan');
     }
 
     public function test_second_amendment_is_refused(): void
     {
         [$draft, $owner, $journey] = $this->paid();
-        $this->actingAs($owner)->post(route('portal.drafts.check.amend', $draft));
-        $this->actingAs($owner)->post(route('portal.drafts.check.amend', $draft))->assertSessionHasErrors('check');
+        $this->actingAs($owner)->post(route('portal.drafts.check.amend', $draft), ['confirm_amendment' => '1']);
+        $this->actingAs($owner)->post(route('portal.drafts.check.amend', $draft), ['confirm_amendment' => '1'])->assertSessionHasErrors('check');
         $this->assertSame(2, ReviewVersion::query()->count());
     }
 
@@ -143,7 +171,7 @@ final class AmendmentTest extends TestCase
     {
         [$draft, $owner, $journey] = $this->paid();
         $draft->forceFill(['lighting_types' => ['BESI', 'KONKRIT']])->save();
-        $this->actingAs($owner)->post(route('portal.drafts.check.amend', $draft));
+        $this->actingAs($owner)->post(route('portal.drafts.check.amend', $draft), ['confirm_amendment' => '1']);
         $this->assertSame(['BESI', 'KONKRIT'], $journey->fresh()->lighting_types);
         $this->assertSame(['BESI', 'KONKRIT'], ReviewVersion::query()->where('check_number', 2)->sole()->reviewCase->selected_lighting_types);
     }
@@ -160,7 +188,7 @@ final class AmendmentTest extends TestCase
         $journey = PaidCheckJourney::query()->sole();
         $photo->delete();
 
-        $this->actingAs($owner)->post(route('portal.drafts.check.amend', $draft));
+        $this->actingAs($owner)->post(route('portal.drafts.check.amend', $draft), ['confirm_amendment' => '1']);
 
         $this->assertFalse(ApplicationDocument::query()->where('checksum_sha256', $photo->sha256)->sole()->is_current);
     }
@@ -173,7 +201,7 @@ final class AmendmentTest extends TestCase
         $this->assertSame(PaidCheckState::HandedOver, $journey->state);
         $this->assertSame(1, $journey->final_check_number);
         $this->assertSame(0, ReviewVersion::query()->where('check_number', 2)->count());
-        $this->actingAs($owner)->post(route('portal.drafts.check.amend', $draft))->assertSessionHasErrors('check');
+        $this->actingAs($owner)->post(route('portal.drafts.check.amend', $draft), ['confirm_amendment' => '1'])->assertSessionHasErrors('check');
     }
 
     public function test_other_user_cannot_act_on_the_journey(): void
