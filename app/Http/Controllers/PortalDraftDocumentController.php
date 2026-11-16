@@ -42,9 +42,16 @@ final class PortalDraftDocumentController extends Controller
     public function drop(Request $request, DraftDropService $drops): JsonResponse|RedirectResponse
     {
         $data = $request->validate([
-            'application_type_id' => ['required', Rule::in(ApplicationType::query()->portal()->pluck('id')->all())],
+            // Only types with a published checklist: an unsorted file must always have a tray to show in.
+            'application_type_id' => ['required', Rule::in(ApplicationType::query()->portal()->pluck('id')->all()),
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (! \Illuminate\Support\Facades\DB::table('core.document_catalogues')->where('application_type_id', $value)->exists()) {
+                        $fail('Senarai semak dokumen belum tersedia untuk jenis permohonan ini. Isi butiran draf dahulu.');
+                    }
+                }],
             'files' => ['required', 'array', 'min:1', 'max:10'], 'files.*' => ['file'],
-        ], ['files.required' => 'Pilih sekurang-kurangnya satu fail.'], ['application_type_id' => 'jenis permohonan', 'files' => 'fail']);
+        ], ['files.required' => 'Pilih sekurang-kurangnya satu fail.'],
+            ['application_type_id' => 'jenis permohonan', 'files' => 'fail']);
         $draft = $drops->createDraft($request->user(), $data['application_type_id']);
 
         return $this->dropped($request, $draft, $this->acceptAll($request, $drops, $draft));

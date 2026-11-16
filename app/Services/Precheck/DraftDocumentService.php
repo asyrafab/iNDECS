@@ -110,8 +110,10 @@ final class DraftDocumentService
             throw ValidationException::withMessages(['file' => 'Dokumen ini tidak diperlukan untuk projek anda.']);
         }
         DraftFileRules::assertFits(Storage::disk('local')->path($document->path), DraftFileRules::forItem($draft, $itemCode));
+        $staleItem = $document->item_code;
         app(DraftDocumentPlacer::class)->place($document, $itemCode, 'manual');
         $document->forceFill(['confirmed_at' => null])->save();
+        $this->clearStaleHistory($draft, $staleItem, $checklist);
     }
 
     /** Removes a tray file (never a file placed in the checklist). */
@@ -123,8 +125,27 @@ final class DraftDocumentService
             throw ValidationException::withMessages(['file' => 'Hanya fail dalam "Belum diisih" boleh dibuang. Gantikan dokumen senarai semak dengan muat naik semula.']);
         }
         $path = $document->path;
+        $staleItem = $document->item_code;
         $document->delete();
         Storage::disk('local')->delete($path);
+        $this->clearStaleHistory($draft, $staleItem, $this->checklist->for($draft));
+    }
+
+    /**
+     * Older versions of an item that no longer applies would otherwise surface in the tray one by one
+     * after the applicant deals with the current one; they are history of a dropped item and are removed together.
+     */
+    private function clearStaleHistory(ApplicantDraft $draft, ?string $itemCode, array $checklist): void
+    {
+        if ($itemCode === null || collect($checklist['items'])->contains(fn (array $item) => $item['code'] === $itemCode)) {
+            return;
+        }
+        ApplicantDraftDocument::query()->where('draft_id', $draft->id)->where('item_code', $itemCode)->get()
+            ->each(function (ApplicantDraftDocument $old): void {
+                $path = $old->path;
+                $old->delete();
+                Storage::disk('local')->delete($path);
+            });
     }
 
     private function authorize(User $owner, ApplicantDraft $draft): void

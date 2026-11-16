@@ -124,19 +124,20 @@ final class DraftDropServiceTest extends TestCase
     public function test_unsafe_zip_is_refused_whole(): void
     {
         $draft = $this->draft();
-        $this->expectException(ValidationException::class);
-        try {
-            app(DraftDropService::class)->accept($this->owner($draft), $draft, $this->zip(['../evil.pdf' => $this->pdfBytes('e'), 'ok.pdf' => $this->pdfBytes('o')]));
-        } finally {
-            $this->assertSame(0, ApplicantDraftDocument::query()->count());
-        }
+        $result = app(DraftDropService::class)->accept($this->owner($draft), $draft, $this->zip(['../evil.pdf' => $this->pdfBytes('e'), 'ok.pdf' => $this->pdfBytes('o')]));
+
+        $this->assertSame([], $result->accepted);
+        $this->assertSame([['name' => 'pakej.zip', 'reason' => 'Fail ZIP tidak selamat atau melebihi had dan tidak diproses.']], $result->rejected);
+        $this->assertSame(0, ApplicantDraftDocument::query()->count());
     }
 
     public function test_nested_zip_refuses_archive(): void
     {
         $draft = $this->draft();
-        $this->expectException(ValidationException::class);
-        app(DraftDropService::class)->accept($this->owner($draft), $draft, $this->zip(['dalam.zip' => 'PK', 'ok.pdf' => $this->pdfBytes('o')]));
+        $result = app(DraftDropService::class)->accept($this->owner($draft), $draft, $this->zip(['dalam.zip' => 'PK', 'ok.pdf' => $this->pdfBytes('o')]));
+
+        $this->assertSame([], $result->accepted);
+        $this->assertSame('pakej.zip', $result->rejected[0]['name']);
     }
 
     public function test_duplicate_file_is_rejected(): void

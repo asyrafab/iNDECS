@@ -88,7 +88,8 @@ final class DraftDropService
             try {
                 $inspection = ZipSafety::inspect($zip, (int) $file->getSize());
             } catch (UnsafeArchiveException) {
-                throw ValidationException::withMessages(['files' => "Fail ZIP {$name} tidak selamat atau melebihi had dan tidak diproses."]);
+                // Refused whole, but reported like any other rejected file so the rest of the batch and the new draft stay visible.
+                return new DropResult([], [['name' => $name, 'reason' => 'Fail ZIP tidak selamat atau melebihi had dan tidak diproses.']]);
             } catch (NoRelevantDocumentException) {
                 return new DropResult([], [['name' => $name, 'reason' => 'Fail ZIP tidak mengandungi dokumen yang boleh digunakan.']]);
             }

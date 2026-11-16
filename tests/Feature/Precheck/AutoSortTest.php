@@ -153,4 +153,14 @@ final class AutoSortTest extends TestCase
         $this->assertNull($doc->item_code);
         $this->assertSame([], $doc->matched_keywords);
     }
+
+    public function test_confirmed_auto_placement_is_never_displaced(): void
+    {
+        $weak = $this->check($this->dropped('geran.pdf'), 'SURAT HAKMILIK');
+        $weak->forceFill(['confirmed_at' => now()])->save();
+        $strong = $this->check($this->dropped('geran hakmilik.pdf'), 'HAKMILIK NO. LOT 4412');
+
+        $this->assertSame('geran', $weak->fresh()->item_code);
+        $this->assertNull($strong->item_code);
+    }
 }

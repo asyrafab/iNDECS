@@ -234,8 +234,10 @@
             }
         }
         busy = false;
-        if (draftUrl && !progress.querySelector('.is-error')) window.location.assign(draftUrl);
-        else if (draftUrl) line('Lihat draf anda untuk menyemak fail yang diterima.').appendChild(Object.assign(document.createElement('a'), { href: draftUrl, textContent: ' Buka draf' }));
+        // Adding to an open draft lands on the same page: a hash-only change would not reload, so the new files would not show.
+        const go = target => (new URL(target, window.location.href).pathname === window.location.pathname ? window.location.reload() : window.location.assign(target));
+        if (draftUrl && !progress.querySelector('.is-error')) go(draftUrl);
+        else if (draftUrl) line('Lihat draf anda untuk menyemak fail yang diterima.').appendChild(Object.assign(document.createElement('a'), { href: draftUrl, textContent: ' Buka draf', onclick: event => { event.preventDefault(); go(draftUrl); } }));
     };
 
     form.addEventListener('submit', event => {

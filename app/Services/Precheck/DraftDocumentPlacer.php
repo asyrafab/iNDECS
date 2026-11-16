@@ -34,7 +34,8 @@ final class DraftDocumentPlacer
                 return false;
             }
             $current = $this->current($draft, $winner['code']);
-            if ($current !== null && ($current->sort_source !== 'auto' || (int) $current->sort_score >= $winner['score'])) {
+            // Never displace a file the applicant placed or confirmed.
+            if ($current !== null && ($current->sort_source !== 'auto' || $current->confirmed_at !== null || (int) $current->sort_score >= $winner['score'])) {
                 return false;
             }
             try {

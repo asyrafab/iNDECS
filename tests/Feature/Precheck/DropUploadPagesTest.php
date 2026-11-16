@@ -202,4 +202,65 @@ final class DropUploadPagesTest extends TestCase
             ->assertRedirect();
         $this->assertFalse($draft->fresh()->title_provisional);
     }
+
+    public function test_unsafe_zip_on_first_drop_returns_the_draft_with_the_reason(): void
+    {
+        $path = sys_get_temp_dir().DIRECTORY_SEPARATOR.uniqid().'.zip';
+        $zip = new \ZipArchive;
+        $zip->open($path, \ZipArchive::CREATE);
+        $zip->addFromString('../evil.pdf', "%PDF-1.4
+%%EOF
+");
+        $zip->close();
+
+        $response = $this->actingAs($this->applicant())->postJson(route('portal.drafts.drop'), ['application_type_id' => 'TEL',
+            'files' => [new UploadedFile($path, 'pakej.zip', 'application/zip', null, true)]]);
+        @unlink($path);
+
+        $draft = ApplicantDraft::query()->sole();
+        $response->assertOk()->assertJson(['draft_url' => route('portal.drafts.edit', $draft).'#dokumen', 'accepted' => []]);
+        $this->assertSame('pakej.zip', $response->json('rejected.0.name'));
+        $this->assertSame(0, ApplicantDraftDocument::query()->count());
+    }
+
+    public function test_removing_a_stale_item_file_clears_its_older_versions(): void
+    {
+        $owner = $this->applicant();
+        $draft = $this->telDraft($owner, ['storeys' => 4]);
+        $this->draftDocument($draft, 'pelan_struktur');
+        $latest = $this->draftDocument($draft, 'pelan_struktur');
+        $draft->forceFill(['storeys' => 1])->save();
+
+        $this->actingAs($owner)->delete(route('portal.drafts.documents.remove', [$draft, $latest]))->assertRedirect();
+
+        $this->assertSame([], app(\App\Services\Precheck\DraftChecklist::class)->for($draft->fresh())['unsorted']);
+    }
+
+    public function test_placing_a_stale_item_file_clears_its_older_versions(): void
+    {
+        $owner = $this->applicant();
+        $draft = $this->telDraft($owner, ['storeys' => 4]);
+        $this->draftDocument($draft, 'pelan_struktur');
+        $latest = $this->draftDocument($draft, 'pelan_struktur');
+        Storage::disk('local')->put($latest->path, "%PDF-1.4
+%%EOF
+");
+        $draft->forceFill(['storeys' => 1])->save();
+
+        $this->actingAs($owner)->post(route('portal.drafts.documents.assign', [$draft, $latest]), ['item_code' => 'pelan_lantai'])->assertRedirect();
+
+        $this->assertSame([], app(\App\Services\Precheck\DraftChecklist::class)->for($draft->fresh())['unsorted']);
+        $this->assertSame('pelan_lantai', $latest->fresh()->item_code);
+    }
+
+    public function test_drop_refuses_a_type_without_a_published_checklist(): void
+    {
+        $type = \App\Models\ApplicationType::query()->portal()->pluck('id')
+            ->first(fn ($id) => ! \Illuminate\Support\Facades\DB::table('core.document_catalogues')->where('application_type_id', $id)->exists());
+        $this->assertNotNull($type, 'Test needs a portal type without a catalogue.');
+
+        $this->actingAs($this->applicant())->post(route('portal.drafts.drop'), ['application_type_id' => $type, 'files' => [$this->pdf('a.pdf')]])
+            ->assertSessionHasErrors('application_type_id');
+        $this->assertSame(0, ApplicantDraft::query()->count());
+    }
 }
