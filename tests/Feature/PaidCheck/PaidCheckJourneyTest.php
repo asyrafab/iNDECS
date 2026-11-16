@@ -106,7 +106,15 @@ final class PaidCheckJourneyTest extends TestCase
             ['code' => 'pelan_lampu', 'name' => 'Pelan Lampu Jalan', 'is_required' => true],
             ['code' => 'laporan_fotometrik', 'name' => 'Laporan Fotometrik', 'is_required' => true],
         ]], User::query()->where('role', 'senior_engineering_officer')->firstOrFail());
-        $this->pay($draft);
+        // Upload-first: the stale file is shown in "Belum diisih" and payment waits until the applicant removes it.
+        try {
+            $this->pay($draft);
+            $this->fail('Payment should wait for the unsorted file.');
+        } catch (\Illuminate\Validation\ValidationException $exception) {
+            $this->assertSame([\App\Services\PaidCheck\CheckPaymentService::UNSORTED], $exception->errors()['payment']);
+        }
+        app(\App\Services\Precheck\DraftDocumentService::class)->remove($owner, $stale);
+        $this->pay($draft->fresh());
 
         $this->assertNull(ApplicationDocument::query()->where('checksum_sha256', $stale->sha256)->first());
         $this->assertSame(2, ApplicationDocument::query()->count());

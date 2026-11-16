@@ -69,16 +69,25 @@ final class CheckPaymentService
      * A draft is ready for a paid (or waived) check: enabled AIRS module, lighting types declared, at least
      * one uploaded document and none still being prechecked or unreadable. Returns the draft checklist.
      */
+    public const UNSORTED = 'Isih atau buang fail dalam "Belum diisih" sebelum membayar.';
+
     public function assertReadyForCheck(ApplicantDraft $draft): array
     {
         $module = config('airs.modules.'.$draft->application_type_id);
         if (! is_array($module) || ($module['enabled'] ?? false) !== true) {
             throw ValidationException::withMessages(['payment' => 'Semakan AIRS berbayar belum dibuka untuk jenis permohonan ini.']);
         }
+        if ($draft->title_provisional) {
+            throw ValidationException::withMessages(['payment' => 'Isi tajuk cadangan dan simpan draf sebelum membayar.']);
+        }
         if ($draft->lightingTypes() === []) {
             throw ValidationException::withMessages(['payment' => 'Pilih jenis lampu sebelum semakan AIRS.']);
         }
         $checklist = $this->checklists->for($draft);
+        // Only files in checklist items are handed over; a file left unsorted must never be silently dropped.
+        if ($checklist['unsorted'] !== []) {
+            throw ValidationException::withMessages(['payment' => self::UNSORTED]);
+        }
         $withDocuments = array_filter($checklist['items'], fn (array $item) => $item['document'] !== null);
         if ($withDocuments === []) {
             throw ValidationException::withMessages(['payment' => 'Muat naik sekurang-kurangnya satu dokumen sebelum membayar.']);

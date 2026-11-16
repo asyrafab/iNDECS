@@ -57,6 +57,9 @@
                 <div><strong>{{ $checklist['ready'] ? 'Sedia untuk semakan AIRS' : 'Lengkapkan dokumen wajib untuk meneruskan' }}</strong>
                     <small>Semakan AIRS berbayar dibuka sebaik fi ditetapkan oleh MBSP.</small></div>
                 <button class="button button-primary" type="button" disabled>Fi semakan belum ditetapkan</button>
+            @elseif (($checklist['unsorted'] ?? []) !== [])
+                <div><strong>Fail belum diisih</strong><small>{{ \App\Services\PaidCheck\CheckPaymentService::UNSORTED }}</small></div>
+                <a class="button button-secondary" href="#belum-diisih">Lihat fail belum diisih</a>
             @else
                 <form method="POST" action="{{ route('portal.drafts.payment.start', $draft) }}" class="precheck-pay">
                     @csrf

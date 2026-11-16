@@ -134,6 +134,9 @@ final class PaidCheckJourneyService
                     ? 'Pindaan hanya boleh dibuat sekali.' : 'Tempoh pindaan telah tamat.']);
             }
             $draft = ApplicantDraft::query()->lockForUpdate()->findOrFail($locked->draft_id);
+            if ($this->checklists->for($draft)['unsorted'] !== []) {
+                throw ValidationException::withMessages(['check' => CheckPaymentService::UNSORTED]);
+            }
             $changes = $this->reviseDocuments($draft, $locked->application);
             $locked->forceFill(['amended_at' => now(), 'state' => PaidCheckState::Check2Running, 'lighting_types' => $draft->lightingTypes()])->save();
             $this->audit($locked, 'amendment_submitted', null, $changes + ['lighting_types' => $draft->lightingTypes()], $owner->id);
