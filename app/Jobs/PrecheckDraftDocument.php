@@ -5,8 +5,13 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Contracts\TextExtractor;
+use App\Models\ApplicantDraft;
 use App\Models\ApplicantDraftDocument;
 use App\Models\DocumentRequirement;
+use App\Services\Precheck\DocumentSorter;
+use App\Services\Precheck\DraftChecklist;
+use App\Services\Precheck\DraftDocumentPlacer;
+use App\Services\Precheck\ExtractedText;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
@@ -50,24 +55,34 @@ final class PrecheckDraftDocument implements ShouldQueue
         if ($document === null || $document->precheck_status !== 'pending') {
             return;
         }
-        $currentSequence = (int) ApplicantDraftDocument::query()->where('draft_id', $document->draft_id)
-            ->where('item_code', $document->item_code)->max('sequence');
-        if ($document->sequence !== $currentSequence) {
-            // Superseded by a newer upload: the newer file gets its own check.
-            $document->forceFill(['precheck_status' => 'done', 'readable' => null])->save();
+        if ($document->item_code !== null) {
+            $currentSequence = (int) ApplicantDraftDocument::query()->where('draft_id', $document->draft_id)
+                ->where('item_code', $document->item_code)->max('sequence');
+            if ($document->sequence !== $currentSequence) {
+                // Superseded by a newer upload: the newer file gets its own check.
+                $document->forceFill(['precheck_status' => 'done', 'readable' => null])->save();
 
-            return;
+                return;
+            }
         }
-        $result = $extractor->extract(Storage::disk('local')->path($document->path), $document->mime);
+        // Beyond the draft's reading budget a dropped file is sorted by its name only and left for the applicant to confirm.
+        $result = $this->read
+            ? $extractor->extract(Storage::disk('local')->path($document->path), $document->mime)
+            : new ExtractedText('', ocrUnavailable: true);
         $text = mb_strtoupper((string) preg_replace('/\s+/u', ' ', $result->text));
-        $keywords = array_values(DocumentRequirement::query()->where('document_type_id', $document->document_type_id)
+        if ($document->item_code === null) {
+            $items = app(DraftChecklist::class)->catalogueItems((string) ApplicantDraft::query()->whereKey($document->draft_id)->value('application_type_id'));
+            app(DraftDocumentPlacer::class)->autoPlace($document, app(DocumentSorter::class)->rank($document->original_name, $text, $items));
+            $document->refresh();
+        }
+        $keywords = $document->document_type_id === null ? [] : array_values(DocumentRequirement::query()->where('document_type_id', $document->document_type_id)
             ->where('is_active', true)->first()?->precheck_keywords ?? []);
         $matched = array_values(array_filter($keywords, fn (string $word) => str_contains($text, (string) preg_replace('/\s+/u', ' ', mb_strtoupper($word)))));
         $document->forceFill([
             'precheck_status' => 'done',
             // Only a damaged file is unreadable; little text (photos, stamps) is left for the applicant to confirm.
             'readable' => ! $result->corrupt,
-            'text_chars' => mb_strlen(trim($text)),
+            'text_chars' => $this->read ? mb_strlen(trim($text)) : null,
             'matched_keywords' => $matched,
             'ocr_used' => $result->ocrUsed,
             'ocr_unavailable' => $result->ocrUnavailable,
