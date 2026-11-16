@@ -116,9 +116,9 @@ private const LETTER = "Tuan, PERMOHONAN KELULUSAN PELAN LAMPU JALAN BAGI CADANG
 
 **Files:**
 - Modify: `tests/Feature/Precheck/GreenCamourSortTest.php` (assert title starts with `CADANGAN PEMBANGUNAN` and address contains `LOT 22067`)
-- Create: `docs/adr/ADR-387-draft-prefill-from-documents.md`; Modify: `docs/adr/README.md`, `docs/runbooks/public-portal.md`
+- Create: `docs/adr/ADR-<next free number>-draft-prefill-from-documents.md`; Modify: `docs/adr/README.md`, `docs/runbooks/public-portal.md`
 
 - [ ] **Step 1:** Extend the pilot test; run with `PLAN_REVIEW_GREEN_CAMOUR_PATH` set to the ZIP — Expected: PASS (if OCR of the letter differs, record a ruling and adjust the reader, not the assertion's intent).
 - [ ] **Step 2:** Write the ADR (decision, the never-overwrite rule, the version merge) and runbook lines.
 - [ ] **Step 3:** Full suite `php artisan test` — Expected: all pass (2 skipped without the pilot path).
-- [ ] **Step 4: Commit** `docs: ADR-387 draft prefill from dropped documents`.
+- [ ] **Step 4: Commit** `docs: ADR for draft prefill from dropped documents`.
