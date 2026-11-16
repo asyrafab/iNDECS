@@ -140,6 +140,8 @@ final class PublicPortalController extends Controller
                 throw ValidationException::withMessages(['version' => 'Draf telah berubah di tetingkap lain. Salin perubahan anda dan muat semula draf sebelum menyimpan.']);
             }
             $locked->fill($data);
+            // The applicant has now typed a real title over the one a drop created.
+            $locked->title_provisional = false;
             $locked->version++;
             $locked->save();
             $this->recordRevision($locked, $request->user());

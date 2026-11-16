@@ -97,6 +97,36 @@ final class DraftDocumentService
         $document->forceFill(['confirmed_at' => now()])->save();
     }
 
+    /** The applicant places a tray file into an applicable checklist item; the item's file rules apply. */
+    public function assign(User $owner, ApplicantDraftDocument $document, string $itemCode): void
+    {
+        $draft = $document->draft;
+        $this->authorize($owner, $draft);
+        $checklist = $this->checklist->for($draft);
+        if (! collect($checklist['unsorted'])->contains(fn (ApplicantDraftDocument $tray) => $tray->id === $document->id)) {
+            throw ValidationException::withMessages(['file' => 'Fail ini sudah berada dalam senarai semak.']);
+        }
+        if (collect($checklist['items'])->firstWhere('code', $itemCode) === null) {
+            throw ValidationException::withMessages(['file' => 'Dokumen ini tidak diperlukan untuk projek anda.']);
+        }
+        DraftFileRules::assertFits(Storage::disk('local')->path($document->path), DraftFileRules::forItem($draft, $itemCode));
+        app(DraftDocumentPlacer::class)->place($document, $itemCode, 'manual');
+        $document->forceFill(['confirmed_at' => null])->save();
+    }
+
+    /** Removes a tray file (never a file placed in the checklist). */
+    public function remove(User $owner, ApplicantDraftDocument $document): void
+    {
+        $draft = $document->draft;
+        $this->authorize($owner, $draft);
+        if (! collect($this->checklist->for($draft)['unsorted'])->contains(fn (ApplicantDraftDocument $tray) => $tray->id === $document->id)) {
+            throw ValidationException::withMessages(['file' => 'Hanya fail dalam "Belum diisih" boleh dibuang. Gantikan dokumen senarai semak dengan muat naik semula.']);
+        }
+        $path = $document->path;
+        $document->delete();
+        Storage::disk('local')->delete($path);
+    }
+
     private function authorize(User $owner, ApplicantDraft $draft): void
     {
         abort_unless($draft->user_id === $owner->id, 404);

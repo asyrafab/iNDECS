@@ -37,6 +37,11 @@ Route::prefix('portal')->name('portal.')->group(function (): void {
         Route::post('/drafts', [PublicPortalController::class, 'store'])->middleware('throttle:20,1')->name('drafts.store');
         Route::get('/drafts/{draft}/edit', [PublicPortalController::class, 'edit'])->whereUlid('draft')->name('drafts.edit');
         // ADR-363: owner-only uploads and free pre-check on a draft.
+        // Upload-first drafts: drop files, a folder or one ZIP; AIRS's free local check sorts them, the rest wait in the tray.
+        Route::post('/drafts/drop', [PortalDraftDocumentController::class, 'drop'])->middleware('throttle:20,1')->name('drafts.drop');
+        Route::post('/drafts/{draft}/documents', [PortalDraftDocumentController::class, 'add'])->whereUlid('draft')->middleware('throttle:20,1')->name('drafts.documents.add');
+        Route::post('/drafts/{draft}/documents/{document}/assign', [PortalDraftDocumentController::class, 'assign'])->whereUlid(['draft', 'document'])->middleware('throttle:30,1')->name('drafts.documents.assign');
+        Route::delete('/drafts/{draft}/documents/{document}', [PortalDraftDocumentController::class, 'remove'])->whereUlid(['draft', 'document'])->middleware('throttle:30,1')->name('drafts.documents.remove');
         Route::post('/drafts/{draft}/documents/{code}', [PortalDraftDocumentController::class, 'store'])->whereUlid('draft')->where('code', '[a-z][a-z0-9_]{0,35}')->middleware('throttle:20,1')->name('drafts.documents.store');
         Route::post('/drafts/{draft}/documents/{document}/confirm', [PortalDraftDocumentController::class, 'confirm'])->whereUlid(['draft', 'document'])->middleware('throttle:30,1')->name('drafts.documents.confirm');
         Route::get('/drafts/{draft}/documents/{document}', [PortalDraftDocumentController::class, 'download'])->whereUlid(['draft', 'document'])->name('drafts.documents.download');

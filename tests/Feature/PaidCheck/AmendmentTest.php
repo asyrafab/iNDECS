@@ -142,6 +142,18 @@ final class AmendmentTest extends TestCase
             ->assertDontSee('class="precheck-upload"', false)->assertDontSee('Bayar semakan AIRS');
     }
 
+    public function test_drop_on_locked_draft_is_forbidden(): void
+    {
+        Queue::fake([PrecheckDraftDocument::class, \App\Airs\Jobs\RunAirsCheck::class]);
+        [$draft, $owner] = $this->paid();
+        $before = \App\Models\ApplicantDraftDocument::query()->where('draft_id', $draft->id)->count();
+
+        $this->actingAs($owner)->post(route('portal.drafts.documents.add', $draft), ['files' => [UploadedFile::fake()->createWithContent('baru.pdf', "%PDF-1.4\n%%EOF\n")]])
+            ->assertForbidden();
+        $this->assertSame($before, \App\Models\ApplicantDraftDocument::query()->where('draft_id', $draft->id)->count());
+        $this->actingAs($owner)->get(route('portal.drafts.edit', $draft))->assertOk()->assertDontSee('Seret fail atau folder ke sini');
+    }
+
     public function test_amendment_window_shows_edit_controls(): void
     {
         [$draft, $owner] = $this->paid();

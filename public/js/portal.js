@@ -152,3 +152,103 @@
     };
     setTimeout(poll, 4000);
 })();
+
+/* Upload-first drafts: drop files, a folder or one ZIP. Batches of up to 10 files and 100 MB; a ZIP or a large file goes alone. */
+(function () {
+    const form = document.querySelector('[data-drop-zone]');
+    if (!form || !window.fetch || !window.FormData) return;
+    const target = form.querySelector('[data-drop-target]');
+    const progress = form.querySelector('[data-drop-progress]');
+    const token = form.querySelector('input[name="_token"]').value;
+    const MAX_FILES = 10, MAX_BYTES = 100 * 1024 * 1024;
+    const skip = name => name.startsWith('.') || name.toLowerCase() === 'thumbs.db';
+    let busy = false;
+
+    const line = (text, kind) => {
+        const item = document.createElement('li');
+        item.textContent = text;
+        if (kind) item.className = kind;
+        progress.appendChild(item);
+        return item;
+    };
+
+    const readEntry = entry => new Promise(resolve => {
+        if (entry.isFile) { entry.file(file => resolve([file]), () => resolve([])); return; }
+        if (!entry.isDirectory) { resolve([]); return; }
+        const reader = entry.createReader();
+        const all = [];
+        const next = () => reader.readEntries(entries => {
+            if (!entries.length) { Promise.all(all.map(readEntry)).then(lists => resolve(lists.flat())); return; }
+            all.push(...entries);
+            next();
+        }, () => resolve([]));
+        next();
+    });
+
+    const batches = files => {
+        const out = [];
+        let current = [], bytes = 0;
+        files.forEach(file => {
+            const alone = /\.zip$/i.test(file.name) || file.size > MAX_BYTES;
+            if (alone) { out.push([file]); return; }
+            if (current.length === MAX_FILES || bytes + file.size > MAX_BYTES) { out.push(current); current = []; bytes = 0; }
+            current.push(file);
+            bytes += file.size;
+        });
+        if (current.length) out.push(current);
+        return out;
+    };
+
+    const upload = async files => {
+        files = files.filter(file => !skip(file.name));
+        if (busy || !files.length) return;
+        const type = form.querySelector('select[name="application_type_id"]');
+        if (type && !type.value) { line('Pilih jenis permohonan dahulu.', 'is-error'); type.focus(); return; }
+        busy = true;
+        progress.innerHTML = '';
+        let url = form.dataset.addUrl || form.dataset.dropUrl;
+        let draftUrl = null;
+        for (const batch of batches(files)) {
+            const status = line('Memuat naik ' + batch.map(file => file.name).join(', ') + '…');
+            const data = new FormData();
+            data.append('_token', token);
+            if (type && !form.dataset.addUrl) data.append('application_type_id', type.value);
+            batch.forEach(file => data.append('files[]', file, file.name));
+            try {
+                const response = await fetch(url, { method: 'POST', body: data, credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': token } });
+                const json = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    status.textContent = (json.errors ? Object.values(json.errors).flat().join(' ') : json.message) || 'Muat naik gagal. Cuba lagi.';
+                    status.className = 'is-error';
+                    if (!draftUrl) { busy = false; return; }
+                    continue;
+                }
+                form.dataset.addUrl = json.add_url;
+                url = json.add_url;
+                draftUrl = json.draft_url;
+                status.textContent = json.accepted.length + ' fail diterima.';
+                (json.rejected || []).forEach(rejected => line(rejected.name + ' — ' + rejected.reason, 'is-error'));
+            } catch (error) {
+                status.textContent = 'Sambungan terputus. Cuba lagi.';
+                status.className = 'is-error';
+            }
+        }
+        busy = false;
+        if (draftUrl && !progress.querySelector('.is-error')) window.location.assign(draftUrl);
+        else if (draftUrl) line('Lihat draf anda untuk menyemak fail yang diterima.').appendChild(Object.assign(document.createElement('a'), { href: draftUrl, textContent: ' Buka draf' }));
+    };
+
+    form.addEventListener('submit', event => {
+        event.preventDefault();
+        upload([...form.querySelectorAll('input[type="file"]')].flatMap(input => [...input.files]));
+    });
+    form.querySelectorAll('input[type="file"]').forEach(input => input.addEventListener('change', () => upload([...input.files])));
+    ['dragenter', 'dragover'].forEach(name => target.addEventListener(name, event => { event.preventDefault(); target.classList.add('is-dragover'); }));
+    ['dragleave', 'drop'].forEach(name => target.addEventListener(name, () => target.classList.remove('is-dragover')));
+    target.addEventListener('drop', async event => {
+        event.preventDefault();
+        const items = [...(event.dataTransfer.items || [])].map(item => item.webkitGetAsEntry && item.webkitGetAsEntry()).filter(Boolean);
+        const files = items.length ? (await Promise.all(items.map(readEntry))).flat() : [...event.dataTransfer.files];
+        upload(files);
+    });
+})();

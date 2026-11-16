@@ -10,6 +10,10 @@
     @else
     <div class="alert alert-info"><x-icon name="circle-alert" /><div><strong>Draf belum dihantar kepada MBSP.</strong> Semakan awal dokumen adalah percuma. Fi, bayaran dan penghantaran rasmi belum dibuka.</div></div>
     @endif
+    @unless ($draft->exists)
+        @include('public.drafts.partials.drop-zone', ['types' => $types])
+    <details class="draft-details-toggle" @if (old('title') || request()->has('prefill') || request()->has('type')) open @endif><summary>Atau isi butiran draf dahulu</summary>
+    @endunless
     <form class="application-form" method="POST" action="{{ $draft->exists ? route('portal.drafts.update', $draft) : route('portal.drafts.store') }}">
         @csrf
         @if($draft->exists)@method('PUT')<input type="hidden" name="version" value="{{ old('version', $draft->version) }}">@endif
@@ -22,7 +26,7 @@
                         <optgroup label="{{ $department }}">@foreach($departmentTypes as $type)<option value="{{ $type->id }}" @selected(old('application_type_id', $draft->application_type_id) === $type->id)>{{ $type->id }} · {{ $type->name }}</option>@endforeach</optgroup>
                     @endforeach
                 </select><small>Jenis yang tersedia untuk persediaan awal. Landskap akan menyusul.</small></label>
-                <label class="field field-span-2"><span>Tajuk cadangan <b>*</b></span><input name="title" value="{{ old('title', $draft->title) }}" maxlength="500" required @error('title') aria-invalid="true" @enderror><small>Contoh: Cadangan mendirikan sebuah rumah di Lot 101, Mukim 6.</small></label>
+                <label class="field field-span-2"><span>Tajuk cadangan <b>*</b></span><input name="title" value="{{ old('title', $draft->title_provisional ? '' : $draft->title) }}" maxlength="500" required @error('title') aria-invalid="true" @enderror><small>@if ($draft->title_provisional)Tajuk sementara diberi semasa fail dimuat naik. Isi tajuk cadangan sebenar dan simpan draf. @endif Contoh: Cadangan mendirikan sebuah rumah di Lot 101, Mukim 6.</small></label>
                 <label class="field field-span-2"><span>Alamat atau lokasi tapak</span><textarea name="site_address" rows="3" maxlength="2000" @error('site_address') aria-invalid="true" @enderror>{{ old('site_address', $draft->site_address) }}</textarea><small>Nyatakan nombor lot, mukim dan daerah jika diketahui.</small></label>
                 <label class="field field-span-2"><span>Catatan persediaan</span><textarea name="notes" rows="4" maxlength="5000" @error('notes') aria-invalid="true" @enderror>{{ old('notes', $draft->notes) }}</textarea><small>Catatan peribadi untuk membantu anda menyambung persediaan.</small></label>
             </div>
@@ -37,10 +41,12 @@
         <div class="form-actions"><div><a class="button button-secondary" href="{{ route('portal.home') }}">Kembali ke Fail saya</a></div><small>Draf dikunci semasa semakan AIRS dan selepas penyerahan. Perubahan hanya dibenarkan dalam tempoh pindaan.</small></div>
         @endif
     </form>
+    @unless ($draft->exists)</details>@endunless
     @if ($draft->exists)
         @if ($checkResult ?? null)
             @include('public.drafts.partials.check-result', ['result' => $checkResult])
         @endif
+        @if (($editable ?? true) && ($checklist['available'] ?? false))@include('public.drafts.partials.drop-zone')@endif
         @include('public.drafts.partials.checklist')
     @endif
     </x-slot:file></x-portal-counter>

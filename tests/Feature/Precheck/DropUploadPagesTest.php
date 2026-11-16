@@ -1,0 +1,205 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Feature\Precheck;
+
+use App\Contracts\DocumentScanner;
+use App\Models\ApplicantDraft;
+use App\Models\ApplicantDraftDocument;
+use App\Models\DocumentType;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Storage;
+use Tests\TestCase;
+
+/** Upload-first part 1, Task 4: drop zone, folder pick and the "Belum diisih" tray. */
+final class DropUploadPagesTest extends TestCase
+{
+    use BuildsPrecheck, RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->seed();
+        $this->seedTelCatalogue();
+        Storage::fake('local');
+        Queue::fake();
+        $this->app->instance(DocumentScanner::class, new class implements DocumentScanner
+        {
+            public function assertClean(string $path): void {}
+        });
+    }
+
+    private function pdf(string $name, string $marker = 'a'): UploadedFile
+    {
+        return UploadedFile::fake()->createWithContent($name, "%PDF-1.4\n% {$marker}\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n");
+    }
+
+    private function tray(ApplicantDraft $draft, string $name = 'fail.pdf', array $state = []): ApplicantDraftDocument
+    {
+        $path = "drafts/{$draft->id}/inbox/".uniqid().'.pdf';
+        Storage::disk('local')->put($path, "%PDF-1.4\n% ".uniqid()."\n%%EOF\n");
+
+        return $this->draftDocument($draft, 'x', array_replace(['item_code' => null, 'document_type_id' => null, 'sequence' => 0,
+            'original_name' => $name, 'path' => $path, 'sha256' => hash('sha256', uniqid('', true))], $state));
+    }
+
+    public function test_create_page_leads_with_drop_zone(): void
+    {
+        $this->actingAs($this->applicant())->get(route('portal.drafts.create'))->assertOk()
+            ->assertSee('Seret fail atau folder ke sini')->assertSee('Pilih folder')->assertSee('webkitdirectory', false)
+            ->assertSee('Atau isi butiran draf dahulu')->assertSee('action="'.route('portal.drafts.drop').'"', false);
+    }
+
+    public function test_drop_creates_draft_and_redirects(): void
+    {
+        $owner = $this->applicant();
+        $response = $this->actingAs($owner)->post(route('portal.drafts.drop'), ['application_type_id' => 'TEL', 'files' => [$this->pdf('geran.pdf')]]);
+
+        $draft = ApplicantDraft::query()->sole();
+        $response->assertRedirect(route('portal.drafts.edit', $draft).'#dokumen');
+        $this->assertTrue($draft->title_provisional);
+        $this->assertSame($owner->id, $draft->user_id);
+        $this->assertSame(1, ApplicantDraftDocument::query()->whereNull('item_code')->count());
+    }
+
+    public function test_drop_requires_a_type_and_files(): void
+    {
+        $this->actingAs($this->applicant())->post(route('portal.drafts.drop'), ['application_type_id' => 'TEL'])->assertSessionHasErrors('files');
+        $this->actingAs($this->applicant('b@example.test'))->post(route('portal.drafts.drop'), ['files' => [$this->pdf('a.pdf')]])->assertSessionHasErrors('application_type_id');
+        $this->assertSame(0, ApplicantDraft::query()->count());
+    }
+
+    public function test_drop_json_returns_add_url(): void
+    {
+        $response = $this->actingAs($this->applicant())->postJson(route('portal.drafts.drop'), ['application_type_id' => 'TEL',
+            'files' => [$this->pdf('geran.pdf'), UploadedFile::fake()->createWithContent('nota.pdf', 'bukan pdf')]]);
+
+        $draft = ApplicantDraft::query()->sole();
+        $response->assertOk()->assertJson([
+            'draft_url' => route('portal.drafts.edit', $draft).'#dokumen',
+            'add_url' => route('portal.drafts.documents.add', $draft),
+            'accepted' => ['geran.pdf'],
+        ]);
+        $this->assertSame('nota.pdf', $response->json('rejected.0.name'));
+    }
+
+    public function test_add_to_existing_draft(): void
+    {
+        $owner = $this->applicant();
+        $draft = $this->telDraft($owner);
+        $this->actingAs($owner)->post(route('portal.drafts.documents.add', $draft), ['files' => [$this->pdf('a.pdf', 'a'), $this->pdf('b.pdf', 'b')]])
+            ->assertRedirect(route('portal.drafts.edit', $draft).'#dokumen');
+
+        $this->assertSame(2, ApplicantDraftDocument::query()->where('draft_id', $draft->id)->whereNull('item_code')->count());
+    }
+
+    public function test_rejected_files_are_listed_after_redirect(): void
+    {
+        $owner = $this->applicant();
+        $draft = $this->telDraft($owner);
+        $this->actingAs($owner)->followingRedirects()->post(route('portal.drafts.documents.add', $draft), ['files' => [UploadedFile::fake()->createWithContent('palsu.pdf', '<html></html>')]])
+            ->assertOk()->assertSee('palsu.pdf')->assertSee('Fail tidak diterima');
+    }
+
+    public function test_tray_lists_unsorted_file_with_item_choices(): void
+    {
+        $owner = $this->applicant();
+        $draft = $this->telDraft($owner);
+        $file = $this->tray($draft, 'imbasan-001.pdf');
+
+        $this->actingAs($owner)->get(route('portal.drafts.edit', $draft))->assertOk()
+            ->assertSee('Belum diisih')->assertSee('imbasan-001.pdf')->assertSee('Geran tanah')
+            ->assertSee(route('portal.drafts.documents.assign', [$draft, $file]), false)
+            ->assertSee(route('portal.drafts.documents.remove', [$draft, $file]), false)
+            ->assertDontSee('Pelan struktur</option>', false);
+    }
+
+    public function test_pending_tray_file_keeps_the_checklist_polling(): void
+    {
+        $owner = $this->applicant();
+        $draft = $this->telDraft($owner);
+        $this->tray($draft, 'baru.pdf', ['precheck_status' => 'pending', 'readable' => null]);
+
+        $this->actingAs($owner)->get(route('portal.drafts.checklist', $draft))->assertOk()->assertSee('data-precheck-pending', false);
+    }
+
+    public function test_tray_explains_when_automatic_reading_was_unavailable(): void
+    {
+        $owner = $this->applicant();
+        $draft = $this->telDraft($owner);
+        $this->tray($draft, 'imbasan.pdf', ['ocr_unavailable' => true]);
+
+        $this->actingAs($owner)->get(route('portal.drafts.edit', $draft))->assertOk()
+            ->assertSee('Bacaan automatik tidak tersedia untuk sebahagian fail — sila isih fail tersebut sendiri.');
+    }
+
+    public function test_assign_places_file_and_rejects_oversize(): void
+    {
+        $owner = $this->applicant();
+        $draft = $this->telDraft($owner);
+        $file = $this->tray($draft);
+
+        DocumentType::query()->where('code', 'bina_tel_geran')->update(['max_file_size_kb' => 0]);
+        $this->actingAs($owner)->post(route('portal.drafts.documents.assign', [$draft, $file]), ['item_code' => 'geran'])->assertSessionHasErrors('file');
+        $this->assertNull($file->fresh()->item_code);
+
+        DocumentType::query()->where('code', 'bina_tel_geran')->update(['max_file_size_kb' => 20480]);
+        $this->actingAs($owner)->post(route('portal.drafts.documents.assign', [$draft, $file]), ['item_code' => 'geran'])
+            ->assertRedirect(route('portal.drafts.edit', $draft).'#dokumen');
+        $this->assertSame('geran', $file->fresh()->item_code);
+        $this->assertSame('manual', $file->fresh()->sort_source);
+    }
+
+    public function test_assign_refuses_item_that_does_not_apply(): void
+    {
+        $owner = $this->applicant();
+        $draft = $this->telDraft($owner);
+        $file = $this->tray($draft);
+
+        $this->actingAs($owner)->post(route('portal.drafts.documents.assign', [$draft, $file]), ['item_code' => 'pelan_struktur'])->assertSessionHasErrors('file');
+        $this->assertNull($file->fresh()->item_code);
+    }
+
+    public function test_remove_deletes_only_tray_files(): void
+    {
+        $owner = $this->applicant();
+        $draft = $this->telDraft($owner);
+        $file = $this->tray($draft);
+        $placed = $this->draftDocument($draft, 'geran');
+
+        $this->actingAs($owner)->delete(route('portal.drafts.documents.remove', [$draft, $placed]))->assertSessionHasErrors('file');
+        $this->assertNotNull($placed->fresh());
+
+        $this->actingAs($owner)->delete(route('portal.drafts.documents.remove', [$draft, $file]))->assertRedirect(route('portal.drafts.edit', $draft).'#dokumen');
+        $this->assertNull($file->fresh());
+        Storage::disk('local')->assertMissing($file->path);
+    }
+
+    public function test_foreign_draft_is_not_found(): void
+    {
+        $draft = $this->telDraft($this->applicant());
+        $file = $this->tray($draft);
+        $other = $this->applicant('lain@example.test');
+
+        $this->actingAs($other)->post(route('portal.drafts.documents.add', $draft), ['files' => [$this->pdf('a.pdf')]])->assertNotFound();
+        $this->actingAs($other)->post(route('portal.drafts.documents.assign', [$draft, $file]), ['item_code' => 'geran'])->assertNotFound();
+        $this->actingAs($other)->delete(route('portal.drafts.documents.remove', [$draft, $file]))->assertNotFound();
+    }
+
+    public function test_saving_details_clears_provisional_title(): void
+    {
+        $owner = $this->applicant();
+        $draft = $this->telDraft($owner);
+        $draft->forceFill(['title_provisional' => true, 'title' => 'Draf baharu — 16/11/2026'])->save();
+
+        $this->actingAs($owner)->get(route('portal.drafts.edit', $draft))->assertOk()->assertSee('Tajuk sementara')
+            ->assertDontSee('value="Draf baharu — 16/11/2026"', false);
+        $this->actingAs($owner)->put(route('portal.drafts.update', $draft), ['application_type_id' => 'TEL', 'title' => 'Menara 30 m', 'version' => 1])
+            ->assertRedirect();
+        $this->assertFalse($draft->fresh()->title_provisional);
+    }
+}

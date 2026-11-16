@@ -1,5 +1,5 @@
 {{-- Free pre-check checklist (ADR-363, contract §3). Preparation labels only; no findings or approval wording. --}}
-@php($pending = collect($checklist['items'])->contains(fn ($item) => $item['label'] === \App\Enums\PrecheckLabel::Pending))
+@php($pending = collect($checklist['items'])->contains(fn ($item) => $item['label'] === \App\Enums\PrecheckLabel::Pending) || collect($checklist['unsorted'] ?? [])->contains(fn ($file) => $file->precheck_status === 'pending'))
 <section class="form-card precheck" id="dokumen" data-precheck-url="{{ route('portal.drafts.checklist', $draft) }}" @if ($pending) data-precheck-pending @endif aria-live="polite">
     @if (! $checklist['available'])
         <div class="form-section-heading"><div><h2>Dokumen diperlukan</h2></div></div>
@@ -43,6 +43,8 @@
                 </li>
             @endforeach
         </ul>
+        @error('file')<p class="field-error" role="alert">{{ $message }}</p>@enderror
+        @include('public.drafts.partials.unsorted')
         @php($airsEnabled = (config('airs.modules.'.$draft->application_type_id.'.enabled') ?? false) === true)
         @php($fee = \App\Services\PaidCheck\CheckPaymentService::feeSen())
         @unless ($checkResult ?? null)
