@@ -143,3 +143,5 @@ Date: YYYY-MM-DD. Status: Proposed | Accepted | Superseded by ADR-MMM.
 - [ADR-385: Compact document upload windows](ADR-385-compact-document-upload-windows.md)
 
 - [ADR-386: Compact shaped document status icons](ADR-386-document-status-icon-shapes.md)
+
+- [ADR-390: Fill draft details from dropped documents](ADR-390-draft-prefill-from-documents.md)

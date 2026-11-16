@@ -77,3 +77,11 @@ Run `php artisan test --filter=PublicPortalTest` against guarded PostgreSQL
 `indecs_test`, followed by the full suite for shared-core regressions. Check the
 dashboard, draft editor/list and account page on desktop and phones, including
 dark mode, keyboard navigation, validation and concurrent tab saves.
+
+## Draft details filled from dropped documents (ADR-390)
+
+The pre-check job fills a dropped draft's provisional title, empty address and (LJUP) empty lighting type from
+the cover letter. Filled fields show "Diisi daripada … — sila semak." until the applicant saves. If nothing is
+filled, check that the letter was within the 20-file reading budget (`kaunter.precheck.read_files_per_draft`)
+and that its subject follows "PERMOHONAN … BAGI CADANGAN … DI ATAS …". Run
+`PLAN_REVIEW_GREEN_CAMOUR_PATH=<zip> php artisan test --filter=GreenCamourSortTest` for the real-package check.

@@ -66,5 +66,12 @@ final class GreenCamourSortTest extends TestCase
         // Auto-sorting never hides a file: each one is either the current file of one item or in the tray.
         $checklist = app(DraftChecklist::class)->for($draft->fresh());
         $this->assertSame(12, collect($checklist['items'])->pluck('document')->filter()->count() + count($checklist['unsorted']));
+        // Upload-first part 2: the cover letter's subject fills the provisional title and the empty address.
+        $draft->refresh();
+        fwrite(STDERR, 'Filled title: '.$draft->title.PHP_EOL.'Filled address: '.$draft->site_address.PHP_EOL);
+        $this->assertStringStartsWith('CADANGAN PEMBANGUNAN', $draft->title);
+        $this->assertStringContainsString('LOT 22067', (string) $draft->site_address);
+        $this->assertSame('LAIN_LAIN_SURAT PERMOHONAN (1).pdf', $draft->prefill_sources['title']['name']);
+        $this->assertTrue($draft->title_provisional);
     }
 }
