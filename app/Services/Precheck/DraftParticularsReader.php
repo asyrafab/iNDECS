@@ -15,6 +15,9 @@ final class DraftParticularsReader
 
     private const ADDRESS_MAX = 2000;
 
+    /** Real addresses are short (pilots: 70–120 characters); anything longer has lost its ending. */
+    private const ADDRESS_SEARCH = 400;
+
     /** A lighting type is named only as a pole or light type, never as a loose word. */
     private const LIGHTING = [
         'SOLAR' => '/\b(?:LAMPU(?: JALAN)?|LIGHT|TIANG) SOLAR\b|\bSOLAR (?:STREET )?LIGHT/u',
@@ -29,11 +32,15 @@ final class DraftParticularsReader
         $found = [];
         // Only a complete subject counts: PERMOHONAN close before BAGI CADANGAN, and a real ending (never the end of the text).
         // The address is read only from that subject's own "DI ATAS", so everyday "di atas" ("above") elsewhere is ignored.
-        $subject = '/\bPERMOHONAN\b.{0,200}?\bBAGI (CADANGAN\b.{1,1500}?)(?: DI ATAS (.{1,2500}?)(?:\s*\.?\s*UNTUK\b|\s*PER ?:)| UNTUK TETUAN\b| PER ?:)/u';
-        if (preg_match($subject, $text, $match) === 1) {
-            $found['title'] = self::tidy($match[1], self::TITLE_MAX);
-            if (($match[2] ?? '') !== '') {
-                $found['site_address'] = self::tidy($match[2], self::ADDRESS_MAX);
+        $subject = '/\bPERMOHONAN\b.{0,200}?\bBAGI (CADANGAN\b.{1,1500}?)( DI ATAS | UNTUK TETUAN\b| PER ?:)/u';
+        if (preg_match($subject, $text, $match, PREG_OFFSET_CAPTURE) === 1) {
+            $found['title'] = self::tidy($match[1][0], self::TITLE_MAX);
+            // The address follows the subject's own DI ATAS and ends nearby: at UNTUK (letter), PER: (reference)
+            // or the next form label such as "SEKSYEN/MUKIM :" (MBSP submission form). No nearby ending, no address.
+            $rest = substr($text, $match[2][1] + strlen($match[2][0]));
+            if ($match[2][0] === ' DI ATAS '
+                && preg_match('/^(.{1,'.self::ADDRESS_SEARCH.'}?)(?:\s*\.?\s*UNTUK\b|\s*PER ?:|\s+[A-Z][A-Z\/]{2,} ?:)/u', $rest, $address) === 1) {
+                $found['site_address'] = self::tidy($address[1], self::ADDRESS_MAX);
             }
         }
         $types = array_keys(array_filter(self::LIGHTING, fn (string $pattern) => preg_match($pattern, $text) === 1));

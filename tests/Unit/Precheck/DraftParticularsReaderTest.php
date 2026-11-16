@@ -71,9 +71,26 @@ final class DraftParticularsReaderTest extends TestCase
 
     public function test_values_are_capped(): void
     {
-        $found = $this->read('PERMOHONAN BAGI CADANGAN '.str_repeat('KEDAI ', 100).'DI ATAS LOT 1 '.str_repeat('JALAN ', 400).'. UNTUK TETUAN X');
+        $found = $this->read('PERMOHONAN BAGI CADANGAN '.str_repeat('KEDAI ', 100).'DI ATAS LOT 1. UNTUK TETUAN X');
 
         $this->assertSame(500, mb_strlen($found['title']));
-        $this->assertSame(2000, mb_strlen($found['site_address']));
+        $this->assertSame('LOT 1', $found['site_address']);
+    }
+
+    /** MBSP "Borang pengemukaan": the address is followed by the next form label, not by UNTUK. */
+    public function test_submission_form_address_ends_at_the_next_label(): void
+    {
+        $found = $this->read('BORANG PENGEMUKAAN PELAN LAMPU JALAN UNTUK PEMBANGUNAN TAJUK CADANGAN :Permohonan Kelulusan Pelan Lampu Jalan Bagi Cadangan Pembangunan yang terdiri daripada: Fasa 1: i) 14 Unit Kedai Pejabat Berkembar 2 Tingkat di atas Sebahagian lot 22067 (PT6182) Lebuhraya Bandar Cassia, Mukim 13, Seberang Perai Selatan SEKSYEN/MUKIM : Mukim 13 TARIKH : 17th December 2025 - Sila tandakan (V) bagi kotak yang berkaitan. 1. | Empat (4) set pelan untuk kelulusan oleh MBSP');
+
+        $this->assertSame('CADANGAN PEMBANGUNAN YANG TERDIRI DARIPADA: FASA 1: I) 14 UNIT KEDAI PEJABAT BERKEMBAR 2 TINGKAT', $found['title'] ?? null);
+        $this->assertSame('SEBAHAGIAN LOT 22067 (PT6182) LEBUHRAYA BANDAR CASSIA, MUKIM 13, SEBERANG PERAI SELATAN', $found['site_address'] ?? null);
+    }
+
+    public function test_address_without_an_ending_nearby_is_left_out_but_title_is_kept(): void
+    {
+        $found = $this->read('PERMOHONAN BAGI CADANGAN MEMBINA JALAN DI ATAS LOT 5 '.str_repeat('SYARAT AM BERKAITAN ', 30).'UNTUK KELULUSAN MBSP');
+
+        $this->assertSame('CADANGAN MEMBINA JALAN', $found['title'] ?? null);
+        $this->assertArrayNotHasKey('site_address', $found);
     }
 }
