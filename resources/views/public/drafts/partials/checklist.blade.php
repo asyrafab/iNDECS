@@ -26,29 +26,7 @@
                         <h2 id="document-title-{{ $item['code'] }}">{{ $item['name'] }}</h2>
                         <div class="precheck-detail-meta"><span class="status-badge {{ $item['label']->badgeClass() }}">{{ $item['label']->value }}</span><span>{{ $item['is_required'] ? 'Wajib' : 'Pilihan' }}@if ($item['conditional']) · berdasarkan butiran projek @endif</span></div>
                         @if ($item['guidance'])<p class="precheck-guidance">{{ $item['guidance'] }}</p>@endif
-                        @if ($item['document'])
-                            <p class="precheck-file"><x-icon name="file-text" />
-                                @if ($item['document']->scan_pending || $item['document']->rejected_reason){{ $item['document']->original_name }}
-                                @else<a href="{{ route('portal.drafts.documents.download', [$draft, $item['document']]) }}">{{ $item['document']->original_name }}</a>@endif
-                            </p>
-                            @if ($item['label'] === \App\Enums\PrecheckLabel::Unreadable)<p class="precheck-guidance">Fail tidak dapat dibaca. Sila muat naik semula.</p>
-                            @elseif ($item['label'] === \App\Enums\PrecheckLabel::NeedsConfirmation)<p class="precheck-guidance">{{ $item['document']->ocr_unavailable ? 'Kandungan tidak dapat disemak secara automatik.' : 'Perkataan yang dijangka tidak ditemui.' }} Pastikan ini dokumen yang betul.</p>
-                            @endif
-                        @else
-                            <p class="precheck-guidance">Dokumen ini belum dikemukakan. Pilih fail untuk melampirkannya.</p>
-                        @endif
-                        @if ($editable ?? true)
-                            <div class="precheck-actions">
-                                @if ($item['label'] === \App\Enums\PrecheckLabel::NeedsConfirmation)
-                                    <form method="POST" action="{{ route('portal.drafts.documents.confirm', [$draft, $item['document']]) }}">@csrf<button class="button button-secondary button-small" type="submit"><x-icon name="check" />Saya sahkan dokumen ini betul</button></form>
-                                @endif
-                                <form class="precheck-upload" method="POST" action="{{ route('portal.drafts.documents.store', [$draft, $item['code']]) }}" enctype="multipart/form-data">
-                                    @csrf
-                                    <label class="field"><span>Fail untuk {{ $item['name'] }}</span><input type="file" name="file" required accept=".pdf,.jpg,.jpeg,.png"></label>
-                                    <button class="button button-primary button-small" type="submit"><x-icon name="file-plus-2" />{{ $item['document'] ? 'Muat naik semula' : 'Muat naik' }}</button>
-                                </form>
-                            </div>
-                        @endif
+                        @include('public.drafts.partials.item-files')
                     </dialog>
                 </li>
             @endforeach
