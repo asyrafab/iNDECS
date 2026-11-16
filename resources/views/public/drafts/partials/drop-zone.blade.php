@@ -6,7 +6,7 @@
     @csrf
     <div class="form-section-heading"><div>
         <h2>{{ $creating ? 'Mulakan dengan dokumen anda' : 'Tambah dokumen' }}</h2>
-        <p>Seret fail, satu folder atau satu fail ZIP. AIRS menyusun setiap fail ke dalam senarai semak secara automatik; fail yang tidak pasti diletakkan dalam "Belum diisih" untuk anda pilih.</p>
+        <p>Seret fail, satu folder atau satu fail ZIP. AIRS menyusun setiap fail ke dalam senarai semak secara automatik; fail yang tidak dapat dipadankan diletakkan dalam "Fail belum dipadankan" untuk anda pilih.</p>
     </div></div>
     @if ($creating)
         <label class="field"><span>Jenis permohonan <b>*</b></span><select name="application_type_id" required>

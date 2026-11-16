@@ -6,10 +6,14 @@ namespace App\Http\Controllers;
 
 use App\Models\ApplicantDraft;
 use App\Models\ApplicationType;
+use App\Models\AuditLog;
+use App\Models\CheckPayment;
 use App\Models\LibraryDocument;
 use App\Models\User;
 use App\Services\Amira\ContextBuilder;
 use App\Services\Amira\ProposalSanitiser;
+use App\Services\PaidCheck\ApplicantCheckPresenter;
+use App\Services\PaidCheck\PaidCheckJourneyService;
 use App\Services\Portal\PortalBoard;
 use App\Services\Precheck\DraftChecklist;
 use Illuminate\Database\Eloquent\Builder;
@@ -116,8 +120,8 @@ final class PublicPortalController extends Controller
             'types' => $this->types()->get(),
             'board' => $this->board->for($request->user(), justSaved: $request->session()->has('status'), focus: $draft),
             'checklist' => app(DraftChecklist::class)->for($draft),
-            'checkResult' => ($journey = $draft->journey()->first()) ? app(\App\Services\PaidCheck\ApplicantCheckPresenter::class)->for($journey) : null,
-            'editable' => \App\Services\PaidCheck\PaidCheckJourneyService::draftEditable($draft),
+            'checkResult' => ($journey = $draft->journey()->first()) ? app(ApplicantCheckPresenter::class)->for($journey) : null,
+            'editable' => PaidCheckJourneyService::draftEditable($draft),
         ]);
     }
 
@@ -126,10 +130,10 @@ final class PublicPortalController extends Controller
         $this->requireVerified($request);
         // Check ownership before validating input; foreign IDs always return 404.
         $owned = ApplicantDraft::query()->ownedBy($request->user())->findOrFail($draft);
-        abort_unless(\App\Services\PaidCheck\PaidCheckJourneyService::draftEditable($owned), 403, 'Draf dikunci semasa semakan AIRS.');
+        abort_unless(PaidCheckJourneyService::draftEditable($owned), 403, 'Draf dikunci semasa semakan AIRS.');
         $data = $this->validated($request);
         // Once a payment has been started (pending or paid) the draft's application type is fixed.
-        $paymentStarted = \App\Models\CheckPayment::query()->where('draft_id', $owned->id)->whereIn('status', ['pending', 'paid'])->exists();
+        $paymentStarted = CheckPayment::query()->where('draft_id', $owned->id)->whereIn('status', ['pending', 'paid'])->exists();
         if ($paymentStarted && $data['application_type_id'] !== $owned->application_type_id) {
             throw ValidationException::withMessages(['application_type_id' => 'Jenis permohonan tidak boleh ditukar selepas bayaran.']);
         }
@@ -148,6 +152,28 @@ final class PublicPortalController extends Controller
         });
 
         return redirect()->route('portal.drafts.edit', $owned)->with('status', 'Perubahan draf disimpan. Draf ini belum dihantar kepada MBSP.');
+    }
+
+    public function destroy(Request $request, string $draft)
+    {
+        DB::transaction(function () use ($request, $draft): void {
+            $owned = ApplicantDraft::query()->ownedBy($request->user())->lockForUpdate()->findOrFail($draft);
+            abort_unless($owned->removable(), 403, 'Draf tidak boleh dibuang selepas bayaran atau semakan AIRS bermula.');
+            $request->validate(['version' => ['required', 'integer', 'min:1']]);
+            if ($owned->version !== $request->integer('version')) {
+                throw ValidationException::withMessages(['version' => 'Draf telah berubah di tetingkap lain. Muat semula sebelum membuang draf.']);
+            }
+            $owned->delete();
+            AuditLog::query()->create([
+                'auditable_type' => ApplicantDraft::class, 'auditable_id' => $owned->id,
+                'event' => 'applicant_draft_removed', 'actor_id' => $request->user()->id,
+                'before_values' => ['version' => $owned->version, 'deleted_at' => null],
+                'after_values' => ['deleted_at' => $owned->deleted_at->toIso8601String()],
+                'ip_address' => $request->ip(),
+            ]);
+        });
+
+        return redirect()->route('portal.home')->with('status', 'Draf telah dibuang daripada Fail saya.');
     }
 
     private function types(): Builder

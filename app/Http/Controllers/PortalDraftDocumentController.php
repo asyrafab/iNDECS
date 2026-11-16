@@ -103,7 +103,7 @@ final class PortalDraftDocumentController extends Controller
         }
 
         return redirect()->to(route('portal.drafts.edit', $draft).'#dokumen')
-            ->with('status', count($result->accepted).' fail diterima dan sedang diisih secara automatik.')
+            ->with('status', count($result->accepted).' fail diterima dan sedang dipadankan secara automatik.')
             ->with('drop_rejected', $result->rejected);
     }
 

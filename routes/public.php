@@ -6,8 +6,8 @@ use App\Http\Controllers\Auth\PublicAccessController;
 use App\Http\Controllers\PortalCheckPaymentController;
 use App\Http\Controllers\PortalCheckResultController;
 use App\Http\Controllers\PortalDraftDocumentController;
-use App\Http\Controllers\PublicPortalController;
 use App\Http\Controllers\PortalGuidanceController;
+use App\Http\Controllers\PublicPortalController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/tentang-indecs', 'public.about')->name('about');
@@ -63,6 +63,7 @@ Route::prefix('portal')->name('portal.')->group(function (): void {
         Route::post('/drafts/{draft}/check/amend', [PortalCheckResultController::class, 'amend'])->whereUlid('draft')->middleware('throttle:10,1')->name('drafts.check.amend');
         Route::post('/drafts/{draft}/check/submit', [PortalCheckResultController::class, 'submit'])->whereUlid('draft')->middleware('throttle:10,1')->name('drafts.check.submit');
         Route::put('/drafts/{draft}', [PublicPortalController::class, 'update'])->whereUlid('draft')->middleware('throttle:20,1')->name('drafts.update');
+        Route::delete('/drafts/{draft}', [PublicPortalController::class, 'destroy'])->whereUlid('draft')->middleware('throttle:20,1')->name('drafts.destroy');
         Route::post('/account', [PublicAccessController::class, 'claim'])->middleware('throttle:5,1')->name('claim');
         Route::get('/account/google', [GoogleLoginController::class, 'redirect'])->name('google.link');
         Route::post('/logout', [PublicAccessController::class, 'logout'])->name('logout');

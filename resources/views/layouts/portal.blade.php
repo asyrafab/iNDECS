@@ -70,6 +70,7 @@
         <a class="button button-secondary" href="{{ route('about') }}">Maklumat &amp; soalan lazim<x-icon name="arrow-right" /></a>
     </dialog>
     <noscript><style>.portal-dialog { display: block; position: static; width: auto; margin: var(--space-6); } [data-portal-close] { display: none; }</style></noscript>
+    <noscript><style>.precheck-dialog { margin: var(--space-3) 0 var(--space-6); } .precheck-dialog .precheck-upload { display: grid; }</style></noscript>
     @hasSection('counter')<noscript><style>@media (max-width: 900px) { .counter-amira { display: flex; position: static; border-radius: var(--radius-lg); } .amira-counter-bar { display: none; } }</style></noscript>@endif
     {{-- Kaunter Maya pages render AMIRA inline (x-portal-counter); others keep the drawer. --}}
     @unless(View::hasSection('counter'))

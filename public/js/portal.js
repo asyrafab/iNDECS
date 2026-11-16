@@ -1,15 +1,18 @@
 /* Public portal choices use native modal isolation and ordinary links as fallback. */
 (function () {
-    const dialogs = [...document.querySelectorAll('.portal-dialog')];
+    // Checklist polling replaces its dialogs: discover the current nodes on each interaction.
+    const dialogs = () => [...document.querySelectorAll('.portal-dialog')];
+    const registered = new WeakSet();
     const settings = document.querySelector('[data-portal-settings]');
     const openers = new WeakMap();
     document.addEventListener('click', event => {
         const trigger = event.target.closest('[data-portal-open]');
         if (trigger) {
             const dialog = document.getElementById(trigger.dataset.portalOpen);
-            if (!dialogs.includes(dialog) || typeof dialog.showModal !== 'function') return;
+            if (!dialogs().includes(dialog) || typeof dialog.showModal !== 'function') return;
+            registerDialog(dialog);
             event.preventDefault();
-            const current = dialogs.find(item => item.open);
+            const current = dialogs().find(item => item.open);
             const isChild = current && dialog.dataset.portalParent === current.id;
             const returnTarget = isChild ? trigger : (current ? openers.get(current) : (trigger.closest('[data-portal-settings]') ? settings.querySelector('summary') : trigger));
             if (current === dialog) return;
@@ -22,11 +25,13 @@
             settings.open = false;
         }
     });
-    dialogs.forEach(dialog => {
+    function registerDialog(dialog) {
+        if (registered.has(dialog)) return;
+        registered.add(dialog);
         dialog.querySelector('[data-portal-close]')?.addEventListener('click', () => dialog.close());
         dialog.addEventListener('close', () => {
             const parent = document.getElementById(dialog.dataset.portalParent);
-            if (parent?.open || !dialogs.some(item => item.open)) openers.get(dialog)?.focus({preventScroll: true});
+            if (parent?.open || !dialogs().some(item => item.open)) openers.get(dialog)?.focus({preventScroll: true});
         });
         dialog.addEventListener('click', event => {
             const rect = dialog.getBoundingClientRect();
@@ -40,7 +45,8 @@
             if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
             else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
         });
-    });
+    }
+    dialogs().forEach(registerDialog);
     settings?.addEventListener('keydown', event => {
         if (event.key === 'Escape') { settings.open = false; settings.querySelector('summary')?.focus(); }
     });
@@ -134,19 +140,21 @@
 /* ADR-363: refresh the draft checklist while free pre-checks run (stops after five minutes). */
 (function () {
     const started = Date.now();
+    const isBusy = section => section.querySelector('dialog[open]')
+        || [...section.querySelectorAll('input[type="file"]')].some(input => input.files && input.files.length > 0)
+        || section.contains(document.activeElement);
     const poll = () => {
         const section = document.querySelector('[data-precheck-pending][data-precheck-url]');
         // A large drop is scanned and read file by file in the background (pilot: 12 files in ~7 min).
         if (!section || Date.now() - started > 1200000) return;
         // Never throw away the applicant's work: wait while a file is picked or focus is inside the list.
-        const busy = [...section.querySelectorAll('input[type="file"]')].some(input => input.files && input.files.length > 0)
-            || section.contains(document.activeElement);
-        if (busy) { setTimeout(poll, 4000); return; }
+        if (isBusy(section)) { setTimeout(poll, 4000); return; }
         fetch(section.dataset.precheckUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' })
             .then(response => response.ok ? response.text() : Promise.reject(response.status))
             .then(html => {
                 const fresh = new DOMParser().parseFromString(html, 'text/html').querySelector('[data-precheck-url]');
-                if (fresh) section.replaceWith(fresh);
+                // A dialog may have opened while the request was in flight.
+                if (fresh && section.isConnected && !isBusy(section)) section.replaceWith(fresh);
             })
             .catch(() => {})
             .finally(() => setTimeout(poll, 4000));

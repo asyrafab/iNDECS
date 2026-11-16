@@ -137,3 +137,9 @@ Date: YYYY-MM-DD. Status: Proposed | Accepted | Superseded by ADR-MMM.
 - [ADR-382: Small edging on the garden walking path](ADR-382-garden-path-stone-edging.md)
 
 - [ADR-383: AIRS merged into iNDECS as an in-process module](ADR-383-airs-merged-into-indecs.md)
+
+- [ADR-384: Public applicants may remove preparation drafts](ADR-384-public-draft-removal.md)
+
+- [ADR-385: Compact document upload windows](ADR-385-compact-document-upload-windows.md)
+
+- [ADR-386: Compact shaped document status icons](ADR-386-document-status-icon-shapes.md)

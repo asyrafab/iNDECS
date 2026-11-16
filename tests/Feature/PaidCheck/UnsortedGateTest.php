@@ -22,12 +22,12 @@ use Illuminate\Validation\ValidationException;
 use Tests\Support\FakeAirsDocumentProcessor;
 use Tests\TestCase;
 
-/** Upload-first part 1, Task 5: nothing in "Belum diisih" may be silently left out of payment or the amendment. */
+/** Upload-first part 1, Task 5: nothing in "Fail belum dipadankan" may be silently left out of payment or the amendment. */
 final class UnsortedGateTest extends TestCase
 {
     use BuildsLjupJourney, RefreshDatabase;
 
-    private const TRAY = 'Isih atau buang fail dalam "Belum diisih" sebelum membayar.';
+    private const TRAY = 'Padankan atau buang fail yang belum dipadankan sebelum membayar.';
 
     protected function setUp(): void
     {

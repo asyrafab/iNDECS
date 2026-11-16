@@ -55,7 +55,7 @@ final class GreenCamourSortTest extends TestCase
         $documents = ApplicantDraftDocument::query()->where('draft_id', $draft->id)->orderBy('original_name')->get();
         fwrite(STDERR, PHP_EOL.'Green Camour sorting:'.PHP_EOL);
         foreach ($documents as $document) {
-            fwrite(STDERR, sprintf('  %-36s -> %-26s score=%s chars=%s%s', $document->original_name, $document->item_code ?? '(Belum diisih)',
+            fwrite(STDERR, sprintf('  %-36s -> %-26s score=%s chars=%s%s', $document->original_name, $document->item_code ?? '(belum dipadankan)',
                 $document->sort_score ?? '-', $document->text_chars ?? '-', PHP_EOL));
         }
         $placed = fn (string $code) => $documents->where('item_code', $code)->pluck('original_name')->all();

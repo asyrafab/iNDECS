@@ -54,7 +54,8 @@ final class PrecheckDraftDocument implements ShouldQueue
     public function handle(TextExtractor $extractor): void
     {
         $document = ApplicantDraftDocument::query()->find($this->documentId);
-        if ($document === null || $document->precheck_status !== 'pending') {
+        if ($document === null || $document->precheck_status !== 'pending'
+            || ! ApplicantDraft::query()->whereKey($document->draft_id)->exists()) {
             return;
         }
         if ($document->item_code !== null) {

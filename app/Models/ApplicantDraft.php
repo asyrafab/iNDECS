@@ -10,11 +10,14 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable(['application_type_id', 'title', 'site_address', 'notes', 'work_type', 'building_category', 'storeys', 'floor_area', 'site_conditions', 'lighting_types'])]
 class ApplicantDraft extends Model
 {
     use HasUlids;
+    use SoftDeletes;
 
     /** Project particulars that drive the checklist rules (ADR-362/363). */
     public const PARTICULARS = ['work_type', 'building_category', 'storeys', 'floor_area', 'site_conditions'];
@@ -36,8 +39,16 @@ class ApplicantDraft extends Model
         return $this->hasMany(ApplicantDraftDocument::class, 'draft_id');
     }
 
+    /** Preparation ends once payment or the paid review journey starts. */
+    public function removable(): bool
+    {
+        return $this->exists && ! $this->trashed()
+            && ! $this->journey()->exists()
+            && ! CheckPayment::query()->where('draft_id', $this->id)->whereIn('status', ['pending', 'paid'])->exists();
+    }
+
     /** The paid AIRS check journey, once the applicant has paid. */
-    public function journey(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function journey(): HasOne
     {
         return $this->hasOne(PaidCheckJourney::class, 'draft_id');
     }

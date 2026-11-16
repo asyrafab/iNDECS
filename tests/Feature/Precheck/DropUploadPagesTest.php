@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
-/** Upload-first part 1, Task 4: drop zone, folder pick and the "Belum diisih" tray. */
+/** Upload-first part 1, Task 4: drop zone, folder pick and the "Fail belum dipadankan" tray. */
 final class DropUploadPagesTest extends TestCase
 {
     use BuildsPrecheck, RefreshDatabase;
@@ -112,10 +112,20 @@ final class DropUploadPagesTest extends TestCase
         $file = $this->tray($draft, 'imbasan-001.pdf');
 
         $this->actingAs($owner)->get(route('portal.drafts.edit', $draft))->assertOk()
-            ->assertSee('Belum diisih')->assertSee('imbasan-001.pdf')->assertSee('Geran tanah')
+            ->assertSee('Fail belum dipadankan')->assertDontSee('Belum diisih')->assertSee('imbasan-001.pdf')->assertSee('Geran tanah')
+            ->assertSeeInOrder(['<optgroup label="Wajib">', 'Geran tanah</option>', '<optgroup label="Pilihan">', 'Gambar tapak</option>'], false)
             ->assertSee(route('portal.drafts.documents.assign', [$draft, $file]), false)
             ->assertSee(route('portal.drafts.documents.remove', [$draft, $file]), false)
             ->assertDontSee('Pelan struktur</option>', false);
+    }
+
+    public function test_checklist_is_split_into_wajib_and_pilihan(): void
+    {
+        $owner = $this->applicant();
+        $draft = $this->telDraft($owner);
+
+        $this->actingAs($owner)->get(route('portal.drafts.edit', $draft))->assertOk()
+            ->assertSeeInOrder(['precheck-group-title">Wajib</h3>', 'Geran tanah', 'Pelan lantai', 'precheck-group-title">Pilihan</h3>', 'Gambar tapak'], false);
     }
 
     public function test_pending_tray_file_keeps_the_checklist_polling(): void
@@ -134,7 +144,7 @@ final class DropUploadPagesTest extends TestCase
         $this->tray($draft, 'imbasan.pdf', ['ocr_unavailable' => true]);
 
         $this->actingAs($owner)->get(route('portal.drafts.edit', $draft))->assertOk()
-            ->assertSee('Bacaan automatik tidak tersedia untuk sebahagian fail — sila isih fail tersebut sendiri.');
+            ->assertSee('Bacaan automatik tidak tersedia untuk sebahagian fail — sila padankan fail tersebut sendiri.');
     }
 
     public function test_assign_places_file_and_rejects_oversize(): void

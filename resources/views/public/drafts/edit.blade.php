@@ -42,6 +42,7 @@
         @endif
     </form>
     @unless ($draft->exists)</details>@endunless
+    @include('public.drafts.partials.remove')
     @if ($draft->exists)
         @if ($checkResult ?? null)
             @include('public.drafts.partials.check-result', ['result' => $checkResult])

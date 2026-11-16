@@ -3,7 +3,7 @@
 @else
     <ul class="portal-draft-list">
         @foreach($drafts as $draft)
-            <li><div><span class="status-badge status-pending">Draf · {{ $draft->application_type_id }}</span><h3><a href="{{ route('portal.drafts.edit', $draft) }}">{{ $draft->title }}</a></h3><p>{{ $draft->applicationType->name }}</p><small>Dikemas kini <time datetime="{{ $draft->updated_at->toIso8601String() }}">{{ $draft->updated_at->timezone('Asia/Kuala_Lumpur')->format('d/m/Y H:i') }}</time> · Versi {{ $draft->version }}</small></div><a class="button button-secondary button-small" href="{{ route('portal.drafts.edit', $draft) }}" aria-label="Sambung draf {{ $draft->title }}">Sambung<x-icon name="arrow-right" /></a></li>
+            <li><div><span class="status-badge status-pending">Draf · {{ $draft->application_type_id }}</span><h3><a href="{{ route('portal.drafts.edit', $draft) }}">{{ $draft->title }}</a></h3><p>{{ $draft->applicationType->name }}</p><small>Dikemas kini <time datetime="{{ $draft->updated_at->toIso8601String() }}">{{ $draft->updated_at->timezone('Asia/Kuala_Lumpur')->format('d/m/Y H:i') }}</time> · Versi {{ $draft->version }}</small></div><a class="button button-secondary button-small" href="{{ route('portal.drafts.edit', $draft) }}" aria-label="Sambung draf {{ $draft->title }}">Sambung<x-icon name="arrow-right" /></a>@include('public.drafts.partials.remove')</li>
         @endforeach
     </ul>
 @endif

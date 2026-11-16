@@ -106,7 +106,7 @@ final class PaidCheckJourneyTest extends TestCase
             ['code' => 'pelan_lampu', 'name' => 'Pelan Lampu Jalan', 'is_required' => true],
             ['code' => 'laporan_fotometrik', 'name' => 'Laporan Fotometrik', 'is_required' => true],
         ]], User::query()->where('role', 'senior_engineering_officer')->firstOrFail());
-        // Upload-first: the stale file is shown in "Belum diisih" and payment waits until the applicant removes it.
+        // Upload-first: the stale file is shown in "Fail belum dipadankan" and payment waits until the applicant removes it.
         try {
             $this->pay($draft);
             $this->fail('Payment should wait for the unsorted file.');

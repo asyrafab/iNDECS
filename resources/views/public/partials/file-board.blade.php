@@ -21,6 +21,7 @@
                         @isset($board['progress'][$draft->id])<span class="status-badge {{ $board['progress'][$draft->id]['ready'] === $board['progress'][$draft->id]['total'] && $board['progress'][$draft->id]['total'] > 0 ? 'status-compliant' : 'status-info' }}">Dokumen {{ $board['progress'][$draft->id]['ready'] }}/{{ $board['progress'][$draft->id]['total'] }}</span>@endisset
                         <span class="status-badge status-pending">Draf · {{ $draft->application_type_id }}</span>
                         <a class="button button-secondary button-small" href="{{ route('portal.drafts.edit', $draft) }}" aria-label="Sambung {{ $draft->title }}">Sambung<x-icon name="arrow-right" /></a>
+                        @include('public.drafts.partials.remove')
                     </li>
                 @endforeach
             </ul>

@@ -128,7 +128,7 @@ final class DraftDocumentService
         $draft = $document->draft;
         $this->authorize($owner, $draft);
         if (! collect($this->checklist->for($draft)['unsorted'])->contains(fn (ApplicantDraftDocument $tray) => $tray->id === $document->id)) {
-            throw ValidationException::withMessages(['file' => 'Hanya fail dalam "Belum diisih" boleh dibuang. Gantikan dokumen senarai semak dengan muat naik semula.']);
+            throw ValidationException::withMessages(['file' => 'Hanya fail yang belum dipadankan boleh dibuang. Gantikan dokumen senarai semak dengan muat naik semula.']);
         }
         $path = $document->path;
         $staleItem = $document->item_code;

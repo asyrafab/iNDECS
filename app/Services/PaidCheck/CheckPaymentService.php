@@ -69,7 +69,7 @@ final class CheckPaymentService
      * A draft is ready for a paid (or waived) check: enabled AIRS module, lighting types declared, at least
      * one uploaded document and none still being prechecked or unreadable. Returns the draft checklist.
      */
-    public const UNSORTED = 'Isih atau buang fail dalam "Belum diisih" sebelum membayar.';
+    public const UNSORTED = 'Padankan atau buang fail yang belum dipadankan sebelum membayar.';
 
     public function assertReadyForCheck(ApplicantDraft $draft): array
     {

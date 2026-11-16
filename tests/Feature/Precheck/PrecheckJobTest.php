@@ -11,6 +11,7 @@ use App\Services\Precheck\DraftChecklist;
 use App\Services\Precheck\ExtractedText;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Tests\TestCase;
 
 class PrecheckJobTest extends TestCase
@@ -34,6 +35,18 @@ class PrecheckJobTest extends TestCase
         $this->assertSame(['HAKMILIK', 'NO. LOT'], $doc->matched_keywords);
         $this->assertSame(PrecheckLabel::Attached, $this->label('geran'));
         $this->assertFalse($doc->ocr_used);
+    }
+
+    public function test_removed_draft_is_not_processed_by_queued_precheck(): void
+    {
+        $doc = $this->draftDocument($this->draft, 'geran', ['precheck_status' => 'pending']);
+        $this->draft->delete();
+        $extractor = $this->mock(TextExtractor::class);
+        $extractor->shouldNotReceive('extract');
+
+        (new PrecheckDraftDocument($doc->id))->handle($extractor);
+
+        $this->assertSame('pending', $doc->fresh()->precheck_status);
     }
 
     public function test_no_keyword_match_gives_needs_confirmation(): void
@@ -72,7 +85,7 @@ class PrecheckJobTest extends TestCase
         $doc = $this->draftDocument($this->draft, 'geran', ['precheck_status' => 'pending', 'readable' => null]);
         $job = new PrecheckDraftDocument($doc->id);
         $this->assertNotInstanceOf(ShouldBeUnique::class, $job);
-        $overlap = collect($job->middleware())->first(fn ($m) => $m instanceof \Illuminate\Queue\Middleware\WithoutOverlapping);
+        $overlap = collect($job->middleware())->first(fn ($m) => $m instanceof WithoutOverlapping);
         $this->assertNotNull($overlap);
         $this->assertSame($this->draft->id, $overlap->key);
         $this->assertGreaterThan(1, $job->tries);

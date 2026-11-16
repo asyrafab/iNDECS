@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\DB;
 /**
  * The draft's required documents (published catalogue rules applied to its particulars)
  * with each item's free pre-check label (ADR-363). Unsorted uploads, and the current upload
- * of an item that no longer applies, are returned as the "Belum diisih" tray.
+ * of an item that no longer applies, are returned as the "Fail belum dipadankan" tray.
  */
 final class DraftChecklist
 {

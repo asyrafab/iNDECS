@@ -1532,6 +1532,36 @@ html[data-amira-entrance="pending"] [data-amira-entrance] .amira-counter-compose
 .catalogue-condition-groups legend { margin-bottom: var(--space-2); color: var(--color-text-muted); font-size: var(--font-size-xs); font-weight: var(--font-heading-weight); }
 /* Free pre-check checklist on the draft editor (ADR-363). */
 .precheck { margin-top: var(--space-6); }
+/* ADR-385: a raised document window; each row opens details and actions on demand. */
+.precheck-window { box-shadow: var(--shadow-raised); }
+.precheck-legend { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-3) var(--space-5); margin: var(--space-4) 0; padding: 0; list-style: none; color: var(--color-text-muted); font-size: var(--font-size-xs); }
+.precheck-legend li { display: flex; align-items: center; gap: var(--space-2); }
+.precheck-status-icon { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: var(--size-document-status); height: var(--size-document-status); color: var(--color-document-status-symbol); vertical-align: middle; }
+.precheck-status-icon .icon { width: var(--size-document-status-glyph); height: var(--size-document-status-glyph); }
+.precheck-status-attached { border-radius: var(--radius-full); background: var(--color-document-attached); }
+.precheck-status-missing { border-radius: var(--radius-full); background: var(--color-document-missing); }
+.precheck-status-reading { border-radius: var(--radius-sm); background: var(--color-document-reading-bg); }
+.precheck-status-attention .icon { width: var(--size-document-status); height: var(--size-document-status); fill: var(--color-document-attention); }
+.precheck-reading-dots { display: flex; flex-direction: column; gap: var(--space-document-reading-dots); }
+.precheck-reading-dots i { width: var(--size-document-reading-dot); height: var(--size-document-reading-dot); border-radius: var(--radius-full); background: var(--color-document-reading-dot); }
+.precheck-reading-dots i:nth-child(2) { animation: document-read-second var(--duration-document-reading) steps(1, end) infinite; }
+.precheck-reading-dots i:nth-child(3) { animation: document-read-third var(--duration-document-reading) steps(1, end) infinite; }
+@keyframes document-read-second { 0%, 100% { opacity: 0; } 33.333% { opacity: 1; } }
+@keyframes document-read-third { 0%, 100% { opacity: 0; } 66.667% { opacity: 1; } }
+.precheck-list.precheck-compact-list { gap: var(--space-2); }
+.precheck-group-title { margin: var(--space-4) 0 var(--space-2); font-size: var(--font-size-sm); text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-text-muted); }
+.precheck-document { display: flex; align-items: center; gap: var(--space-3); min-height: var(--control-height); padding: var(--space-3); border: var(--rule-hair) solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); color: var(--color-text); text-decoration: none; }
+.precheck-document:hover { background: var(--color-bg-soft); border-color: var(--color-accent-300); }
+.precheck-document:active { background: var(--color-accent-200); }
+.precheck-document > span:not(.precheck-status-icon) { flex: 1; min-width: 0; overflow-wrap: anywhere; font-weight: var(--font-heading-weight); }
+.precheck-document-arrow { flex-shrink: 0; color: var(--color-text-muted); }
+.precheck-dialog h2 { overflow-wrap: anywhere; }
+.precheck-detail-meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); margin-bottom: var(--space-5); color: var(--color-text-muted); font-size: var(--font-size-sm); }
+.precheck-dialog .precheck-guidance, .precheck-dialog .precheck-file { margin-bottom: var(--space-5); }
+.precheck-dialog .precheck-actions { margin-top: var(--space-6); }
+.precheck-dialog .precheck-upload { display: grid; width: 100%; gap: var(--space-4); }
+.precheck-dialog .precheck-upload .button { justify-self: start; }
+.precheck-contract { margin-top: var(--space-5); }
 .precheck-note { margin: 0 0 var(--space-4); color: var(--color-text-muted); font-size: var(--font-size-sm); }
 .precheck-desktop-note { display: none; }
 .precheck-list { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
@@ -1644,7 +1674,7 @@ html[data-amira-entrance="pending"] [data-amira-entrance] .amira-counter-compose
   .department-preview-grid { grid-template-columns: minmax(0, 1fr); }
 }
 
-/* Upload-first drafts: drop zone and the "Belum diisih" tray. */
+/* Upload-first drafts: drop zone and the "Fail belum dipadankan" tray. */
 .drop-zone { display: grid; gap: var(--space-4); }
 .drop-target { display: grid; justify-items: center; gap: var(--space-2); padding: var(--space-8) var(--space-4); text-align: center; border: 2px dashed var(--color-border-soft); border-radius: var(--radius-md); background: var(--color-bg-soft); }
 .drop-target.is-dragover { border-color: var(--color-action); }

@@ -71,6 +71,16 @@
   --color-backdrop: #102a4370;
   --status-compliant: #2f8f63; --status-attention: #d89b2b; --status-critical: #c94b4b;
   --status-info: #3f7cac; --status-ai: #7a68c9; --status-pending: #8a99a8;
+  /* Owner-requested filled document status icons (ADR-386). */
+  --size-document-status: 20px; --size-document-status-glyph: 12px;
+  --size-document-reading-dot: 3px; --space-document-reading-dots: 2px;
+  --color-document-attached: #1e6546;
+  --color-document-missing: var(--status-critical);
+  --color-document-attention: var(--status-attention);
+  --color-document-status-symbol: var(--color-on-accent);
+  --color-document-reading-bg: var(--color-neutral-200);
+  --color-document-reading-dot: var(--color-neutral-700);
+  --duration-document-reading: 1440ms;
   --font-heading: 'Google Sans', 'Segoe UI', system-ui, sans-serif;
   --font-body: 'Google Sans', 'Segoe UI', system-ui, sans-serif;
   --font-handwriting: 'Caveat', cursive;

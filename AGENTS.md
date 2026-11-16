@@ -342,6 +342,25 @@ AMIRA backend ownership was moved to C:\Users\Asyra\Documents\AMIRA under ADR-35
 
 ## Public portal preparation (2026-11-04)
 
+ADR-385 presents the upload checklist as a raised `.precheck-window`, using
+`.precheck-compact-list`, `.precheck-document`, `.precheck-status-icon` and
+`.precheck-legend`. Names and status icons open native `.precheck-dialog` windows
+for descriptions, files and actions. Keep warning states distinct, dialog focus
+and selected files intact during polling, and dynamic dialog registration in
+`portal.js`. Use the same presentation for unsorted uploads.
+
+ADR-386 refines the status icons to small filled green/red circles, a grey
+reading square with three vertically accumulating dots, and an orange attention
+triangle. `.precheck-legend` sits below the lists at the right. Sizing, colours
+and reading timing use `--*-document-*` tokens; reduced motion shows three static
+dots. Keep precise warning explanations in tooltips and document dialogs.
+
+ADR-384 allows public owners to remove preparation drafts through
+`portal.drafts.destroy`. Use the shared `public.drafts.partials.remove` form on
+the board, list and editor. Removal soft-deletes the draft and records an audit
+event, retaining revisions and files. Pending/paid payments and any paid-check
+journey block removal; check eligibility and version under the draft row lock.
+
 Public preparation drafts are implemented under ADR-358; see the
 [portal runbook](docs/runbooks/public-portal.md). The authenticated `/portal`
 workspace uses `layouts/portal.blade.php`, a dashboard, private drafts and

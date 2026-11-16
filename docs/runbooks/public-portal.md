@@ -22,6 +22,16 @@ is seeded by this increment.
   `AmiraBubble.setMood(document.querySelector('[data-amira-bubble]'), 'think')`
   and `AmiraBubble.setSpeaking(el, true)`.
 - Draf saya: paginated private drafts, creation and editing with manual saves.
+- Document uploads (ADR-385): compact name-and-status cards in a raised checklist
+  window. Select a card for its description, attached file and upload actions;
+  unsorted files open their sorting/removal controls the same way. Icons include
+  accessible labels and a legend. Escape/backdrop/close returns to the list;
+  polling preserves open dialogs and selected files.
+- Buang draf (ADR-384): owner-only removal from Fail saya, the draft list and
+  editor, with confirmation. Apply migration
+  `2026_11_16_000700_add_soft_deletes_to_applicant_drafts.php` before deploying.
+  Removed drafts disappear from the portal and quota; revisions and files remain
+  for audit. Pending/paid checks and all paid review journeys prevent removal.
 - Common fields: active PKM/Bangunan type, title, optional site address and notes.
 - Akaun saya: existing email verification, guest claiming and Google linking.
 - Simple public header and gear menu for account, drafts, helpdesk availability,
