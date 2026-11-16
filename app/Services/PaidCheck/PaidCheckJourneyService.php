@@ -261,23 +261,42 @@ final class PaidCheckJourneyService
     private function reviseDocuments(ApplicantDraft $draft, Application $application): array
     {
         $changes = ['revised' => [], 'added' => [], 'withdrawn' => []];
-        $current = $application->currentDocuments()->get()->keyBy('document_type_id');
+        $current = $application->currentDocuments()->get()->groupBy('document_type_id');
         $kept = [];
         foreach ($this->checklists->for($draft)['items'] as $item) {
+            if ($item['documents'] === []) {
+                continue;
+            }
+            $existing = $current->get($item['documents'][0]->document_type_id, collect());
+            if ($item['max_files'] > 1) {
+                // A multi-file item is a set: unchanged files stay, new files are added, removed files are withdrawn below.
+                foreach ($item['documents'] as $upload) {
+                    $same = $existing->first(fn (ApplicationDocument $document) => $document->checksum_sha256 === $upload->sha256 && ! in_array($document->id, $kept, true));
+                    if ($same !== null) {
+                        $kept[] = $same->id;
+
+                        continue;
+                    }
+                    $copy = $this->copyUpload($draft, $application, $upload, null);
+                    $kept[] = $copy->id;
+                    $changes['added'][] = $copy->original_name;
+                }
+
+                continue;
+            }
             $upload = $item['document'];
-            if ($upload === null) {
+            $previous = $existing->first();
+            if ($previous !== null && $previous->checksum_sha256 === $upload->sha256) {
+                $kept[] = $previous->id;
+
                 continue;
             }
-            $existing = $current->get($upload->document_type_id);
-            $kept[] = $upload->document_type_id;
-            if ($existing !== null && $existing->checksum_sha256 === $upload->sha256) {
-                continue;
-            }
-            $copy = $this->copyUpload($draft, $application, $upload, $existing);
-            $changes[$existing === null ? 'added' : 'revised'][] = $copy->original_name;
+            $copy = $this->copyUpload($draft, $application, $upload, $previous);
+            $kept[] = $copy->id;
+            $changes[$previous === null ? 'added' : 'revised'][] = $copy->original_name;
         }
-        foreach ($current as $typeId => $document) {
-            if (! in_array($typeId, $kept, true)) {
+        foreach ($current->flatten() as $document) {
+            if (! in_array($document->id, $kept, true) && $document->fresh()->is_current) {
                 $document->update(['is_current' => false]);
                 $changes['withdrawn'][] = $document->original_name;
             }
@@ -355,8 +374,8 @@ final class PaidCheckJourneyService
     private function copyDocuments(ApplicantDraft $draft, Application $application): void
     {
         foreach ($this->checklists->for($draft)['items'] as $item) {
-            if ($item['document'] !== null) {
-                $this->copyUpload($draft, $application, $item['document'], null);
+            foreach ($item['documents'] as $upload) {
+                $this->copyUpload($draft, $application, $upload, null);
             }
         }
     }
