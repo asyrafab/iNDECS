@@ -40,9 +40,14 @@ final class DraftDocumentService
         $sniffed = DraftFileRules::assertFits($file, $rules);
 
         $sha = hash_file('sha256', $file->getRealPath());
-        $current = ApplicantDraftDocument::query()->where('draft_id', $draft->id)->where('item_code', $itemCode)->orderByDesc('sequence')->first();
-        if ($current !== null && hash_equals($current->sha256, $sha)) {
-            return $current;
+        if ($item['max_files'] > 1) {
+            // A multi-file item gains a file; the same bytes twice, or a full item, are refused.
+            if (collect($item['documents'])->contains(fn (ApplicantDraftDocument $current) => hash_equals($current->sha256, $sha))) {
+                throw ValidationException::withMessages(['file' => 'Fail yang sama telah dimuat naik.']);
+            }
+            self::assertRoom($item);
+        } elseif ($item['document'] !== null && hash_equals($item['document']->sha256, $sha)) {
+            return $item['document'];
         }
         if (ApplicantDraftDocument::query()->where('draft_id', $draft->id)->count() >= (int) config('kaunter.precheck.max_documents_per_draft', 60)) {
             throw ValidationException::withMessages(['file' => 'Had muat naik bagi draf ini telah dicapai.']);
@@ -80,18 +85,27 @@ final class DraftDocumentService
         return $document;
     }
 
+    /** @param array{max_files: int, documents: list<ApplicantDraftDocument>} $item */
+    private static function assertRoom(array $item): void
+    {
+        if (count($item['documents']) >= $item['max_files']) {
+            throw ValidationException::withMessages(['file' => "Dokumen ini sudah mempunyai {$item['max_files']} fail. Buang satu fail sebelum menambah."]);
+        }
+    }
+
     public function confirm(User $owner, ApplicantDraftDocument $document): void
     {
         $draft = $document->draft;
         $this->authorize($owner, $draft);
         $item = collect($this->checklist->for($draft)['items'])->firstWhere('code', $document->item_code);
-        if ($item === null || $item['document']?->id !== $document->id) {
+        if ($item === null || ! collect($item['documents'])->contains(fn (ApplicantDraftDocument $current) => $current->id === $document->id)) {
             throw ValidationException::withMessages(['file' => 'Dokumen ini bukan versi semasa.']);
         }
-        if ($item['label'] === PrecheckLabel::Unreadable) {
+        $label = DraftChecklist::label($document, $item['keywords']);
+        if ($label === PrecheckLabel::Unreadable) {
             throw ValidationException::withMessages(['file' => 'Fail tidak dapat dibaca. Sila muat naik semula.']);
         }
-        if ($item['label'] !== PrecheckLabel::NeedsConfirmation) {
+        if ($label !== PrecheckLabel::NeedsConfirmation) {
             throw ValidationException::withMessages(['file' => 'Dokumen ini tidak memerlukan pengesahan.']);
         }
         $document->forceFill(['confirmed_at' => now()])->save();
@@ -112,8 +126,12 @@ final class DraftDocumentService
         if ($document->rejected_reason !== null) {
             throw ValidationException::withMessages(['file' => 'Fail ini ditolak oleh imbasan keselamatan dan perlu dibuang.']);
         }
-        if (collect($checklist['items'])->firstWhere('code', $itemCode) === null) {
+        $item = collect($checklist['items'])->firstWhere('code', $itemCode);
+        if ($item === null) {
             throw ValidationException::withMessages(['file' => 'Dokumen ini tidak diperlukan untuk projek anda.']);
+        }
+        if ($item['max_files'] > 1) {
+            self::assertRoom($item);
         }
         DraftFileRules::assertFits(Storage::disk('local')->path($document->path), DraftFileRules::forItem($draft, $itemCode));
         $staleItem = $document->item_code;
@@ -122,12 +140,16 @@ final class DraftDocumentService
         $this->clearStaleHistory($draft, $staleItem, $checklist);
     }
 
-    /** Removes a tray file (never a file placed in the checklist). */
+    /** Removes a tray file, or one file of a multi-file item (a single-file item's file is replaced by re-uploading). */
     public function remove(User $owner, ApplicantDraftDocument $document): void
     {
         $draft = $document->draft;
         $this->authorize($owner, $draft);
-        if (! collect($this->checklist->for($draft)['unsorted'])->contains(fn (ApplicantDraftDocument $tray) => $tray->id === $document->id)) {
+        $checklist = $this->checklist->for($draft);
+        $inTray = collect($checklist['unsorted'])->contains(fn (ApplicantDraftDocument $tray) => $tray->id === $document->id);
+        $inMultiItem = collect($checklist['items'])->contains(fn (array $item) => $item['max_files'] > 1
+            && collect($item['documents'])->contains(fn (ApplicantDraftDocument $current) => $current->id === $document->id));
+        if (! $inTray && ! $inMultiItem) {
             throw ValidationException::withMessages(['file' => 'Hanya fail yang belum dipadankan boleh dibuang. Gantikan dokumen senarai semak dengan muat naik semula.']);
         }
         $path = $document->path;

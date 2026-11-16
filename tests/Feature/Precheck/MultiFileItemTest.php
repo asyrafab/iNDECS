@@ -125,6 +125,121 @@ final class MultiFileItemTest extends TestCase
         $this->assertSame(PrecheckLabel::Attached, DraftChecklist::label($older->fresh(), []));
     }
 
+    private function pdf(string $marker): \Illuminate\Http\UploadedFile
+    {
+        return \Illuminate\Http\UploadedFile::fake()->createWithContent($marker.'.pdf', "%PDF-1.4\n% {$marker}\n%%EOF\n");
+    }
+
+    private function upload(ApplicantDraft $draft, string $code, string $marker): \App\Models\ApplicantDraftDocument
+    {
+        return app(\App\Services\Precheck\DraftDocumentService::class)->upload(User::query()->findOrFail($draft->user_id), $draft, $code, $this->pdf($marker));
+    }
+
+    private function trayFile(ApplicantDraft $draft, string $marker): \App\Models\ApplicantDraftDocument
+    {
+        $path = "drafts/{$draft->id}/inbox/{$marker}.pdf";
+        Storage::disk('local')->put($path, "%PDF-1.4\n% {$marker}\n%%EOF\n");
+
+        return $this->draftDocument($draft, 'x', ['item_code' => null, 'document_type_id' => null, 'sequence' => 0,
+            'original_name' => $marker.'.pdf', 'path' => $path, 'sha256' => hash('sha256', $marker)]);
+    }
+
+    private function refused(callable $action, string $message): void
+    {
+        try {
+            $action();
+            $this->fail('Expected a refusal.');
+        } catch (\Illuminate\Validation\ValidationException $exception) {
+            $this->assertSame([$message], $exception->errors()['file'] ?? null);
+        }
+    }
+
+    public function test_upload_adds_to_multi_item_until_full(): void
+    {
+        \Illuminate\Support\Facades\Queue::fake();
+        $draft = $this->telDraft($this->applicant());
+        $files = [$this->upload($draft, 'pelan_lantai', 'a'), $this->upload($draft, 'pelan_lantai', 'b'), $this->upload($draft, 'pelan_lantai', 'c')];
+
+        $this->assertSame($this->ids($files), $this->ids($this->item($draft, 'pelan_lantai')['documents']));
+        $this->refused(fn () => $this->upload($draft, 'pelan_lantai', 'd'), 'Dokumen ini sudah mempunyai 3 fail. Buang satu fail sebelum menambah.');
+        // A single-file item still replaces.
+        $this->upload($draft, 'geran', 'g1');
+        $this->upload($draft, 'geran', 'g2');
+        $this->assertCount(1, $this->item($draft, 'geran')['documents']);
+    }
+
+    public function test_duplicate_bytes_refused_in_multi_item(): void
+    {
+        \Illuminate\Support\Facades\Queue::fake();
+        $draft = $this->telDraft($this->applicant());
+        $this->upload($draft, 'pelan_lantai', 'a');
+
+        $this->refused(fn () => $this->upload($draft, 'pelan_lantai', 'a'), 'Fail yang sama telah dimuat naik.');
+    }
+
+    public function test_autoplace_fills_multi_item_without_displacing(): void
+    {
+        $draft = $this->telDraft($this->applicant());
+        $placer = app(\App\Services\Precheck\DraftDocumentPlacer::class);
+        $ranked = [['code' => 'pelan_lantai', 'score' => 6, 'name_score' => 1]];
+        $placed = collect(['a', 'b', 'c'])->map(fn ($marker) => $this->trayFile($draft, $marker));
+        foreach ($placed as $file) {
+            $this->assertTrue($placer->autoPlace($file, $ranked));
+        }
+        $fourth = $this->trayFile($draft, 'd');
+
+        $this->assertFalse($placer->autoPlace($fourth, [['code' => 'pelan_lantai', 'score' => 9, 'name_score' => 1]]));
+        $this->assertSame($placed->pluck('id')->all(), $this->ids($this->item($draft, 'pelan_lantai')['documents']));
+        $this->assertNull($fourth->fresh()->item_code);
+    }
+
+    public function test_assign_into_full_item_refused(): void
+    {
+        \Illuminate\Support\Facades\Queue::fake();
+        $draft = $this->telDraft($this->applicant());
+        foreach (['a', 'b', 'c'] as $marker) {
+            $this->upload($draft, 'pelan_lantai', $marker);
+        }
+        $loose = $this->trayFile($draft, 'd');
+
+        $this->refused(fn () => app(\App\Services\Precheck\DraftDocumentService::class)->assign(User::query()->findOrFail($draft->user_id), $loose, 'pelan_lantai'),
+            'Dokumen ini sudah mempunyai 3 fail. Buang satu fail sebelum menambah.');
+    }
+
+    public function test_placed_file_in_multi_item_can_be_removed(): void
+    {
+        \Illuminate\Support\Facades\Queue::fake();
+        $draft = $this->telDraft($this->applicant());
+        $keep = $this->upload($draft, 'pelan_lantai', 'a');
+        $drop = $this->upload($draft, 'pelan_lantai', 'b');
+        $single = $this->upload($draft, 'geran', 'g');
+        $service = app(\App\Services\Precheck\DraftDocumentService::class);
+        $owner = User::query()->findOrFail($draft->user_id);
+
+        $service->remove($owner, $drop);
+
+        $this->assertSame([$keep->id], $this->ids($this->item($draft, 'pelan_lantai')['documents']));
+        $this->assertFalse(Storage::disk('local')->exists($drop->path));
+        // A single-file item's file is still replaced by re-uploading, not removed.
+        $this->refused(fn () => $service->remove($owner, $single),
+            'Hanya fail yang belum dipadankan boleh dibuang. Gantikan dokumen senarai semak dengan muat naik semula.');
+    }
+
+    public function test_confirm_each_file_in_multi_item(): void
+    {
+        $draft = $this->telDraft($this->applicant());
+        $first = $this->draftDocument($draft, 'pelan_lantai', ['text_chars' => 5]);
+        $second = $this->draftDocument($draft, 'pelan_lantai', ['text_chars' => 5]);
+        $service = app(\App\Services\Precheck\DraftDocumentService::class);
+        $owner = User::query()->findOrFail($draft->user_id);
+
+        $service->confirm($owner, $first);
+        $this->assertSame(PrecheckLabel::NeedsConfirmation, $this->item($draft, 'pelan_lantai')['label']);
+        $service->confirm($owner, $second);
+
+        $this->assertSame(PrecheckLabel::Attached, $this->item($draft, 'pelan_lantai')['label']);
+    }
+
     public function test_every_ljup_item_holds_five(): void
     {
         $catalogue = json_decode((string) file_get_contents(database_path('catalogues/ljup.v1.json')), true);

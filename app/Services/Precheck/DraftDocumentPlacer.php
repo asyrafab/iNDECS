@@ -33,15 +33,26 @@ final class DraftDocumentPlacer
             if ($document->item_code !== null) {
                 return false;
             }
-            $current = $this->current($draft, $winner['code']);
-            // Never displace a file the applicant placed or confirmed.
-            if ($current !== null && ($current->sort_source !== 'auto' || $current->confirmed_at !== null || (int) $current->sort_score >= $winner['score'])) {
-                return false;
-            }
             try {
                 $rules = DraftFileRules::forItem($draft, $winner['code']);
                 DraftFileRules::assertFits(\Illuminate\Support\Facades\Storage::disk('local')->path($document->path), $rules);
             } catch (ValidationException) {
+                return false;
+            }
+            $maxFiles = DraftChecklist::maxFilesForType((int) $rules['document_type']->id);
+            if ($maxFiles > 1) {
+                // A multi-file item gains the file while it has room; nothing is ever pushed out of it.
+                $rows = ApplicantDraftDocument::query()->where('draft_id', $draft->id)->where('item_code', $winner['code'])->get();
+                if (count(DraftChecklist::current($rows, $maxFiles)) >= $maxFiles) {
+                    return false;
+                }
+                $this->move($draft, $document, $winner['code'], (int) $rules['document_type']->id, 'auto', $winner['score']);
+
+                return true;
+            }
+            $current = $this->current($draft, $winner['code']);
+            // Never displace a file the applicant placed or confirmed.
+            if ($current !== null && ($current->sort_source !== 'auto' || $current->confirmed_at !== null || (int) $current->sort_score >= $winner['score'])) {
                 return false;
             }
             if ($current !== null) {
