@@ -31,7 +31,7 @@ class ApplicantDraftDocument extends Model
     {
         return [
             'sequence' => 'integer', 'size_bytes' => 'integer', 'readable' => 'boolean', 'text_chars' => 'integer',
-            'matched_keywords' => 'array', 'ocr_used' => 'boolean', 'ocr_unavailable' => 'boolean', 'confirmed_at' => 'datetime',
+            'matched_keywords' => 'array', 'sort_score' => 'integer', 'ocr_used' => 'boolean', 'ocr_unavailable' => 'boolean', 'confirmed_at' => 'datetime',
         ];
     }
 }

@@ -62,6 +62,6 @@ class ApplicantDraft extends Model
 
     protected function casts(): array
     {
-        return ['version' => 'integer', 'storeys' => 'integer', 'floor_area' => 'float', 'site_conditions' => 'array', 'lighting_types' => 'array'];
+        return ['version' => 'integer', 'title_provisional' => 'boolean', 'storeys' => 'integer', 'floor_area' => 'float', 'site_conditions' => 'array', 'lighting_types' => 'array'];
     }
 }

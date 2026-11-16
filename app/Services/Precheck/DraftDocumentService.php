@@ -25,8 +25,6 @@ use Throwable;
  */
 final class DraftDocumentService
 {
-    private const MIMES = ['pdf' => 'application/pdf', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png'];
-
     public function __construct(private readonly DraftChecklist $checklist, private readonly DocumentScanner $scanner) {}
 
     public function upload(User $owner, ApplicantDraft $draft, string $itemCode, UploadedFile $file): ApplicantDraftDocument
@@ -36,16 +34,10 @@ final class DraftDocumentService
         if ($item === null) {
             throw ValidationException::withMessages(['file' => 'Dokumen ini tidak diperlukan untuk projek anda.']);
         }
-        $type = DocumentType::query()->where('code', \App\Services\DocumentCatalogueService::documentTypeCode($draft->application_type_id, $itemCode))->firstOrFail();
-        $extensions = array_values(array_intersect($type->allowedExtensions(), array_keys(self::MIMES)));
-        $mimes = array_values(array_unique(array_map(fn ($ext) => self::MIMES[$ext], $extensions)));
-        Validator::make(['file' => $file], ['file' => ['required', 'file', 'mimes:'.implode(',', $extensions),
-            'mimetypes:'.implode(',', $mimes), 'max:'.(int) $type->max_file_size_kb]], [], ['file' => 'fail dokumen'])->validate();
-        // Read the bytes ourselves: a renamed file (e.g. HTML saved as .pdf) must never be stored.
-        $sniffed = (string) (new \finfo(FILEINFO_MIME_TYPE))->file($file->getRealPath());
-        if (! in_array($sniffed, $mimes, true)) {
-            throw ValidationException::withMessages(['file' => 'Kandungan fail dokumen tidak sepadan dengan jenis fail yang dibenarkan: '.implode(', ', $extensions).'.']);
-        }
+        $rules = DraftFileRules::forItem($draft, $itemCode);
+        $type = $rules['document_type'];
+        $extensions = $rules['extensions'];
+        $sniffed = DraftFileRules::assertFits($file, $rules);
 
         $sha = hash_file('sha256', $file->getRealPath());
         $current = ApplicantDraftDocument::query()->where('draft_id', $draft->id)->where('item_code', $itemCode)->orderByDesc('sequence')->first();
@@ -65,7 +57,8 @@ final class DraftDocumentService
         $document = DB::transaction(function () use ($owner, $draft, $itemCode, $file, $type, $sha, $extension, $sniffed): ApplicantDraftDocument {
             ApplicantDraft::query()->whereKey($draft->id)->lockForUpdate()->firstOrFail();
             $sequence = (int) ApplicantDraftDocument::query()->where('draft_id', $draft->id)->where('item_code', $itemCode)->max('sequence') + 1;
-            $path = "drafts/{$draft->id}/{$itemCode}/{$sequence}.{$extension}";
+            // A unique name: a file that left this item for the tray keeps its old path, so a sequence-based name could overwrite it.
+            $path = "drafts/{$draft->id}/{$itemCode}/{$sequence}-".\Illuminate\Support\Str::ulid().".{$extension}";
             if (! Storage::disk('local')->putFileAs(dirname($path), $file, basename($path))) {
                 throw ValidationException::withMessages(['file' => 'Fail tidak dapat disimpan. Cuba lagi.']);
             }
@@ -74,7 +67,7 @@ final class DraftDocumentService
                 $document->forceFill(['draft_id' => $draft->id, 'item_code' => $itemCode, 'document_type_id' => $type->id,
                     'sequence' => $sequence, 'original_name' => mb_substr($file->getClientOriginalName(), 0, 255), 'path' => $path,
                     'mime' => $sniffed, 'size_bytes' => $file->getSize(), 'sha256' => $sha,
-                    'uploaded_by' => $owner->id, 'precheck_status' => 'pending'])->save();
+                    'uploaded_by' => $owner->id, 'precheck_status' => 'pending', 'sort_source' => 'manual'])->save();
 
                 return $document;
             } catch (Throwable $e) {
