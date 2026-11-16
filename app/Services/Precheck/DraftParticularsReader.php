@@ -27,11 +27,14 @@ final class DraftParticularsReader
     {
         $text = mb_strtoupper(trim((string) preg_replace('/\s+/u', ' ', $text)));
         $found = [];
-        if (preg_match('/\bPERMOHONAN\b.*?\bBAGI (CADANGAN\b.+?)(?= DI ATAS\b| UNTUK TETUAN\b| PER ?:|$)/u', $text, $title) === 1) {
-            $found['title'] = self::tidy($title[1], self::TITLE_MAX);
-        }
-        if (preg_match('/\bDI ATAS (.+?)(?=\s*\.? UNTUK\b| PER ?:|$)/u', $text, $address) === 1) {
-            $found['site_address'] = self::tidy($address[1], self::ADDRESS_MAX);
+        // Only a complete subject counts: PERMOHONAN close before BAGI CADANGAN, and a real ending (never the end of the text).
+        // The address is read only from that subject's own "DI ATAS", so everyday "di atas" ("above") elsewhere is ignored.
+        $subject = '/\bPERMOHONAN\b.{0,200}?\bBAGI (CADANGAN\b.{1,1500}?)(?: DI ATAS (.{1,2500}?)(?:\s*\.?\s*UNTUK\b|\s*PER ?:)| UNTUK TETUAN\b| PER ?:)/u';
+        if (preg_match($subject, $text, $match) === 1) {
+            $found['title'] = self::tidy($match[1], self::TITLE_MAX);
+            if (($match[2] ?? '') !== '') {
+                $found['site_address'] = self::tidy($match[2], self::ADDRESS_MAX);
+            }
         }
         $types = array_keys(array_filter(self::LIGHTING, fn (string $pattern) => preg_match($pattern, $text) === 1));
         if (count($types) === 1) {

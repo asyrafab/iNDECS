@@ -18,8 +18,10 @@
         let payload;
         try { payload = JSON.parse(holder.dataset.prefill); } catch (e) { return; }
         const current = parseInt(form.elements.version.value, 10);
-        if (!payload || !(payload.version > current)) return;
-        const fields = payload.fields || {}, sources = payload.sources || {};
+        const fields = (payload && payload.fields) || {}, sources = (payload && payload.sources) || {};
+        // Take a newer version only when every change since this form's version was a fill;
+        // after a save in another tab the applicant must still get the conflict message.
+        if (!(payload.version > current) || !(current >= payload.base) || Object.keys(fields).length === 0) return;
         ['title', 'site_address'].forEach(field => {
             const box = form.elements[field];
             if (typeof fields[field] !== 'string' || !box) return;

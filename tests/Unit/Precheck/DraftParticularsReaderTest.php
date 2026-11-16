@@ -40,6 +40,26 @@ final class DraftParticularsReaderTest extends TestCase
         $this->assertSame('CADANGAN MEMBINA JALAN', $this->read('PERMOHONAN KELULUSAN BAGI CADANGAN MEMBINA JALAN Per: Permohonan')['title'] ?? null);
     }
 
+    public function test_declaration_using_di_atas_gives_no_address(): void
+    {
+        $this->assertSame([], $this->read('MAKLUMAT YANG DIBERIKAN DI ATAS ADALAH BENAR. TANDATANGAN PEMOHON'));
+    }
+
+    public function test_title_without_a_real_ending_gives_nothing(): void
+    {
+        $this->assertSame([], $this->read('PERMOHONAN KELULUSAN PELAN BAGI CADANGAN PEMBANGUNAN LAMPU JALAN SKALA 1:500 NOTA SEMUA UKURAN DALAM MM LEGEND'));
+    }
+
+    public function test_permohonan_far_from_bagi_gives_nothing(): void
+    {
+        $this->assertSame([], $this->read('PERMOHONAN '.str_repeat('SYARAT AM ', 40).'BAGI CADANGAN MEMBINA JALAN DI ATAS LOT 5. UNTUK TETUAN X'));
+    }
+
+    public function test_address_ends_at_untuk_without_a_space(): void
+    {
+        $this->assertSame('LOT 1', $this->read('PERMOHONAN BAGI CADANGAN MEMBINA JALAN DI ATAS LOT 1.UNTUK TETUAN Y')['site_address'] ?? null);
+    }
+
     public function test_lighting_type_only_when_exactly_one_is_named(): void
     {
         $this->assertSame(['KONKRIT'], $this->read('TIANG KONKRIT 10M')['lighting_types'] ?? null);

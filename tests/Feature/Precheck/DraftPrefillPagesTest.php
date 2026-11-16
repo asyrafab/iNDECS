@@ -72,6 +72,30 @@ final class DraftPrefillPagesTest extends TestCase
         $this->assertSame('SURAT PERMOHONAN.pdf', $payload['sources']['site_address']);
     }
 
+    public function test_fragment_names_the_last_version_the_applicant_saved(): void
+    {
+        $draft = $this->filledDraft();
+        \Illuminate\Support\Facades\DB::table('core.applicant_draft_revisions')->insert(['draft_id' => $draft->id, 'actor_id' => $this->owner->id,
+            'version' => 2, 'snapshot' => json_encode(['title' => 'CADANGAN MEMBINA MENARA', 'prefill' => true]), 'created_at' => now()]);
+
+        $payload = $this->payload($draft);
+        $this->assertSame(1, $payload['base'], 'Only fills happened after version 1, so a form at version 1 may take version 2.');
+
+        // A save in another tab is not a fill: a form older than it must keep getting the conflict message.
+        $draft->forceFill(['version' => 3])->save();
+        \Illuminate\Support\Facades\DB::table('core.applicant_draft_revisions')->insert(['draft_id' => $draft->id, 'actor_id' => $this->owner->id,
+            'version' => 3, 'snapshot' => json_encode(['title' => 'Tajuk lain']), 'created_at' => now()]);
+        $this->assertSame(3, $this->payload($draft)['base']);
+    }
+
+    private function payload(ApplicantDraft $draft): array
+    {
+        $html = $this->actingAs($this->owner)->get(route('portal.drafts.checklist', $draft))->assertOk()->getContent();
+        preg_match("/data-prefill='([^']*)'/", $html, $match);
+
+        return json_decode(html_entity_decode($match[1]), true);
+    }
+
     public function test_payment_still_blocked_until_saved(): void
     {
         $draft = $this->filledDraft();
