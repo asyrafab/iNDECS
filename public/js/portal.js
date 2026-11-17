@@ -5,6 +5,28 @@
     const registered = new WeakSet();
     const settings = document.querySelector('[data-portal-settings]');
     const openers = new WeakMap();
+    const closing = new WeakSet();
+    const closeDialog = dialog => {
+        if (!dialog.open || closing.has(dialog)) return;
+        dialog.dispatchEvent(new Event('portal:closing'));
+        if (!dialog.matches('.precheck-dialog, .draft-remove-dialog')
+            || window.matchMedia('(prefers-reduced-motion: reduce)').matches
+            || document.documentElement.dataset.motion === 'reduced') { dialog.close(); return; }
+        closing.add(dialog);
+        dialog.classList.add('is-closing');
+        let timer;
+        const finish = () => {
+            clearTimeout(timer);
+            dialog.removeEventListener('animationend', ended);
+            dialog.close();
+            dialog.classList.remove('is-closing');
+            closing.delete(dialog);
+        };
+        const ended = event => { if (event.target === dialog && event.animationName === 'document-dialog-exit') finish(); };
+        dialog.addEventListener('animationend', ended);
+        const duration = parseFloat(getComputedStyle(dialog).animationDuration) * 1000;
+        timer = setTimeout(finish, (Number.isFinite(duration) ? duration : 0) + 50);
+    };
     document.addEventListener('click', event => {
         const trigger = event.target.closest('[data-portal-open]');
         if (trigger) {
@@ -28,14 +50,15 @@
     function registerDialog(dialog) {
         if (registered.has(dialog)) return;
         registered.add(dialog);
-        dialog.querySelector('[data-portal-close]')?.addEventListener('click', () => dialog.close());
+        dialog.querySelectorAll('[data-portal-close]').forEach(button => button.addEventListener('click', () => closeDialog(dialog)));
+        dialog.addEventListener('cancel', event => { event.preventDefault(); closeDialog(dialog); });
         dialog.addEventListener('close', () => {
             const parent = document.getElementById(dialog.dataset.portalParent);
             if (parent?.open || !dialogs().some(item => item.open)) openers.get(dialog)?.focus({preventScroll: true});
         });
         dialog.addEventListener('click', event => {
             const rect = dialog.getBoundingClientRect();
-            if (event.target === dialog && (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom)) dialog.close();
+            if (event.target === dialog && (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom)) closeDialog(dialog);
         });
         dialog.addEventListener('keydown', event => {
             if (event.key !== 'Tab') return;
@@ -47,6 +70,84 @@
         });
     }
     dialogs().forEach(registerDialog);
+
+    // ADR-389: one confirmation dialog submits the selected owner's original form.
+    const removal = document.getElementById('draft-remove-confirm');
+    const hold = removal?.querySelector('[data-draft-remove-hold]');
+    if (hold && typeof removal.showModal === 'function') {
+        let selectedForm = null, holding = false, frame = 0, complete = false;
+        const confirmed = new WeakSet();
+        const status = removal.querySelector('[data-draft-remove-status]');
+        const reset = () => {
+            holding = false;
+            cancelAnimationFrame(frame);
+            hold.style.setProperty('--hold-progress', '0');
+            hold.classList.remove('is-holding', 'is-complete');
+        };
+        const begin = () => {
+            if (holding || complete || !selectedForm || !removal.open || closing.has(removal)) return;
+            holding = true;
+            hold.classList.add('is-holding');
+            const started = performance.now();
+            const duration = parseFloat(getComputedStyle(hold).getPropertyValue('--duration-draft-remove-hold'));
+            const tick = now => {
+                if (!holding) return;
+                const progress = Math.min(1, (now - started) / duration);
+                hold.style.setProperty('--hold-progress', String(progress));
+                if (progress < 1) { frame = requestAnimationFrame(tick); return; }
+                holding = false;
+                complete = true;
+                hold.classList.add('is-complete');
+                status.textContent = 'Membuang draf…';
+                confirmed.add(selectedForm);
+                selectedForm.requestSubmit();
+            };
+            if (Number.isFinite(duration) && duration > 0) frame = requestAnimationFrame(tick);
+            else reset();
+        };
+        document.querySelectorAll('[data-draft-remove-trigger]').forEach(button => { button.disabled = false; });
+        document.addEventListener('submit', event => {
+            const form = event.target;
+            if (!form.matches('form[data-draft-remove]')) return;
+            if (confirmed.has(form)) { confirmed.delete(form); return; }
+            event.preventDefault();
+            if (removal.open) return;
+            reset();
+            complete = false;
+            selectedForm = form;
+            status.textContent = '';
+            removal.querySelector('[data-draft-remove-name]').textContent = form.dataset.draftTitle;
+            openers.set(removal, event.submitter || form.querySelector('button'));
+            removal.showModal();
+            removal.querySelector('[data-draft-remove-cancel]').focus();
+        });
+        hold.addEventListener('click', event => event.preventDefault());
+        hold.addEventListener('contextmenu', event => event.preventDefault());
+        hold.addEventListener('pointerdown', event => {
+            if (event.button !== 0 || event.isPrimary === false) return;
+            event.preventDefault();
+            hold.focus();
+            hold.setPointerCapture(event.pointerId);
+            begin();
+        });
+        hold.addEventListener('pointermove', event => {
+            const rect = hold.getBoundingClientRect();
+            if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) reset();
+        });
+        ['pointerup', 'pointercancel', 'lostpointercapture', 'blur'].forEach(name => hold.addEventListener(name, reset));
+        hold.addEventListener('keydown', event => {
+            if (event.key !== ' ' && event.key !== 'Enter') return;
+            event.preventDefault();
+            if (!event.repeat) begin();
+        });
+        hold.addEventListener('keyup', event => {
+            if (event.key === ' ' || event.key === 'Enter') { event.preventDefault(); reset(); }
+        });
+        removal.addEventListener('portal:closing', reset);
+        removal.addEventListener('close', () => { reset(); selectedForm = null; });
+        document.addEventListener('visibilitychange', () => { if (document.hidden) reset(); });
+        window.addEventListener('blur', reset);
+    }
     settings?.addEventListener('keydown', event => {
         if (event.key === 'Escape') { settings.open = false; settings.querySelector('summary')?.focus(); }
     });

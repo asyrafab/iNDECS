@@ -342,6 +342,23 @@ AMIRA backend ownership was moved to C:\Users\Asyra\Documents\AMIRA under ADR-35
 
 ## Public portal preparation (2026-11-04)
 
+ADR-389 replaces native removal confirmation with `#draft-remove-confirm` and
+the `.draft-remove-hold` control. `portal.js` requires a continuous hold before
+submitting the original form; short/released/cancelled holds never submit.
+Keep triggers disabled until initialized. Document and removal dialogs animate
+their backdrop and exit before closing; preserve reduced motion and focus return.
+
+ADR-388 supersedes the Sambung cue and legend in ADR-386/387: `.file-row-remove`
+places the accessible red `.file-row-trash` action at the card's upper right.
+Reading dots are horizontal, attention triangles match the other shapes visually,
+and `.precheck-dialog[open]` uses a token-based entrance animation. Keep reduced
+motion support, status tooltips and the separate removal hit area.
+
+ADR-387 makes each `.file-row` in Fail saya a whole-card native link via the
+title link's stretched pseudo-element. `.file-row-meta` groups type/progress;
+`.file-row-actions` contains the Sambung cue and separate removal form. Keep the
+removal form above the link hit area, and provide whole-card keyboard focus.
+
 ADR-385 presents the upload checklist as a raised `.precheck-window`, using
 `.precheck-compact-list`, `.precheck-document`, `.precheck-status-icon` and
 `.precheck-legend`. Names and status icons open native `.precheck-dialog` windows

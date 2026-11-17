@@ -81,6 +81,10 @@
   --color-document-reading-bg: var(--color-neutral-200);
   --color-document-reading-dot: var(--color-neutral-700);
   --duration-document-reading: 1440ms;
+  --scale-document-attention: 1.2;
+  --scale-document-dialog-enter: .97;
+  --duration-draft-remove-hold: 1200ms;
+  --color-draft-remove-progress: #9d3030;
   --font-heading: 'Google Sans', 'Segoe UI', system-ui, sans-serif;
   --font-body: 'Google Sans', 'Segoe UI', system-ui, sans-serif;
   --font-handwriting: 'Caveat', cursive;

@@ -69,7 +69,18 @@
         <p>Penghantaran tiket helpdesk belum tersedia. Anda boleh merujuk maklumat sistem atau menggunakan panduan tempatan AMIRA.</p>
         <a class="button button-secondary" href="{{ route('about') }}">Maklumat &amp; soalan lazim<x-icon name="arrow-right" /></a>
     </dialog>
-    <noscript><style>.portal-dialog { display: block; position: static; width: auto; margin: var(--space-6); } [data-portal-close] { display: none; }</style></noscript>
+    <dialog class="portal-dialog draft-remove-dialog" id="draft-remove-confirm" aria-labelledby="draft-remove-title" aria-describedby="draft-remove-description draft-remove-instruction">
+        <div class="portal-dialog-head"><span class="eyebrow">Pengesahan</span><button class="icon-button" type="button" data-portal-close aria-label="Tutup pengesahan"><x-icon name="x" /></button></div>
+        <h2 id="draft-remove-title">Buang draf?</h2>
+        <p id="draft-remove-description">Draf <strong data-draft-remove-name></strong> akan dibuang daripada Fail saya. Anda tidak boleh menyambung draf ini selepas dibuang.</p>
+        <p id="draft-remove-instruction">Tekan dan tahan Buang draf sehingga penuh untuk mengesahkan. Lepaskan untuk membatalkan.</p>
+        <div class="draft-remove-actions">
+            <button class="button button-secondary" type="button" data-portal-close data-draft-remove-cancel>Batal</button>
+            <button class="button draft-remove-hold" type="button" data-draft-remove-hold aria-describedby="draft-remove-instruction"><span class="draft-remove-hold-label"><x-icon name="trash-2" />Buang draf</span></button>
+        </div>
+        <span class="sr-only" role="status" data-draft-remove-status></span>
+    </dialog>
+    <noscript><style>.portal-dialog { display: block; position: static; width: auto; margin: var(--space-6); } .draft-remove-dialog { display: none; } [data-portal-close] { display: none; }</style></noscript>
     <noscript><style>.precheck-dialog { margin: var(--space-3) 0 var(--space-6); } .precheck-dialog .precheck-upload { display: grid; }</style></noscript>
     @hasSection('counter')<noscript><style>@media (max-width: 900px) { .counter-amira { display: flex; position: static; border-radius: var(--radius-lg); } .amira-counter-bar { display: none; } }</style></noscript>@endif
     {{-- Kaunter Maya pages render AMIRA inline (x-portal-counter); others keep the drawer. --}}

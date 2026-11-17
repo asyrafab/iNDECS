@@ -144,4 +144,10 @@ Date: YYYY-MM-DD. Status: Proposed | Accepted | Superseded by ADR-MMM.
 
 - [ADR-386: Compact shaped document status icons](ADR-386-document-status-icon-shapes.md)
 
+- [ADR-387: Clickable public draft cards](ADR-387-clickable-public-draft-cards.md)
+
+- [ADR-388: Draft trash action and document popup refinements](ADR-388-draft-trash-and-document-popup-motion.md)
+
+- [ADR-389: Held confirmation and reversible modal dimming](ADR-389-held-draft-removal-confirmation.md)
+
 - [ADR-390: Fill draft details from dropped documents](ADR-390-draft-prefill-from-documents.md)

@@ -35,6 +35,7 @@ jobs:
       - run: php vendor/bin/pint --test
       - run: composer audit
       - run: npm audit
+      - run: node --test tests/Js/*.test.mjs
       - run: php scripts/verify-database.php
         env:
           DB_PORT: '5432'
