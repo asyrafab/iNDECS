@@ -17,7 +17,7 @@ final class DocumentSorterTest extends TestCase
 
     public function test_file_name_keyword_outranks_text_only_match(): void
     {
-        $ranked = (new DocumentSorter)->rank('Lampu Jalan Rev B.pdf', 'LAPORAN FOTOMETRIK', self::ITEMS);
+        $ranked = (new DocumentSorter)->rank('Lampu Jalan Rev B.pdf', str_repeat('ISI ', 200).'LAPORAN FOTOMETRIK', self::ITEMS);
 
         // filename keyword LAMPU JALAN (3) + code words LAMPU, JALAN (2) = 5; text FOTOMETRIK (2) = 2.
         $this->assertSame(['code' => 'pelan_lampu_jalan', 'score' => 5, 'name_score' => 5], $ranked[0]);
@@ -51,6 +51,41 @@ final class DocumentSorterTest extends TestCase
     {
         $ranked = (new DocumentSorter)->rank('x.pdf', "SURAT\nNo.  Lot 4412", self::ITEMS);
 
-        $this->assertSame(['code' => 'geran', 'score' => 2, 'name_score' => 0], $ranked[0]);
+        // text NO. LOT (2) + it opens the document, so it is the heading (3).
+        $this->assertSame(['code' => 'geran', 'score' => 5, 'name_score' => 0], $ranked[0]);
+    }
+
+    private const LETTER_ITEMS = [
+        ['code' => 'pelan_lampu_jalan', 'keywords' => ['LAMPU JALAN']],
+        ['code' => 'borang_pengemukaan', 'keywords' => ['SURAT PERMOHONAN', 'PERMOHONAN KELULUSAN PELAN LAMPU JALAN']],
+        ['code' => 'pelan_kebenaran_merancang', 'keywords' => ['KEBENARAN MERANCANG', 'PELAN BANGUNAN', 'SITE PLAN']],
+    ];
+
+    public function test_heading_names_the_document_over_enclosures_listed_in_its_body(): void
+    {
+        $letter = 'PERUNDING M&E RUJ KAMI : PLA 1 TUAN, PERMOHONAN KELULUSAN PELAN LAMPU JALAN BAGI CADANGAN PEMBANGUNAN '
+            .str_repeat('ISI ', 200).'DISERTAKAN: SITE PLAN, SURAT KEBENARAN MERANCANG, PELAN BANGUNAN';
+
+        $ranked = (new DocumentSorter)->rank('SURAT PERMOHONAN (1).pdf', $letter, self::LETTER_ITEMS);
+
+        // name SURAT PERMOHONAN (3) + text subject (2) + heading (3) = 8; enclosures 3 × 2 = 6; LAMPU JALAN text only = 2.
+        $this->assertSame(['code' => 'borang_pengemukaan', 'score' => 8, 'name_score' => 3], $ranked[0]);
+        $this->assertSame(['code' => 'pelan_kebenaran_merancang', 'score' => 6, 'name_score' => 0], $ranked[1]);
+        $this->assertSame(['code' => 'pelan_lampu_jalan', 'score' => 2, 'name_score' => 0], $ranked[2]);
+    }
+
+    public function test_only_the_longest_heading_keyword_names_the_document(): void
+    {
+        $ranked = (new DocumentSorter)->rank('x.pdf', 'PERMOHONAN KELULUSAN PELAN LAMPU JALAN', self::LETTER_ITEMS);
+
+        $this->assertSame(['code' => 'borang_pengemukaan', 'score' => 5, 'name_score' => 0], $ranked[0]);
+        $this->assertSame(['code' => 'pelan_lampu_jalan', 'score' => 2, 'name_score' => 0], $ranked[1]);
+    }
+
+    public function test_keyword_beyond_the_opening_is_not_a_heading(): void
+    {
+        $ranked = (new DocumentSorter)->rank('x.pdf', str_repeat('ISI ', 150).'KEBENARAN MERANCANG', self::LETTER_ITEMS);
+
+        $this->assertSame(['code' => 'pelan_kebenaran_merancang', 'score' => 2, 'name_score' => 0], $ranked[0]);
     }
 }

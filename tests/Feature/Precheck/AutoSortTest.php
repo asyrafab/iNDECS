@@ -94,7 +94,8 @@ final class AutoSortTest extends TestCase
 
         $this->assertSame('geran', $doc->item_code);
         $this->assertSame('auto', $doc->sort_source);
-        $this->assertSame(3, $doc->sort_score);
+        // name code word GERAN (1) + text HAKMILIK (2) + HAKMILIK opens the text, its heading (3).
+        $this->assertSame(6, $doc->sort_score);
         $this->assertSame(1, $doc->sequence);
         $this->assertNotNull($doc->document_type_id);
         $this->assertSame('done', $doc->precheck_status);

@@ -61,11 +61,13 @@ final class GreenCamourSortTest extends TestCase
         $placed = fn (string $code) => $documents->where('item_code', $code)->pluck('original_name')->all();
         $this->assertSame(['PELAN_LAMPU_JALAN_ (22).pdf'], $placed('pelan_lampu_jalan'));
         $this->assertSame(['LAIN_LAIN_LUX REPORT.pdf'], $placed('laporan_fotometrik'));
+        // The cover letter's subject heading names it, over the enclosures it lists.
+        $this->assertContains('LAIN_LAIN_SURAT PERMOHONAN (1).pdf', $placed('borang_pengemukaan'));
         // The payment receipt belongs to no checklist item.
         $this->assertNull($documents->firstWhere('original_name', 'LAIN_LAIN_RECEIPT RM250.pdf')?->item_code);
         // Auto-sorting never hides a file: each one is either the current file of one item or in the tray.
         $checklist = app(DraftChecklist::class)->for($draft->fresh());
-        $this->assertSame(12, collect($checklist['items'])->pluck('document')->filter()->count() + count($checklist['unsorted']));
+        $this->assertSame(12, collect($checklist['items'])->sum(fn (array $item) => count($item['documents'])) + count($checklist['unsorted']));
         // Upload-first part 2: the cover letter's subject fills the provisional title and the empty address.
         $draft->refresh();
         fwrite(STDERR, 'Filled title: '.$draft->title.PHP_EOL.'Filled address: '.$draft->site_address.PHP_EOL);
