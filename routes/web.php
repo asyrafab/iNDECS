@@ -133,6 +133,10 @@ Route::middleware(['auth', 'bangunan.legacy'])->prefix('bangunan')->name('bangun
 Route::middleware(['auth', 'kejuruteraan.access'])->prefix('kejuruteraan')->name('kejuruteraan.')->group(function (): void {
     Route::get('/', [KejuruteraanApplicationController::class, 'index'])->name('index');
     Route::get('/applications/{application}', [KejuruteraanApplicationController::class, 'show'])->whereUlid('application')->name('show');
+    Route::post('/applications/{application}/recommendations', [KejuruteraanApplicationController::class, 'storeRecommendation'])
+        ->whereUlid('application')->middleware('throttle:30,1')->name('recommendations.store');
+    Route::get('/applications/{application}/recommendations/{recommendation}/preview', [KejuruteraanApplicationController::class, 'previewRecommendation'])
+        ->whereUlid(['application', 'recommendation'])->name('recommendations.preview');
     Route::get('/applications/{application}/documents/{document}', [KejuruteraanApplicationController::class, 'document'])->whereUlid(['application', 'document'])->name('documents.show');
     Route::post('/applications/{application}/findings/{finding}/feedback', [KejuruteraanApplicationController::class, 'storeFeedback'])
         ->whereUlid(['application', 'finding'])->middleware('throttle:30,1')->name('findings.feedback');

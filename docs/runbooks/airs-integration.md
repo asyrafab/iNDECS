@@ -39,6 +39,8 @@ An LJUP draft (Jabatan Kejuruteraan) declares its lighting types and uses the fr
 
 `/kejuruteraan` lists LJUP applications for holders of `kejuruteraan.ljup.access` (district scope applies once an application has site/lot records). Officers with `kejuruteraan.ljup.review` comment per finding and review MATRIX-extracted fields on the final, handed-over check; both are attributed and append-only. Officer correction requests, decisions and letters are not part of AIRS.
 
+ADR-392 adds internal recommendations and frozen draft letter previews through shared core services. Use the `Syor dalaman & draf surat` link on an LJUP record. See the [internal recommendation runbook](ljup-internal-recommendations.md). This prepares internal records only; official decisions, issued letters and post-handover correction requests remain separate work.
+
 ## Verification
 
 `php artisan test` (uses `indecs_test`, the fake AI provider and a sync `airs` queue). The real-package acceptance test runs with `PLAN_REVIEW_GREEN_CAMOUR_PATH="<folder of the 12 PDFs>" php artisan test --filter=GreenCamourAcceptanceTest`.

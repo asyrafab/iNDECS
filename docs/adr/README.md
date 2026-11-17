@@ -153,3 +153,5 @@ Date: YYYY-MM-DD. Status: Proposed | Accepted | Superseded by ADR-MMM.
 - [ADR-390: Fill draft details from dropped documents](ADR-390-draft-prefill-from-documents.md)
 
 - [ADR-391: MyDigital ID sandbox linking and email OTP](ADR-391-mydigital-id-sandbox-linking-and-email-otp.md) — accepted for local implementation; real provider use pending.
+
+- [ADR-392: LJUP officer recommendations, decisions and letters](ADR-392-ljup-officer-decisions-and-letters.md) — internal recommendations/draft previews authorised and implemented; official issuance policy/template confirmation pending.

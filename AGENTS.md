@@ -336,6 +336,10 @@ indicator uses one square = standalone application, two = linked pair, three = d
   `staff:superadmin <staff_number>` for explicit audited promotion to the existing
   unscoped `system_admin` role. Never infer privileges from a staff number at login.
 
+## LJUP internal recommendations (2026-11-17)
+
+ADR-392 increment 1 adds append-only recommendations and letter drafts in `core`, through `ApplicationRecommendationService` and the scoped `LjupRecommendationSource`. Existing LJUP review permission is required. Only handed-over final completed checks with matching accepted-submission evidence can be used. Save a new revision; never mutate previous recommendations or letter snapshots. `.internal-draft-text` preserves escaped officer paragraphs. Draft previews say `DRAF — BUKAN SURAT RASMI`; no official status transition, reference, signature, public verification or applicant delivery is implemented.
+
 ## MyDigital ID local sandbox milestone (2026-11-17)
 
 ADR-391 adds default-off, non-production-only identity linking and email OTP on separate `/portal/mydigitalid` and `/portal/otp` routes. Existing public and staff login methods remain unchanged. Only allowlisted existing verified public/guest accounts may link; OTP never creates accounts. `config/mydigitalid.php` keeps real provider transport off; local notifications force the array mailer. Never copy officer-supplied credentials or promote sandbox links to production. See `docs/runbooks/mydigitalid-sandbox.md` for verification and pending provider gates. Company groups and downstream MBSP SSO remain later milestones.
