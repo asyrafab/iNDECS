@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Portal;
 
 use App\Enums\AmiraMood;
+use App\Enums\PaidCheckState;
 use App\Enums\PrecheckLabel;
 use App\Models\ApplicantDraft;
 use App\Models\User;
@@ -44,7 +45,7 @@ final class PortalBoard
                 $progress[$draft->id] = ['ready' => $list['required_ready'], 'total' => $list['required_total']];
             }
             $journey = $draft->journey()->first();
-            if ($journey?->state === \App\Enums\PaidCheckState::AwaitingApplicant) {
+            if ($journey?->state === PaidCheckState::AwaitingApplicant) {
                 $action->push($draft);
                 $todos[] = ['text' => "{$draft->title}: keputusan semakan AIRS sedia", 'href' => route('portal.drafts.edit', $draft).'#semakan-airs'];
             } elseif ($journey !== null) {

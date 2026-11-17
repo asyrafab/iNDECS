@@ -5,8 +5,8 @@ namespace Tests\Feature\Library;
 use App\Models\User;
 use App\Services\PublicIdentityService;
 use Database\Seeders\LibrarySeeder;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class LibraryPermissionsTest extends TestCase

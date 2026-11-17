@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Airs\DocumentProcessing;
 
+use App\Airs\Ai\AiResponseValidator;
+use App\Airs\Ai\AiTaskRunner;
 use App\Airs\Contracts\AiProvider;
 use App\Airs\Exceptions\InvalidAiResponseException;
 use App\Airs\Models\DocumentClassification;
 use App\Airs\Models\ReviewCase;
 use App\Airs\Models\ReviewVersion;
-use App\Airs\Ai\AiResponseValidator;
-use App\Airs\Ai\AiTaskRunner;
 
 final class DocumentClassifier
 {
@@ -18,8 +18,7 @@ final class DocumentClassifier
         private readonly AiProvider $provider,
         private readonly AiTaskRunner $runner,
         private readonly AiResponseValidator $validator,
-    ) {
-    }
+    ) {}
 
     public function classify(ReviewCase $case, ReviewVersion $version): void
     {

@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace Tests\Feature\PaidCheck;
 
 use App\Airs\Contracts\DocumentProcessor;
+use App\Airs\Jobs\RunAirsCheck;
 use App\Airs\Models\ReviewVersion;
 use App\Contracts\DocumentScanner;
 use App\Enums\PaidCheckState;
 use App\Jobs\PrecheckDraftDocument;
-use App\Models\ApplicantDraft;
+use App\Models\ApplicantDraftDocument;
 use App\Models\ApplicationDocument;
 use App\Models\PaidCheckJourney;
 use App\Models\User;
@@ -64,7 +65,7 @@ final class AmendmentTest extends TestCase
 
     public function test_draft_is_locked_while_check_runs(): void
     {
-        Queue::fake([PrecheckDraftDocument::class, \App\Airs\Jobs\RunAirsCheck::class]);
+        Queue::fake([PrecheckDraftDocument::class, RunAirsCheck::class]);
         [$draft, $owner, $journey] = $this->paid();
         $this->assertSame(PaidCheckState::Check1Running, $journey->state);
         $before = $draft->documents()->count();
@@ -133,7 +134,7 @@ final class AmendmentTest extends TestCase
 
     public function test_locked_draft_hides_edit_controls_and_open_window_shows_them(): void
     {
-        Queue::fake([PrecheckDraftDocument::class, \App\Airs\Jobs\RunAirsCheck::class]);
+        Queue::fake([PrecheckDraftDocument::class, RunAirsCheck::class]);
         [$draft, $owner] = $this->paid();
         $this->actingAs($owner)->get(route('portal.drafts.edit', $draft))->assertOk()
             ->assertDontSee('class="precheck-upload"', false)->assertDontSee('Simpan draf')->assertSee('Draf dikunci');
@@ -144,13 +145,13 @@ final class AmendmentTest extends TestCase
 
     public function test_drop_on_locked_draft_is_forbidden(): void
     {
-        Queue::fake([PrecheckDraftDocument::class, \App\Airs\Jobs\RunAirsCheck::class]);
+        Queue::fake([PrecheckDraftDocument::class, RunAirsCheck::class]);
         [$draft, $owner] = $this->paid();
-        $before = \App\Models\ApplicantDraftDocument::query()->where('draft_id', $draft->id)->count();
+        $before = ApplicantDraftDocument::query()->where('draft_id', $draft->id)->count();
 
         $this->actingAs($owner)->post(route('portal.drafts.documents.add', $draft), ['files' => [UploadedFile::fake()->createWithContent('baru.pdf', "%PDF-1.4\n%%EOF\n")]])
             ->assertForbidden();
-        $this->assertSame($before, \App\Models\ApplicantDraftDocument::query()->where('draft_id', $draft->id)->count());
+        $this->assertSame($before, ApplicantDraftDocument::query()->where('draft_id', $draft->id)->count());
         $this->actingAs($owner)->get(route('portal.drafts.edit', $draft))->assertOk()->assertDontSee('Seret fail atau folder ke sini');
     }
 

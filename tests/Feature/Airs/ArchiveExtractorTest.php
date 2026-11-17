@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Airs;
 
+use App\Airs\DocumentProcessing\ArchiveExtractor;
 use App\Airs\Enums\ReviewCaseStatus;
 use App\Airs\Exceptions\NoRelevantDocumentException;
 use App\Airs\Exceptions\UnsafeArchiveException;
-use App\Airs\Models\ReviewCase;
 use App\Airs\Models\ReviewFile;
-use App\Airs\DocumentProcessing\ArchiveExtractor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Tests\Support\AirsFixtures;

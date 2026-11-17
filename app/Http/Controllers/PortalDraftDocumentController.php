@@ -7,17 +7,19 @@ namespace App\Http\Controllers;
 use App\Models\ApplicantDraft;
 use App\Models\ApplicantDraftDocument;
 use App\Models\ApplicationType;
+use App\Services\PaidCheck\PaidCheckJourneyService;
 use App\Services\Precheck\DraftChecklist;
 use App\Services\Precheck\DraftDocumentService;
 use App\Services\Precheck\DraftDropService;
 use App\Services\Precheck\DropResult;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Validation\Rule;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -45,7 +47,7 @@ final class PortalDraftDocumentController extends Controller
             // Only types with a published checklist: an unsorted file must always have a tray to show in.
             'application_type_id' => ['required', Rule::in(ApplicationType::query()->portal()->pluck('id')->all()),
                 function (string $attribute, mixed $value, \Closure $fail): void {
-                    if (! \Illuminate\Support\Facades\DB::table('core.document_catalogues')->where('application_type_id', $value)->exists()) {
+                    if (! DB::table('core.document_catalogues')->where('application_type_id', $value)->exists()) {
                         $fail('Senarai semak dokumen belum tersedia untuk jenis permohonan ini. Isi butiran draf dahulu.');
                     }
                 }],
@@ -133,7 +135,7 @@ final class PortalDraftDocumentController extends Controller
         $owned = $this->draft($request, $draft);
 
         return view('public.drafts.partials.checklist', ['draft' => $owned, 'checklist' => $this->checklist->for($owned),
-            'editable' => \App\Services\PaidCheck\PaidCheckJourneyService::draftEditable($owned),
+            'editable' => PaidCheckJourneyService::draftEditable($owned),
             'checkResult' => $owned->journey()->exists() ? true : null]);
     }
 

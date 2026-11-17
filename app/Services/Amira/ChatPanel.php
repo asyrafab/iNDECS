@@ -8,6 +8,7 @@ use App\Models\AmiraConversation;
 use App\Models\AmiraMessage;
 use App\Models\ApplicantDraft;
 use App\Models\User;
+use Illuminate\Support\Collection;
 
 /** What the Kaunter Maya panel needs to show the AMIRA conversation for one page (ADR-369). */
 final class ChatPanel
@@ -21,7 +22,7 @@ final class ChatPanel
     /**
      * $onForm: the page holds the draft form (new or saved draft), so "Guna butiran ini" fills it in place.
      *
-     * @return array{page: string, fillsForm: bool, messages: \Illuminate\Support\Collection, pending: bool, threadUrl: string, askUrl: string, options: array, retentionMonths: int, maxChars: int}|null
+     * @return array{page: string, fillsForm: bool, messages: Collection, pending: bool, threadUrl: string, askUrl: string, options: array, retentionMonths: int, maxChars: int}|null
      */
     public function forPage(User $user, ?ApplicantDraft $draft, bool $onForm = false): ?array
     {

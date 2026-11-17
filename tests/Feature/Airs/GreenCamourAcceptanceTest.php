@@ -6,6 +6,7 @@ namespace Tests\Feature\Airs;
 
 use App\Airs\CheckClearance;
 use App\Airs\CheckService;
+use App\Airs\Contracts\AiProvider;
 use App\Airs\Models\ReviewFinding;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -32,7 +33,7 @@ final class GreenCamourAcceptanceTest extends TestCase
         $this->seed();
         Storage::fake('local');
         config()->set('airs.provider', 'fake');
-        $this->app->forgetInstance(\App\Airs\Contracts\AiProvider::class);
+        $this->app->forgetInstance(AiProvider::class);
 
         $application = $this->ljupApplication();
         $paths = is_dir($fixture) ? glob(rtrim($fixture, '/\\').'/*.pdf') : [$fixture];

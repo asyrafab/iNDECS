@@ -9,6 +9,8 @@ use App\Models\ApplicantDraft;
 use App\Models\ApplicantDraftDocument;
 use App\Models\DocumentRequirement;
 use App\Services\Checklist\ChecklistRuleEvaluator;
+use App\Services\DocumentCatalogueService;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -59,7 +61,7 @@ final class DraftChecklist
         return DocumentRequirement::query()->with('documentType')->where('application_type_id', $applicationTypeId)
             ->where('is_active', true)->whereNull('permission_category')->whereNull('permission_type')->orderBy('sort_order')->get()
             ->map(fn (DocumentRequirement $item) => [
-                'code' => \App\Services\DocumentCatalogueService::itemCode($applicationTypeId, $item->documentType->code),
+                'code' => DocumentCatalogueService::itemCode($applicationTypeId, $item->documentType->code),
                 'name' => $item->documentType->name,
                 'keywords' => array_values($item->precheck_keywords ?? []),
                 'document_type_id' => (int) $item->document_type_id,
@@ -70,10 +72,10 @@ final class DraftChecklist
      * An item's current files (oldest first): every placed row not marked replaced. A single-file item's
      * re-upload marks the old row replaced; a changed file limit never hides or revives a file.
      *
-     * @param  \Illuminate\Support\Collection<int, ApplicantDraftDocument>  $rows
+     * @param  Collection<int, ApplicantDraftDocument>  $rows
      * @return list<ApplicantDraftDocument>
      */
-    public static function current(\Illuminate\Support\Collection $rows): array
+    public static function current(Collection $rows): array
     {
         return $rows->whereNull('superseded_at')->sortBy('sequence')->values()->all();
     }

@@ -8,6 +8,7 @@ use App\Http\Controllers\BangunanLegacyController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Gis\BoundaryController;
 use App\Http\Controllers\Gis\TileController;
+use App\Http\Controllers\KejuruteraanApplicationController;
 use App\Http\Controllers\LibraryController;
 use App\Http\Controllers\Osc\AgendaItemController;
 use App\Http\Controllers\Osc\AgendaPaperController;
@@ -23,8 +24,7 @@ use Illuminate\Support\Facades\Route;
 require __DIR__.'/public.php';
 require __DIR__.'/identity-sandbox.php';
 
-Route::middleware('auth')->group(function (): void {
-});
+Route::middleware('auth')->group(function (): void {});
 
 Route::middleware('guest')->group(function (): void {
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
@@ -131,12 +131,12 @@ Route::middleware(['auth', 'bangunan.legacy'])->prefix('bangunan')->name('bangun
 
 // Jabatan Kejuruteraan: LJUP applications and their AIRS checks (ADR-383).
 Route::middleware(['auth', 'kejuruteraan.access'])->prefix('kejuruteraan')->name('kejuruteraan.')->group(function (): void {
-    Route::get('/', [\App\Http\Controllers\KejuruteraanApplicationController::class, 'index'])->name('index');
-    Route::get('/applications/{application}', [\App\Http\Controllers\KejuruteraanApplicationController::class, 'show'])->whereUlid('application')->name('show');
-    Route::get('/applications/{application}/documents/{document}', [\App\Http\Controllers\KejuruteraanApplicationController::class, 'document'])->whereUlid(['application', 'document'])->name('documents.show');
-    Route::post('/applications/{application}/findings/{finding}/feedback', [\App\Http\Controllers\KejuruteraanApplicationController::class, 'storeFeedback'])
+    Route::get('/', [KejuruteraanApplicationController::class, 'index'])->name('index');
+    Route::get('/applications/{application}', [KejuruteraanApplicationController::class, 'show'])->whereUlid('application')->name('show');
+    Route::get('/applications/{application}/documents/{document}', [KejuruteraanApplicationController::class, 'document'])->whereUlid(['application', 'document'])->name('documents.show');
+    Route::post('/applications/{application}/findings/{finding}/feedback', [KejuruteraanApplicationController::class, 'storeFeedback'])
         ->whereUlid(['application', 'finding'])->middleware('throttle:30,1')->name('findings.feedback');
-    Route::post('/applications/{application}/fields', [\App\Http\Controllers\KejuruteraanApplicationController::class, 'storeFieldReview'])
+    Route::post('/applications/{application}/fields', [KejuruteraanApplicationController::class, 'storeFieldReview'])
         ->whereUlid('application')->middleware('throttle:30,1')->name('fields.review');
 });
 

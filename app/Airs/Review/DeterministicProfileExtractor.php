@@ -7,7 +7,7 @@ namespace App\Airs\Review;
 final class DeterministicProfileExtractor
 {
     /**
-     * @param array{documents?: list<array<string, mixed>>} $input
+     * @param  array{documents?: list<array<string, mixed>>}  $input
      * @return array{profile: array<string, mixed>, confidence_summary: array<string, float>, conflicts: list<array<string, mixed>>}
      */
     public function extract(array $input): array
@@ -68,8 +68,7 @@ final class DeterministicProfileExtractor
         }
 
         if ($titleCandidates !== []) {
-            usort($titleCandidates, static fn (array $left, array $right): int =>
-                [$right['priority'], mb_strlen($right['value'])] <=> [$left['priority'], mb_strlen($left['value'])]
+            usort($titleCandidates, static fn (array $left, array $right): int => [$right['priority'], mb_strlen($right['value'])] <=> [$left['priority'], mb_strlen($left['value'])]
             );
             $profile['project_title'] = $titleCandidates[0]['value'];
             $confidence['project_title'] = 0.96;
@@ -102,7 +101,7 @@ final class DeterministicProfileExtractor
     }
 
     /**
-     * @param list<array<string, mixed>> $pages
+     * @param  list<array<string, mixed>>  $pages
      */
     private function documentText(array $pages): string
     {
@@ -118,8 +117,8 @@ final class DeterministicProfileExtractor
     }
 
     /**
-     * @param array<string, mixed> $profile
-     * @param array<string, float> $confidence
+     * @param  array<string, mixed>  $profile
+     * @param  array<string, float>  $confidence
      */
     private function extractGeneralForm(string $text, array &$profile, array &$confidence): void
     {
@@ -161,8 +160,8 @@ final class DeterministicProfileExtractor
     }
 
     /**
-     * @param array<string, mixed> $profile
-     * @param array<string, float> $confidence
+     * @param  array<string, mixed>  $profile
+     * @param  array<string, float>  $confidence
      */
     private function set(array &$profile, array &$confidence, string $field, string $rawValue, float $score): void
     {

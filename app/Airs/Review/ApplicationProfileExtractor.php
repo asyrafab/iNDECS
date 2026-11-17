@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Airs\Review;
 
+use App\Airs\Ai\AiResponseValidator;
+use App\Airs\Ai\AiTaskRunner;
 use App\Airs\Contracts\AiProvider;
 use App\Airs\Exceptions\InvalidAiResponseException;
 use App\Airs\Models\ApplicationProfile;
 use App\Airs\Models\ReviewCase;
 use App\Airs\Models\ReviewVersion;
-use App\Airs\Ai\AiResponseValidator;
-use App\Airs\Ai\AiTaskRunner;
 
 final class ApplicationProfileExtractor
 {
@@ -19,8 +19,7 @@ final class ApplicationProfileExtractor
         private readonly AiTaskRunner $runner,
         private readonly AiResponseValidator $validator,
         private readonly DeterministicProfileExtractor $deterministic,
-    ) {
-    }
+    ) {}
 
     public function extract(ReviewCase $case, ReviewVersion $version): ApplicationProfile
     {
@@ -73,8 +72,8 @@ final class ApplicationProfileExtractor
     }
 
     /**
-     * @param array{profile: array<string, mixed>, confidence_summary: array<string, mixed>, conflicts: array<int, mixed>} $result
-     * @param array{profile: array<string, mixed>, confidence_summary: array<string, float>, conflicts: list<array<string, mixed>>} $deterministic
+     * @param  array{profile: array<string, mixed>, confidence_summary: array<string, mixed>, conflicts: array<int, mixed>}  $result
+     * @param  array{profile: array<string, mixed>, confidence_summary: array<string, float>, conflicts: list<array<string, mixed>>}  $deterministic
      * @return array{profile: array<string, mixed>, confidence_summary: array<string, mixed>, conflicts: array<int, mixed>}
      */
     private function mergeDeterministicResult(array $result, array $deterministic): array
@@ -103,7 +102,7 @@ final class ApplicationProfileExtractor
     }
 
     /**
-     * @param array{profile: array<string, mixed>, confidence_summary: array<string, mixed>, conflicts: array<int, mixed>} $result
+     * @param  array{profile: array<string, mixed>, confidence_summary: array<string, mixed>, conflicts: array<int, mixed>}  $result
      * @return array{profile: array<string, mixed>, confidence_summary: array<string, mixed>, conflicts: array<int, mixed>}
      */
     private function applySubmittedLightingTypes(ReviewCase $case, array $result): array
@@ -123,9 +122,14 @@ final class ApplicationProfileExtractor
             ->all();
         if (config('airs.provider') === 'matrix') {
             $observed = $result['profile']['observed_lighting_types'] ?? [];
-            $declared = array_values($types); sort($observed); sort($declared);
+            $declared = array_values($types);
+            sort($observed);
+            sort($declared);
             $result['profile']['lighting_type_conflict'] = $observed !== [] && $observed !== $declared;
-            if ($result['profile']['lighting_type_conflict']) $result['conflicts'][] = ['field' => 'lighting_system', 'reason' => 'Pilihan jenis lampu berbeza daripada pemerhatian dokumen.'];
+            if ($result['profile']['lighting_type_conflict']) {
+                $result['conflicts'][] = ['field' => 'lighting_system', 'reason' => 'Pilihan jenis lampu berbeza daripada pemerhatian dokumen.'];
+            }
+
             return $result;
         }
         $lightingSystem = collect($result['profile']['selected_lighting_type_labels'])->implode(', ');

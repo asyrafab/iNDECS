@@ -28,8 +28,7 @@ final class DocumentRelevanceService
                 && $classification->file->processing_status === 'PROCESSED'
                 && (int) $classification->file->page_count > 0);
 
-        $irrelevant = $classifications->filter(fn ($classification): bool =>
-            $classification->primary_type === self::IRRELEVANT_TYPE
+        $irrelevant = $classifications->filter(fn ($classification): bool => $classification->primary_type === self::IRRELEVANT_TYPE
             && (float) $classification->confidence >= 0.8
         );
         $accepted = $classifications->reject(fn ($classification): bool => $irrelevant->contains('id', $classification->id));

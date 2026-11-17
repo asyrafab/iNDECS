@@ -9,8 +9,10 @@ use App\Airs\DocumentProcessing\DocumentClassifier;
 use App\Airs\DocumentProcessing\DocumentInventoryService;
 use App\Airs\DocumentProcessing\DocumentRelevanceService;
 use App\Airs\Enums\ReviewCaseStatus;
+use App\Airs\Events\AirsCheckCompleted;
 use App\Airs\Exceptions\InvalidAiResponseException;
 use App\Airs\Exceptions\InvalidDocumentException;
+use App\Airs\Exceptions\MatrixTaskException;
 use App\Airs\Exceptions\NoRelevantDocumentException;
 use App\Airs\Exceptions\UnsafeArchiveException;
 use App\Airs\Models\ProcessingTask;
@@ -22,11 +24,15 @@ use App\Airs\Review\ReviewStateService;
 use App\Airs\Review\RuleEvaluationService;
 use App\Airs\Review\RuleRepository;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Queue\TimeoutExceededException;
+use Illuminate\Support\Facades\DB;
+use Symfony\Component\Process\Exception\ProcessTimedOutException;
 use Throwable;
 
 /** Runs one AIRS check (pipeline ported from the archived AIRS ProcessReviewCase job). */
@@ -80,7 +86,7 @@ final class RunAirsCheck implements ShouldQueue
     ): void {
         // Claim: only a version waiting in UPLOADED is run; duplicate or late jobs do nothing.
         $claimed = ReviewVersion::query()->whereKey($this->reviewVersionId)->where('status', 'UPLOADED')
-            ->update(['status' => 'PROCESSING', 'started_at' => now(), 'attempts' => \Illuminate\Support\Facades\DB::raw('attempts + 1'), 'updated_at' => now()]);
+            ->update(['status' => 'PROCESSING', 'started_at' => now(), 'attempts' => DB::raw('attempts + 1'), 'updated_at' => now()]);
         if ($claimed !== 1) {
             return;
         }
@@ -141,7 +147,7 @@ final class RunAirsCheck implements ShouldQueue
         }
 
         // Outside the try: a listener failure must not mark a completed check as failed.
-        \App\Airs\Events\AirsCheckCompleted::dispatch($version->id, (string) $case->application_id, (int) $version->check_number);
+        AirsCheckCompleted::dispatch($version->id, (string) $case->application_id, (int) $version->check_number);
     }
 
     private function task(string $versionId, string $name, callable $callback): mixed
@@ -173,15 +179,12 @@ final class RunAirsCheck implements ShouldQueue
             $exception instanceof UnsafeArchiveException => ['ARCHIVE_EXTRACTION_FAILED', 'The archive did not pass safe extraction checks.'],
             $exception instanceof InvalidDocumentException => ['DOCUMENT_PROCESSING_FAILED', $exception->getMessage()],
             $exception instanceof InvalidAiResponseException => ['AI_RESPONSE_INVALID', 'An AI response failed schema validation and was not used.'],
-            $exception instanceof \App\Airs\Exceptions\MatrixTaskException && $exception->getMessage() === 'MATRIX_REVIEW_BUDGET'
-                => ['MATRIX_REVIEW_BUDGET', 'The MATRIX budget for this check was reached before documents were organised. Staff can rerun the check.'],
-            $exception instanceof \App\Airs\Exceptions\MatrixTaskException && in_array($exception->getMessage(), ['MATRIX_SCOPE_DENIED', 'MATRIX_CLEARANCE_REQUIRED', 'MATRIX_STALE_REVIEW', 'MATRIX_IMAGE_SCOPE_DENIED'], true)
-                => ['MATRIX_DENIED', 'MATRIX refused this check ('.$exception->getMessage().').'],
-            $exception instanceof \App\Airs\Exceptions\MatrixTaskException,
-            $exception instanceof \Symfony\Component\Process\Exception\ProcessTimedOutException,
-            $exception instanceof \Illuminate\Contracts\Cache\LockTimeoutException,
-            $exception instanceof \Illuminate\Queue\TimeoutExceededException
-                => [self::TRANSIENT_FAILURE, 'MATRIX was unavailable; the check is still in progress and will be retried automatically.'],
+            $exception instanceof MatrixTaskException && $exception->getMessage() === 'MATRIX_REVIEW_BUDGET' => ['MATRIX_REVIEW_BUDGET', 'The MATRIX budget for this check was reached before documents were organised. Staff can rerun the check.'],
+            $exception instanceof MatrixTaskException && in_array($exception->getMessage(), ['MATRIX_SCOPE_DENIED', 'MATRIX_CLEARANCE_REQUIRED', 'MATRIX_STALE_REVIEW', 'MATRIX_IMAGE_SCOPE_DENIED'], true) => ['MATRIX_DENIED', 'MATRIX refused this check ('.$exception->getMessage().').'],
+            $exception instanceof MatrixTaskException,
+            $exception instanceof ProcessTimedOutException,
+            $exception instanceof LockTimeoutException,
+            $exception instanceof TimeoutExceededException => [self::TRANSIENT_FAILURE, 'MATRIX was unavailable; the check is still in progress and will be retried automatically.'],
             default => ['CASE_FAILED', 'Processing could not be completed. The check can be rerun without using another paid check.'],
         };
     }

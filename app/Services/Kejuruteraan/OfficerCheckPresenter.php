@@ -5,14 +5,18 @@ declare(strict_types=1);
 namespace App\Services\Kejuruteraan;
 
 use App\Airs\Models\GeneratedReport;
+use App\Airs\Models\ProfileFieldReview;
 use App\Airs\Models\ReviewCase;
 use App\Airs\Models\ReviewFindingFeedback;
-use App\Airs\Review\LiveReportScorer;
+use App\Airs\Models\ReviewRule;
 use App\Airs\Models\ReviewVersion;
+use App\Airs\Review\LiveReportScorer;
+use App\Airs\Review\MatrixProfileProjection;
 use App\Airs\Review\MatrixUsageReport;
 use App\Models\Application;
 use App\Models\PaidCheckJourney;
 use App\Services\PaidCheck\ApplicantCheckPresenter;
+use Illuminate\Support\Collection;
 
 /**
  * Officer view of an LJUP application's AIRS checks: everything the applicant view hides (AI rationale,
@@ -24,7 +28,7 @@ final class OfficerCheckPresenter
         private readonly ApplicantCheckPresenter $applicantView,
         private readonly MatrixUsageReport $usage,
         private readonly LiveReportScorer $scorer,
-        private readonly \App\Airs\Review\MatrixProfileProjection $projection,
+        private readonly MatrixProfileProjection $projection,
     ) {}
 
     public function for(Application $application): array
@@ -139,7 +143,7 @@ final class OfficerCheckPresenter
                 $collect($value);
             }
         };
-        \App\Airs\Models\ReviewRule::query()->where('rule_pack', $version->rule_pack)->where('rule_version', $version->rule_version)
+        ReviewRule::query()->where('rule_pack', $version->rule_pack)->where('rule_version', $version->rule_version)
             ->where('active', true)->pluck('applies_when')->each(fn ($when) => $collect($when));
 
         return array_intersect($changed, array_keys($used)) !== [];
@@ -149,7 +153,7 @@ final class OfficerCheckPresenter
     private function fieldsFor(ReviewVersion $version): array
     {
         $profile = $version->profile()->first()?->profile_json ?? [];
-        $reviews = \App\Airs\Models\ProfileFieldReview::query()->with('actor')->where('review_version_id', $version->id)->orderBy('revision')->get()->groupBy('field');
+        $reviews = ProfileFieldReview::query()->with('actor')->where('review_version_id', $version->id)->orderBy('revision')->get()->groupBy('field');
 
         return array_map(function (string $field) use ($profile, $reviews): array {
             $latest = $reviews->get($field)?->last();
@@ -158,11 +162,11 @@ final class OfficerCheckPresenter
             return ['field' => $field, 'extracted' => is_scalar($profile[$field] ?? null) ? (string) $profile[$field] : null,
                 'page' => $evidence['page'] ?? null, 'disposition' => $latest?->disposition, 'value' => $latest?->value,
                 'reason' => $latest?->reason, 'officer' => $latest?->actor?->name, 'revision' => (int) ($latest?->revision ?? 0)];
-        }, \App\Airs\Review\MatrixProfileProjection::FIELDS);
+        }, MatrixProfileProjection::FIELDS);
     }
 
-    /** @return \Illuminate\Support\Collection<string, \Illuminate\Support\Collection<int, ReviewFindingFeedback>> */
-    private function feedbackFor(ReviewVersion $version): \Illuminate\Support\Collection
+    /** @return Collection<string, Collection<int, ReviewFindingFeedback>> */
+    private function feedbackFor(ReviewVersion $version): Collection
     {
         return ReviewFindingFeedback::query()->with('actor')
             ->whereHas('finding', fn ($query) => $query->where('review_version_id', $version->id))

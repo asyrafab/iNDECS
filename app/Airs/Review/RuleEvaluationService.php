@@ -4,18 +4,19 @@ declare(strict_types=1);
 
 namespace App\Airs\Review;
 
+use App\Airs\Ai\AiResponseValidator;
+use App\Airs\Ai\AiTaskRunner;
 use App\Airs\Contracts\AiProvider;
 use App\Airs\Enums\EvaluationMethod;
 use App\Airs\Enums\FindingStatus;
 use App\Airs\Exceptions\InvalidAiResponseException;
+use App\Airs\Exceptions\MatrixTaskException;
 use App\Airs\Models\ApplicationProfile;
 use App\Airs\Models\ReviewEvidence;
 use App\Airs\Models\ReviewFinding;
 use App\Airs\Models\ReviewPage;
 use App\Airs\Models\ReviewRule;
 use App\Airs\Models\ReviewVersion;
-use App\Airs\Ai\AiResponseValidator;
-use App\Airs\Ai\AiTaskRunner;
 
 final class RuleEvaluationService
 {
@@ -27,8 +28,7 @@ final class RuleEvaluationService
         private readonly EvidenceRetriever $retriever,
         private readonly FindingPolicy $policy,
         private readonly OfficerReferenceCalibrationService $officerCalibration,
-    ) {
-    }
+    ) {}
 
     /**
      * Only an exhausted check budget leaves a rule unassessed (manual review). Worker faults,
@@ -241,7 +241,7 @@ final class RuleEvaluationService
             $result['warnings'] = ['AI_RESPONSE_INVALID'];
 
             return $result;
-        } catch (\App\Airs\Exceptions\MatrixTaskException $exception) {
+        } catch (MatrixTaskException $exception) {
             $code = $exception->getMessage();
             if (! in_array($code, self::UNASSESSABLE_MATRIX_CODES, true)) {
                 throw $exception;

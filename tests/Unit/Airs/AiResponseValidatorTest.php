@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Airs;
 
-use App\Airs\Exceptions\InvalidAiResponseException;
 use App\Airs\Ai\AiResponseValidator;
+use App\Airs\Exceptions\InvalidAiResponseException;
 use PHPUnit\Framework\TestCase;
 
 final class AiResponseValidatorTest extends TestCase

@@ -6,6 +6,7 @@ namespace Tests\Feature\Kejuruteraan;
 
 use App\Airs\Knowledge\LessonExporter;
 use App\Airs\Models\ApplicationProfile;
+use App\Airs\Models\ReviewRule;
 use App\Airs\Models\ReviewVersion;
 use App\Airs\Review\ProfileFieldReviewService;
 use App\Models\CheckPayment;
@@ -98,7 +99,7 @@ final class OfficerReviewFixesTest extends TestCase
         [, $journey] = $this->paidLjup();
         $version = ReviewVersion::query()->sole();
         // A rule of this check's pack whose applicability depends on the profile field 'district'.
-        $rule = \App\Airs\Models\ReviewRule::query()->where('rule_pack', $version->rule_pack)->where('rule_version', $version->rule_version)->where('active', true)->firstOrFail();
+        $rule = ReviewRule::query()->where('rule_pack', $version->rule_pack)->where('rule_version', $version->rule_version)->where('active', true)->firstOrFail();
         $rule->forceFill(['applies_when' => ['district' => ['contains' => 'SPT']]])->save();
         $profile = ApplicationProfile::query()->where('review_version_id', $version->id)->sole();
         $profile->forceFill(['profile_json' => array_merge($profile->profile_json ?? [], ['district' => 'SPU'])])->save();

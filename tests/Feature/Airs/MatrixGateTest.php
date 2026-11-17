@@ -7,7 +7,6 @@ namespace Tests\Feature\Airs;
 use App\Airs\Ai\MatrixReviewGate;
 use App\Airs\Exceptions\MatrixTaskException;
 use App\Airs\Models\AiRun;
-use App\Airs\Models\ReviewCase;
 use App\Airs\Models\ReviewVersion;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;

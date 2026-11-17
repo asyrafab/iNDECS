@@ -7,7 +7,6 @@ namespace Tests\Feature\PaidCheck;
 use App\Models\ApplicantDraft;
 use App\Models\ApplicationType;
 use App\Models\User;
-use App\Services\BangunanDocumentCatalogueService;
 use App\Services\DocumentCatalogueService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;

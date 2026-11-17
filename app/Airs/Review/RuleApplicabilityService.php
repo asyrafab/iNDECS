@@ -75,7 +75,9 @@ final class RuleApplicabilityService
     public function evaluate(ReviewRule $rule, array $profile): ?bool
     {
         $conditions = $rule->applies_when ?? [];
-        if ($conditions !== [] && ($profile['lighting_type_conflict'] ?? false)) return null;
+        if ($conditions !== [] && ($profile['lighting_type_conflict'] ?? false)) {
+            return null;
+        }
         if ($conditions === []) {
             return true;
         }
@@ -102,7 +104,7 @@ final class RuleApplicabilityService
     }
 
     /**
-     * @param list<array<string, mixed>> $branches
+     * @param  list<array<string, mixed>>  $branches
      */
     private function evaluateAnyOf(array $branches, array $profile): ?bool
     {
@@ -111,9 +113,13 @@ final class RuleApplicabilityService
         $selectedBranches = array_values(array_filter($branches, fn (array $branch): bool => count($branch) === 1 && array_key_exists('selected_lighting_types', $branch)));
         $legacyBranches = array_values(array_filter($branches, fn (array $branch): bool => count($branch) === 1 && array_key_exists('lighting_system', $branch)));
         if (count($branches) === 2 && count($selectedBranches) === 1 && count($legacyBranches) === 1) {
-            if (! empty($profile['selected_lighting_types']) && is_array($profile['selected_lighting_types'])) return $this->evaluateConditions($selectedBranches[0], $profile);
+            if (! empty($profile['selected_lighting_types']) && is_array($profile['selected_lighting_types'])) {
+                return $this->evaluateConditions($selectedBranches[0], $profile);
+            }
             $legacy = $profile['lighting_system'] ?? null;
-            if (is_string($legacy) && trim($legacy) !== '' && $legacy !== 'UNKNOWN') return $this->evaluateConditions($legacyBranches[0], $profile);
+            if (is_string($legacy) && trim($legacy) !== '' && $legacy !== 'UNKNOWN') {
+                return $this->evaluateConditions($legacyBranches[0], $profile);
+            }
         }
         $hasUnknown = false;
         $hasFalse = false;
@@ -138,7 +144,7 @@ final class RuleApplicabilityService
     }
 
     /**
-     * @param list<array<string, mixed>> $branches
+     * @param  list<array<string, mixed>>  $branches
      */
     private function evaluateAllOf(array $branches, array $profile): ?bool
     {

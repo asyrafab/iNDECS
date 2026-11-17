@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Checklist;
 
 use App\Models\DocumentRequirement;
+use App\Services\DocumentCatalogueService;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 
@@ -62,7 +63,7 @@ final class ChecklistRuleEvaluator
             ->orderBy('sort_order')->get()
             ->filter(fn (DocumentRequirement $item) => self::matches($item->conditions, $particulars))
             ->map(fn (DocumentRequirement $item) => [
-                'code' => \App\Services\DocumentCatalogueService::itemCode($applicationTypeId, $item->documentType->code),
+                'code' => DocumentCatalogueService::itemCode($applicationTypeId, $item->documentType->code),
                 'name' => $item->documentType->name,
                 'guidance' => $item->guidance,
                 'is_required' => $item->is_required,

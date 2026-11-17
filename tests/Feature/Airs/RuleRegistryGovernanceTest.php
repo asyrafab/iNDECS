@@ -7,6 +7,7 @@ namespace Tests\Feature\Airs;
 use App\Airs\Models\ReviewRule;
 use App\Airs\Review\RuleRepository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 use Tests\Support\AirsFixtures;
 use Tests\TestCase;
@@ -19,7 +20,7 @@ final class RuleRegistryGovernanceTest extends TestCase
     {
         parent::setUp();
         $this->seed();
-        \Illuminate\Support\Facades\Storage::fake('local');
+        Storage::fake('local');
     }
 
     public function test_configured_rule_pack_syncs_governance_metadata(): void

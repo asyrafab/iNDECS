@@ -12,7 +12,7 @@ final class FileValidator
     private const ARCHIVE_MIMES = ['application/zip', 'application/x-zip-compressed', 'application/octet-stream'];
 
     /**
-     * @param list<UploadedFile> $files
+     * @param  list<UploadedFile>  $files
      */
     public function validateUploadSet(?UploadedFile $archive, array $files): void
     {

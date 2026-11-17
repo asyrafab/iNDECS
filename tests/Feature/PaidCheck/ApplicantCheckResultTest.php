@@ -13,6 +13,7 @@ use App\Models\ApplicationDocument;
 use App\Models\PaidCheckJourney;
 use App\Models\User;
 use App\Services\PaidCheck\CheckPaymentService;
+use App\Services\Portal\PortalBoard;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
@@ -137,7 +138,7 @@ final class ApplicantCheckResultTest extends TestCase
     public function test_portal_board_reminds_applicant_when_result_is_ready(): void
     {
         $draft = $this->paidDraft();
-        $board = app(\App\Services\Portal\PortalBoard::class)->for($this->owner($draft));
+        $board = app(PortalBoard::class)->for($this->owner($draft));
         $this->assertContains($draft->title.': keputusan semakan AIRS sedia', array_column($board['todos'], 'text'));
     }
 

@@ -9,6 +9,7 @@ use App\Models\ApplicantDraftDocument;
 use App\Models\DocumentType;
 use App\Models\User;
 use App\Services\DocumentCatalogueService;
+use App\Services\Precheck\DraftChecklist;
 use Illuminate\Support\Facades\Storage;
 use Tests\Feature\Portal\BuildsApplicants;
 
@@ -55,7 +56,7 @@ trait BuildsLjupJourney
             'precheck_status' => 'done', 'readable' => true, 'text_chars' => 200, 'matched_keywords' => [], 'confirmed_at' => now(),
         ], $state))->save();
         // As in the app: a newer file in a single-file item marks the older one replaced.
-        if ($document->item_code !== null && \App\Services\Precheck\DraftChecklist::maxFilesForType($document->document_type_id) === 1) {
+        if ($document->item_code !== null && DraftChecklist::maxFilesForType($document->document_type_id) === 1) {
             ApplicantDraftDocument::query()->where('draft_id', $draft->id)->where('item_code', $document->item_code)
                 ->whereKeyNot($document->id)->whereNull('superseded_at')->update(['superseded_at' => now()]);
         }

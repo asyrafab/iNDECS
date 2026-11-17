@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Support;
 
 use App\Airs\Models\ReviewCase;
+use App\Airs\Models\ReviewVersion;
 use App\Enums\ApplicationStage;
 use App\Enums\ApplicationStatus;
 use App\Models\Application;
@@ -53,9 +54,9 @@ trait AirsFixtures
             'payment_clearance_reference' => 'TEST-'.Str::ulid(), 'payment_cleared_at' => now()->subMinute()]);
     }
 
-    protected function airsVersion(ReviewCase $case, int $checkNumber = 1, array $attributes = []): \App\Airs\Models\ReviewVersion
+    protected function airsVersion(ReviewCase $case, int $checkNumber = 1, array $attributes = []): ReviewVersion
     {
-        return \App\Airs\Models\ReviewVersion::create($attributes + ['review_case_id' => $case->id, 'check_number' => $checkNumber,
+        return ReviewVersion::create($attributes + ['review_case_id' => $case->id, 'check_number' => $checkNumber,
             'rule_pack' => 'ljup', 'rule_version' => 'v2', 'prompt_version' => 'v1', 'report_version' => 'v1', 'ai_provider' => 'fake']);
     }
 }

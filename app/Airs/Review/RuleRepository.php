@@ -6,18 +6,19 @@ namespace App\Airs\Review;
 
 use App\Airs\Enums\EvaluationMethod;
 use App\Airs\Models\ReviewRule;
+use Illuminate\Database\Eloquent\Collection;
 use RuntimeException;
 
 final class RuleRepository
 {
-    /** @return \Illuminate\Database\Eloquent\Collection<int, ReviewRule> */
-    public function syncConfiguredPack(): \Illuminate\Database\Eloquent\Collection
+    /** @return Collection<int, ReviewRule> */
+    public function syncConfiguredPack(): Collection
     {
         return $this->syncPack((string) config('airs.rule_pack'), (string) config('airs.rule_version'));
     }
 
-    /** @return \Illuminate\Database\Eloquent\Collection<int, ReviewRule> */
-    public function syncPack(string $pack, string $version): \Illuminate\Database\Eloquent\Collection
+    /** @return Collection<int, ReviewRule> */
+    public function syncPack(string $pack, string $version): Collection
     {
         $payload = $this->loadVersion($pack, $version);
         $this->validate($payload);

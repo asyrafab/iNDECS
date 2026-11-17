@@ -9,6 +9,7 @@ use App\Airs\Models\ReviewCase;
 use App\Airs\Review\ReviewStateService;
 use DomainException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\Support\AirsFixtures;
 use Tests\TestCase;
 
@@ -20,7 +21,7 @@ final class ReviewStateServiceTest extends TestCase
     {
         parent::setUp();
         $this->seed();
-        \Illuminate\Support\Facades\Storage::fake('local');
+        Storage::fake('local');
     }
 
     public function test_valid_state_progress_never_moves_backwards(): void

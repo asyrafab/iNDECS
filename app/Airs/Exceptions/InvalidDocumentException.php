@@ -6,6 +6,4 @@ namespace App\Airs\Exceptions;
 
 use RuntimeException;
 
-final class InvalidDocumentException extends RuntimeException
-{
-}
+final class InvalidDocumentException extends RuntimeException {}

@@ -8,15 +8,12 @@ use App\Airs\Contracts\DocumentProcessor;
 use App\Airs\Exceptions\InvalidDocumentException;
 use App\Airs\Models\PageRegion;
 use App\Airs\Models\ReviewCase;
-use App\Airs\Models\ReviewFile;
 use App\Airs\Models\ReviewPage;
 use Illuminate\Support\Facades\Storage;
 
 final class DocumentInventoryService
 {
-    public function __construct(private readonly DocumentProcessor $processor)
-    {
-    }
+    public function __construct(private readonly DocumentProcessor $processor) {}
 
     public function inventory(ReviewCase $case): void
     {
@@ -38,12 +35,14 @@ final class DocumentInventoryService
                     'rejection_reason' => 'DOCUMENT_UNREADABLE',
                 ])->save();
                 $warnings[] = "{$file->original_name}: diketepikan kerana dokumen tidak dapat dibaca.";
+
                 continue;
             }
 
             if (($result['is_encrypted'] ?? false) === true) {
                 $file->forceFill(['is_encrypted' => true, 'processing_status' => 'FAILED', 'rejection_reason' => 'PDF_ENCRYPTED'])->save();
                 $warnings[] = "{$file->original_name}: password-protected PDF requires manual review.";
+
                 continue;
             }
 
@@ -55,6 +54,7 @@ final class DocumentInventoryService
                     'rejection_reason' => 'NO_READABLE_PAGES',
                 ])->save();
                 $warnings[] = "{$file->original_name}: diketepikan kerana tiada halaman yang boleh dibaca.";
+
                 continue;
             }
             $totalPages += $pageCount;

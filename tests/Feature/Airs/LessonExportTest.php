@@ -10,6 +10,7 @@ use App\Airs\Models\ReviewFinding;
 use App\Airs\Models\ReviewVersion;
 use App\Airs\Review\FindingFeedbackService;
 use App\Airs\Review\ProfileFieldReviewService;
+use App\Models\ApplicantDraft;
 use App\Models\Application;
 use App\Models\ApplicationDocument;
 use App\Models\User;
@@ -95,7 +96,7 @@ final class LessonExportTest extends TestCase
     {
         app(FindingFeedbackService::class)->record($this->officer, $this->manualFinding(), 'BELUM_DITUNAIKAN', 'Komen teknikal.');
         $text = (string) file_get_contents(app(LessonExporter::class)->export()['file']);
-        $owner = User::query()->whereKey(\App\Models\ApplicantDraft::query()->value('user_id'))->firstOrFail();
+        $owner = User::query()->whereKey(ApplicantDraft::query()->value('user_id'))->firstOrFail();
         foreach ([$this->application->application_reference, $this->application->title, $owner->email, $owner->name, $this->officer->email, $this->officer->name, $this->application->id] as $identifier) {
             $this->assertStringNotContainsString((string) $identifier, $text);
         }

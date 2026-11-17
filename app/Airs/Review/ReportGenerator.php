@@ -11,9 +11,7 @@ use App\Airs\Models\ReviewVersion;
 
 final class ReportGenerator
 {
-    public function __construct(private readonly FindingAggregator $aggregator)
-    {
-    }
+    public function __construct(private readonly FindingAggregator $aggregator) {}
 
     public function generate(ReviewCase $case, ReviewVersion $version): GeneratedReport
     {
@@ -146,7 +144,7 @@ final class ReportGenerator
     /**
      * This is a readiness score for officer triage. It is not an approval score.
      *
-     * @param list<array<string, mixed>> $findings
+     * @param  list<array<string, mixed>>  $findings
      */
     private function applicationScore(array $findings): array
     {
@@ -154,7 +152,7 @@ final class ReportGenerator
     }
 
     /**
-     * @param list<array{title: string, findings: list<array<string, mixed>>}> $sections
+     * @param  list<array{title: string, findings: list<array<string, mixed>>}>  $sections
      * @return list<array<string, mixed>>
      */
     private function sectionChecklist(array $sections): array

@@ -11,7 +11,5 @@ final class CheckPaymentConfirmed
 {
     use Dispatchable;
 
-    public function __construct(public readonly string $paymentId)
-    {
-    }
+    public function __construct(public readonly string $paymentId) {}
 }

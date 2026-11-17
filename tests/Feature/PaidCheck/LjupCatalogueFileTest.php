@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Tests\Feature\PaidCheck;
 
 use App\Models\User;
+use App\Services\DocumentCatalogueService;
 use App\Services\Precheck\DraftChecklist;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
 /** The committed LJUP checklist (database/catalogues/ljup.v1.json) stays valid and publishable. */
@@ -39,8 +41,8 @@ final class LjupCatalogueFileTest extends TestCase
     {
         $this->seed();
         $senior = User::factory()->create(['department_id' => 'JKEJ', 'role' => 'senior_engineering_officer']);
-        $this->expectException(\Illuminate\Validation\ValidationException::class);
-        app(\App\Services\DocumentCatalogueService::class)->publish('LJUP', ['version' => 0, 'source_reference' => 'Ujian', 'items' => [
+        $this->expectException(ValidationException::class);
+        app(DocumentCatalogueService::class)->publish('LJUP', ['version' => 0, 'source_reference' => 'Ujian', 'items' => [
             ['code' => 'pelan', 'name' => 'Pelan', 'is_required' => true, 'max_file_size_kb' => 204800],
         ]], $senior);
     }

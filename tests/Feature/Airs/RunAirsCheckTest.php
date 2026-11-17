@@ -9,6 +9,7 @@ use App\Airs\CheckService;
 use App\Airs\Contracts\AiProvider;
 use App\Airs\Contracts\DocumentProcessor;
 use App\Airs\Enums\ReviewCaseStatus;
+use App\Airs\Events\AirsCheckCompleted;
 use App\Airs\Models\AiRun;
 use App\Airs\Models\ProcessingTask;
 use App\Airs\Models\ReviewFinding;
@@ -16,6 +17,7 @@ use App\Airs\Models\ReviewVersion;
 use App\Models\Application;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
 use Tests\Support\AirsFixtures;
 use Tests\Support\FakeAirsDocumentProcessor;
@@ -46,10 +48,10 @@ final class RunAirsCheckTest extends TestCase
 
     public function test_completed_check_dispatches_event_once(): void
     {
-        \Illuminate\Support\Facades\Event::fake([\App\Airs\Events\AirsCheckCompleted::class]);
+        Event::fake([AirsCheckCompleted::class]);
         $version = $this->runCheck();
-        \Illuminate\Support\Facades\Event::assertDispatchedTimes(\App\Airs\Events\AirsCheckCompleted::class, 1);
-        \Illuminate\Support\Facades\Event::assertDispatched(\App\Airs\Events\AirsCheckCompleted::class,
+        Event::assertDispatchedTimes(AirsCheckCompleted::class, 1);
+        Event::assertDispatched(AirsCheckCompleted::class,
             fn ($event) => $event->reviewVersionId === $version->id && $event->checkNumber === 1 && $event->applicationId === $this->application->id);
     }
 
@@ -85,13 +87,25 @@ final class RunAirsCheckTest extends TestCase
         {
             public function __construct(private AiProvider $inner) {}
 
-            public function classifyDocument(array $input): array { return $this->inner->classifyDocument($input); }
+            public function classifyDocument(array $input): array
+            {
+                return $this->inner->classifyDocument($input);
+            }
 
-            public function extractApplicationProfile(array $input): array { return $this->inner->extractApplicationProfile($input); }
+            public function extractApplicationProfile(array $input): array
+            {
+                return $this->inner->extractApplicationProfile($input);
+            }
 
-            public function evaluateRule(array $input): array { return ['status' => 'LULUS', 'confidence' => 'very']; }
+            public function evaluateRule(array $input): array
+            {
+                return ['status' => 'LULUS', 'confidence' => 'very'];
+            }
 
-            public function generateReport(array $input): array { return $this->inner->generateReport($input); }
+            public function generateReport(array $input): array
+            {
+                return $this->inner->generateReport($input);
+            }
         });
 
         $version = $this->runCheck();

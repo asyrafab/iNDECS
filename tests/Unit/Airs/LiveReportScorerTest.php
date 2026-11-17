@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Airs;
 
+use App\Airs\Enums\FindingStatus;
 use App\Airs\Review\LiveReportScorer;
 use Illuminate\Support\Collection;
 use Tests\TestCase;
@@ -20,7 +21,7 @@ final class LiveReportScorerTest extends TestCase
 
     private function entry(string $status): object
     {
-        return (object) ['status' => \App\Airs\Enums\FindingStatus::from($status), 'created_at' => now()];
+        return (object) ['status' => FindingStatus::from($status), 'created_at' => now()];
     }
 
     public function test_latest_officer_status_replaces_status_and_keeps_ai_status(): void

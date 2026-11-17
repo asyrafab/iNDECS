@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Airs;
 
+use App\Airs\CheckClearance;
+use App\Airs\CheckService;
 use App\Airs\Contracts\AiProvider;
 use App\Airs\Contracts\DocumentProcessor;
 use App\Airs\Enums\FindingStatus;
 use App\Airs\Jobs\RunAirsCheck;
 use App\Airs\Models\ReviewFinding;
-use App\Airs\CheckClearance;
-use App\Airs\CheckService;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
@@ -26,7 +26,7 @@ final class LightingTypeApplicabilityFlowTest extends TestCase
     {
         parent::setUp();
         $this->seed();
-        \Illuminate\Support\Facades\Storage::fake('local');
+        Storage::fake('local');
     }
 
     public function test_all_lighting_type_combinations_route_only_relevant_rules_to_ai(): void
@@ -79,7 +79,7 @@ final class LightingTypeApplicabilityFlowTest extends TestCase
     }
 
     /**
-     * @param list<string> $evaluated
+     * @param  list<string>  $evaluated
      */
     private function assertRuleRoute(bool $expected, array $evaluated, string $ruleId, string $label): void
     {

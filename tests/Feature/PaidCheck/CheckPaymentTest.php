@@ -4,13 +4,20 @@ declare(strict_types=1);
 
 namespace Tests\Feature\PaidCheck;
 
+use App\Airs\Jobs\RunAirsCheck;
 use App\Events\CheckPaymentConfirmed;
+use App\Models\ApplicantDraft;
 use App\Models\AuditLog;
 use App\Models\CheckPayment;
+use App\Models\User;
 use App\Services\PaidCheck\CheckPaymentService;
+use App\Services\PaidCheck\PaidCheckJourneyService;
 use Carbon\CarbonImmutable;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -32,14 +39,14 @@ final class CheckPaymentTest extends TestCase
     {
         config(['airs.fee_sen' => null]);
         $draft = $this->readyLjupDraft();
-        $this->actingAs($draft->user_id === null ? null : \App\Models\User::find($draft->user_id))
+        $this->actingAs($draft->user_id === null ? null : User::find($draft->user_id))
             ->get(route('portal.drafts.edit', $draft))->assertOk()->assertSee('Fi semakan belum ditetapkan');
     }
 
     public function test_banner_reflects_whether_the_paid_check_is_open(): void
     {
         $draft = $this->readyLjupDraft();
-        $owner = \App\Models\User::find($draft->user_id);
+        $owner = User::find($draft->user_id);
         $this->actingAs($owner)->get(route('portal.drafts.edit', $draft))->assertOk()
             ->assertDontSee('Fi, bayaran dan penghantaran rasmi belum dibuka')->assertSee('Semakan AIRS berbayar dibuka')
             ->assertDontSee('Kejuruteraan dan Landskap akan menyusul')->assertSee('Landskap akan menyusul');
@@ -51,14 +58,14 @@ final class CheckPaymentTest extends TestCase
     public function test_pay_button_shows_fee_when_set(): void
     {
         $draft = $this->readyLjupDraft();
-        $this->actingAs(\App\Models\User::find($draft->user_id))->get(route('portal.drafts.edit', $draft))->assertOk()
+        $this->actingAs(User::find($draft->user_id))->get(route('portal.drafts.edit', $draft))->assertOk()
             ->assertSee('Bayar semakan AIRS (RM150.00)');
     }
 
     public function test_owner_starts_payment_and_is_sent_to_staging_checkout(): void
     {
         $draft = $this->readyLjupDraft();
-        $owner = \App\Models\User::find($draft->user_id);
+        $owner = User::find($draft->user_id);
 
         $response = $this->actingAs($owner)->post(route('portal.drafts.payment.start', $draft));
 
@@ -73,7 +80,7 @@ final class CheckPaymentTest extends TestCase
     public function test_starting_twice_reuses_the_pending_payment(): void
     {
         $draft = $this->readyLjupDraft();
-        $owner = \App\Models\User::find($draft->user_id);
+        $owner = User::find($draft->user_id);
         $this->actingAs($owner)->post(route('portal.drafts.payment.start', $draft));
         $this->actingAs($owner)->post(route('portal.drafts.payment.start', $draft));
         $this->assertSame(1, CheckPayment::query()->count());
@@ -113,7 +120,7 @@ final class CheckPaymentTest extends TestCase
     public function test_other_user_cannot_start_or_confirm_payment(): void
     {
         $draft = $this->readyLjupDraft();
-        $owner = \App\Models\User::find($draft->user_id);
+        $owner = User::find($draft->user_id);
         $stranger = $this->applicant('stranger@example.test');
         $this->actingAs($stranger)->post(route('portal.drafts.payment.start', $draft))->assertNotFound();
         $this->actingAs($owner)->post(route('portal.drafts.payment.start', $draft));
@@ -126,7 +133,7 @@ final class CheckPaymentTest extends TestCase
     public function test_staging_confirmation_marks_paid_and_dispatches_event(): void
     {
         $draft = $this->readyLjupDraft();
-        $owner = \App\Models\User::find($draft->user_id);
+        $owner = User::find($draft->user_id);
         $this->actingAs($owner)->post(route('portal.drafts.payment.start', $draft));
         $payment = CheckPayment::query()->sole();
 
@@ -140,7 +147,7 @@ final class CheckPaymentTest extends TestCase
     public function test_confirm_is_idempotent_for_same_event(): void
     {
         $draft = $this->readyLjupDraft();
-        $payment = app(CheckPaymentService::class)->start(\App\Models\User::find($draft->user_id), $draft, false);
+        $payment = app(CheckPaymentService::class)->start(User::find($draft->user_id), $draft, false);
         $service = app(CheckPaymentService::class);
 
         $service->confirm($payment->reference, 'evt-1', CarbonImmutable::now());
@@ -159,12 +166,12 @@ final class CheckPaymentTest extends TestCase
     {
         Event::fake([CheckPaymentConfirmed::class]);
         $draft = $this->readyLjupDraft();
-        $payment = app(CheckPaymentService::class)->start(\App\Models\User::find($draft->user_id), $draft, false);
+        $payment = app(CheckPaymentService::class)->start(User::find($draft->user_id), $draft, false);
         $service = app(CheckPaymentService::class);
         $service->confirm($payment->reference, 'evt-1', CarbonImmutable::now());
         Event::fake([CheckPaymentConfirmed::class]);
-        \Illuminate\Support\Facades\Queue::fake([\App\Airs\Jobs\RunAirsCheck::class]);
-        app(\App\Services\PaidCheck\PaidCheckJourneyService::class)->paid($payment->fresh());
+        Queue::fake([RunAirsCheck::class]);
+        app(PaidCheckJourneyService::class)->paid($payment->fresh());
 
         $service->confirm($payment->reference, 'evt-1', CarbonImmutable::now());
 
@@ -174,7 +181,7 @@ final class CheckPaymentTest extends TestCase
     public function test_paid_draft_cannot_start_another_payment(): void
     {
         $draft = $this->readyLjupDraft();
-        $owner = \App\Models\User::find($draft->user_id);
+        $owner = User::find($draft->user_id);
         $payment = app(CheckPaymentService::class)->start($owner, $draft, false);
         app(CheckPaymentService::class)->confirm($payment->reference, 'evt-1', CarbonImmutable::now());
         $this->actingAs($owner)->post(route('portal.drafts.payment.start', $draft))->assertSessionHasErrors('payment');
@@ -184,10 +191,10 @@ final class CheckPaymentTest extends TestCase
     public function test_staging_gateway_refused_in_production(): void
     {
         $draft = $this->readyLjupDraft();
-        $owner = \App\Models\User::find($draft->user_id);
+        $owner = User::find($draft->user_id);
         $payment = app(CheckPaymentService::class)->start($owner, $draft, false);
         $this->app->detectEnvironment(fn () => 'production');
-        $this->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class, \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class]); // CSRF is only bypassed in 'testing'
+        $this->withoutMiddleware([PreventRequestForgery::class, ValidateCsrfToken::class]); // CSRF is only bypassed in 'testing'
         $this->actingAs($owner)->get(route('portal.payments.staging', $payment))->assertNotFound();
         $this->actingAs($owner)->post(route('portal.payments.staging.confirm', $payment))->assertNotFound();
         $this->assertSame('pending', $payment->fresh()->status);
@@ -196,7 +203,7 @@ final class CheckPaymentTest extends TestCase
     public function test_non_ljup_draft_cannot_pay(): void
     {
         $owner = $this->applicant();
-        $draft = new \App\Models\ApplicantDraft(['application_type_id' => 'PKM', 'title' => 'Rumah']);
+        $draft = new ApplicantDraft(['application_type_id' => 'PKM', 'title' => 'Rumah']);
         $draft->user_id = $owner->id;
         $draft->version = 1;
         $draft->save();

@@ -5,15 +5,18 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Airs\Models\ReviewFinding;
+use App\Airs\Models\ReviewVersion;
 use App\Airs\Review\FindingFeedbackService;
+use App\Airs\Review\MatrixProfileProjection;
 use App\Airs\Review\ProfileFieldReviewService;
 use App\Models\Application;
-use Illuminate\Http\RedirectResponse;
 use App\Models\ApplicationDocument;
 use App\Models\PaidCheckJourney;
 use App\Services\Kejuruteraan\OfficerCheckPresenter;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -64,12 +67,12 @@ final class KejuruteraanApplicationController extends Controller
         $record = $this->application($request, $application);
         $data = $request->validate([
             'review_version_id' => ['required', 'string'],
-            'field' => ['required', \Illuminate\Validation\Rule::in(\App\Airs\Review\MatrixProfileProjection::FIELDS)],
-            'disposition' => ['required', \Illuminate\Validation\Rule::in(['ACCEPTED', 'CORRECTED', 'REJECTED'])],
+            'field' => ['required', Rule::in(MatrixProfileProjection::FIELDS)],
+            'disposition' => ['required', Rule::in(['ACCEPTED', 'CORRECTED', 'REJECTED'])],
             'value' => ['nullable', 'string', 'max:2000'], 'reason' => ['required', 'string', 'max:2000'],
             'expected_revision' => ['required', 'integer', 'min:0'],
         ]);
-        $version = \App\Airs\Models\ReviewVersion::query()->whereKey($data['review_version_id'])
+        $version = ReviewVersion::query()->whereKey($data['review_version_id'])
             ->whereHas('reviewCase', fn ($query) => $query->where('application_id', $record->id))->firstOrFail();
         $fields->record($request->user(), $version, $data['field'], $data['disposition'], $data['value'] ?? null, $data['reason'], (int) $data['expected_revision']);
 

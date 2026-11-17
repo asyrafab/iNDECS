@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Tests\Feature\Airs;
 
 use App\Airs\Contracts\DocumentProcessor;
+use App\Airs\DocumentProcessing\DocumentInventoryService;
 use App\Airs\Enums\ReviewCaseStatus;
 use App\Airs\Models\ReviewCase;
 use App\Airs\Models\ReviewFile;
-use App\Airs\DocumentProcessing\DocumentInventoryService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
@@ -23,7 +23,7 @@ final class DocumentInventoryServiceTest extends TestCase
     {
         parent::setUp();
         $this->seed();
-        \Illuminate\Support\Facades\Storage::fake('local');
+        Storage::fake('local');
     }
 
     public function test_one_unreadable_file_does_not_stop_another_usable_document(): void

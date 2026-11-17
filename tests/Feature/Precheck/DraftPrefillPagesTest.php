@@ -8,6 +8,7 @@ use App\Models\ApplicantDraft;
 use App\Models\User;
 use App\Services\Precheck\DraftDropService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 /** Upload-first part 2, Task 3: filled details are shown with their source, merged into an open form and confirmed on save. */
@@ -75,7 +76,7 @@ final class DraftPrefillPagesTest extends TestCase
     public function test_fragment_names_the_last_version_the_applicant_saved(): void
     {
         $draft = $this->filledDraft();
-        \Illuminate\Support\Facades\DB::table('core.applicant_draft_revisions')->insert(['draft_id' => $draft->id, 'actor_id' => $this->owner->id,
+        DB::table('core.applicant_draft_revisions')->insert(['draft_id' => $draft->id, 'actor_id' => $this->owner->id,
             'version' => 2, 'snapshot' => json_encode(['title' => 'CADANGAN MEMBINA MENARA', 'prefill' => true]), 'created_at' => now()]);
 
         $payload = $this->payload($draft);
@@ -83,7 +84,7 @@ final class DraftPrefillPagesTest extends TestCase
 
         // A save in another tab is not a fill: a form older than it must keep getting the conflict message.
         $draft->forceFill(['version' => 3])->save();
-        \Illuminate\Support\Facades\DB::table('core.applicant_draft_revisions')->insert(['draft_id' => $draft->id, 'actor_id' => $this->owner->id,
+        DB::table('core.applicant_draft_revisions')->insert(['draft_id' => $draft->id, 'actor_id' => $this->owner->id,
             'version' => 3, 'snapshot' => json_encode(['title' => 'Tajuk lain']), 'created_at' => now()]);
         $this->assertSame(3, $this->payload($draft)['base']);
     }

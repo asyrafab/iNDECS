@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Airs\Models\ReviewCase;
 use App\Enums\ApplicationStage;
 use App\Enums\ApplicationStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -96,7 +97,7 @@ class Application extends Model
 
     public function airsCase(): HasOne
     {
-        return $this->hasOne(\App\Airs\Models\ReviewCase::class);
+        return $this->hasOne(ReviewCase::class);
     }
 
     public function bangunan(): HasOne

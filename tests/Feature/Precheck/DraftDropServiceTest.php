@@ -8,6 +8,7 @@ use App\Contracts\DocumentScanner;
 use App\Jobs\PrecheckDraftDocument;
 use App\Models\ApplicantDraft;
 use App\Models\ApplicantDraftDocument;
+use App\Models\User;
 use App\Services\Precheck\DraftDropService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -82,9 +83,9 @@ final class DraftDropServiceTest extends TestCase
         });
     }
 
-    private function owner(ApplicantDraft $draft): \App\Models\User
+    private function owner(ApplicantDraft $draft): User
     {
-        return \App\Models\User::query()->findOrFail($draft->user_id);
+        return User::query()->findOrFail($draft->user_id);
     }
 
     private function draft(): ApplicantDraft

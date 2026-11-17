@@ -9,9 +9,11 @@ use App\Contracts\TextExtractor;
 use App\Jobs\PrecheckDraftDocument;
 use App\Models\ApplicantDraft;
 use App\Models\ApplicantDraftDocument;
+use App\Models\User;
 use App\Services\Precheck\DraftDropService;
 use App\Services\Precheck\ExtractedText;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -35,7 +37,7 @@ final class DraftPrefillTest extends TestCase
         });
     }
 
-    private ?\App\Models\User $owner = null;
+    private ?User $owner = null;
 
     private function dropDraft(): ApplicantDraft
     {
@@ -67,7 +69,7 @@ final class DraftPrefillTest extends TestCase
         (new PrecheckDraftDocument($document->id, $read))->handle($fake);
     }
 
-    private function revisions(ApplicantDraft $draft): \Illuminate\Support\Collection
+    private function revisions(ApplicantDraft $draft): Collection
     {
         return DB::table('core.applicant_draft_revisions')->where('draft_id', $draft->id)->orderBy('version')->get();
     }
