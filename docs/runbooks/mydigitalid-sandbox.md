@@ -49,7 +49,9 @@ Selected `facile-it/php-openid-client` 1.0.0 (MIT), with JOSE verification throu
 
 The adapter uses the library for authorization/token exchange and signature/claim verification; the application adds exact issuer/HTTPS endpoint checks, required nonce/subject/expiry/authentication time and UserInfo subject consistency. Only RS256 and `client_secret_basic` are currently supported. Issuer metadata and JWKS are bounded by five-second request timeout, no redirects, same configured HTTPS origin and 256 KiB response limit. They are fetched per transaction without a persistent key cache, so rotated keys are retrieved on the next operation. Unknown token-controlled URLs are never fetched. Broader provider requirements remain an interoperability gate.
 
-Composer installed only the new dependency set without upgrading existing locked packages. Its audit reported nine advisories affecting six existing packages (Laravel framework, phpseclib and Symfony foundation/kernel/mime/routing). No new selected package appeared in that report. Treat dependency remediation as a separate pre-release task; this is not a security-audit clearance. Do not expand the pilot to real participants before unresolved provider and release security gates are reviewed.
+Composer initially installed only the new dependency set without upgrading existing locked packages. Its audit reported nine advisories affecting six existing packages (Laravel framework, phpseclib and Symfony foundation/kernel/mime/routing). No new selected package appeared in that report.
+
+The separate 2026-11-17 dependency follow-up updates only those six packages: Laravel 13.42.0, phpseclib 4.0.3, Symfony http-foundation/http-kernel/routing 8.1.11 and mime 8.1.10. The live Composer lockfile audit and npm audit now report zero known advisories. This resolves the recorded dependency findings; it is not a security-audit clearance. Do not expand the pilot to real participants before unresolved provider and release security gates are reviewed. See the [release review](release-review-2026-11-17.md) for validation and review boundaries.
 
 ## Local verification
 
