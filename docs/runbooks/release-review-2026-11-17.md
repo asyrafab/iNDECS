@@ -29,7 +29,7 @@ The live initial Composer audit reported nine advisories across six packages. A 
 ## Verification
 
 - Focused identity, OIDC and real PostgreSQL lock-contention tests before the dependency update: 43 passed, 256 assertions.
-- JavaScript removal-confirmation tests: four passed.
+- JavaScript tests: all 23 AMIRA and removal-confirmation tests passed. Hosted CI now includes both CommonJS and ESM test files.
 - Full-repository Pint check after mechanical fixes: passed.
 - Composer manifest validation: passed.
 - Frontend production build: passed.
@@ -39,6 +39,6 @@ The live initial Composer audit reported nine advisories across six packages. A 
 
 ## Hosted review boundary
 
-The fetched `origin/main` is `5e6ff0e`, an ancestor of the starting local commit. There are 127 pre-existing local commits between it and `fdf7437`. Publishing the current branch as a PR against main would therefore include that earlier backlog, not just this review's changes. No branch has been pushed and no hosted CI result is claimed by this follow-up. Reconcile the earlier backlog through the repository PR process before publishing a PR scoped to these changes.
+The fetched `origin/main` is `5e6ff0e`, an ancestor of the starting local commit. There are 127 pre-existing local commits between it and `fdf7437`. The owner subsequently authorised reconciliation of that backlog and preparation for a GitHub PR. The review branch retains those commits and the four follow-up commits without rewriting main or changing their history. The PR scope is the complete accumulated platform change, not only the identity sandbox. See the [reconciliation record](backlog-reconciliation-2026-11-17.md). Hosted CI results must be checked on the PR before merging.
 
 No operational database migration, real MyDigital ID connection, real email delivery, production activation or merge is part of this review.
