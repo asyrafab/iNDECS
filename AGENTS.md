@@ -336,6 +336,10 @@ indicator uses one square = standalone application, two = linked pair, three = d
   `staff:superadmin <staff_number>` for explicit audited promotion to the existing
   unscoped `system_admin` role. Never infer privileges from a staff number at login.
 
+## MyDigital ID local sandbox milestone (2026-11-17)
+
+ADR-391 adds default-off, non-production-only identity linking and email OTP on separate `/portal/mydigitalid` and `/portal/otp` routes. Existing public and staff login methods remain unchanged. Only allowlisted existing verified public/guest accounts may link; OTP never creates accounts. `config/mydigitalid.php` keeps real provider transport off; local notifications force the array mailer. Never copy officer-supplied credentials or promote sandbox links to production. See `docs/runbooks/mydigitalid-sandbox.md` for verification and pending provider gates. Company groups and downstream MBSP SSO remain later milestones.
+
 ## Independent AMIRA backend (2026-11-04)
 
 AMIRA backend ownership was moved to C:\Users\Asyra\Documents\AMIRA under ADR-353 (2026-11-04). It is an independent prepared-guidance/catalogue service; conversation, model inference and record retrieval remain unimplemented. AIRS retains its review AiProvider and UI/assets. iNDECS keeps local guidance with no new remote dependency. Future assistant APIs belong to AMIRA, with scoped source APIs and iNDECS identity; free applicant guidance stays local and uses no paid AI.

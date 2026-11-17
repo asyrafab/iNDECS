@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->web(append: [\App\Http\Middleware\SandboxIdentitySession::class]);
         $middleware->alias([
             'bangunan.access' => EnsureBangunanAccess::class,
             'bangunan.legacy' => EnsureBangunanLegacyAccess::class,

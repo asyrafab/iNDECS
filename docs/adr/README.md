@@ -151,3 +151,5 @@ Date: YYYY-MM-DD. Status: Proposed | Accepted | Superseded by ADR-MMM.
 - [ADR-389: Held confirmation and reversible modal dimming](ADR-389-held-draft-removal-confirmation.md)
 
 - [ADR-390: Fill draft details from dropped documents](ADR-390-draft-prefill-from-documents.md)
+
+- [ADR-391: MyDigital ID sandbox linking and email OTP](ADR-391-mydigital-id-sandbox-linking-and-email-otp.md) — accepted for local implementation; real provider use pending.

@@ -21,6 +21,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 require __DIR__.'/public.php';
+require __DIR__.'/identity-sandbox.php';
 
 Route::middleware('auth')->group(function (): void {
 });

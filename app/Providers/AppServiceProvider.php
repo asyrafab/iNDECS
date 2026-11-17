@@ -15,6 +15,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->bind(\App\Contracts\Identity\MyDigitalIdClient::class, \App\Services\Identity\MyDigitalIdOidcClient::class);
         $this->app->bind(StaffAuthenticator::class, MbspStaffAuthenticator::class);
         $this->app->bind(DocumentScanner::class, ClamAvDocumentScanner::class);
         $this->app->bind(\App\Contracts\TextExtractor::class, \App\Services\Precheck\LocalTextExtractor::class);
