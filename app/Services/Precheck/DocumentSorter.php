@@ -8,9 +8,10 @@ namespace App\Services\Precheck;
  * Ranks checklist items for one dropped file from its name and locally read text (upload-first drafts).
  * Deterministic keyword scoring only — no AI. Score per item: 3 × keywords in the file name
  * + 1 × item-code words (4+ letters) that are file-name words + 2 × keywords in the text
- * + 3 for the item whose keyword is the longest one in the text's opening (its heading or subject line).
- * Only the longest heading keyword counts, so "LAMPU JALAN" inside a cover letter's subject
- * "PERMOHONAN KELULUSAN PELAN LAMPU JALAN" does not also name the lighting plan.
+ * + 3 for the item named by the text's heading: the first keyword in its opening that belongs to one item only
+ * (the longest when several start at the same place). A form's own title comes before the application subject
+ * it quotes, a cover letter's subject comes before the enclosures it lists, and "LAMPU JALAN" inside the subject
+ * "PERMOHONAN KELULUSAN PELAN LAMPU JALAN" starts later, so it does not name the lighting plan.
  */
 final class DocumentSorter
 {
@@ -51,26 +52,29 @@ final class DocumentSorter
     }
 
     /**
-     * Items owning the longest keyword found in the heading (several only on an exact length tie).
+     * The item named by the heading's first single-item keyword, or none.
      *
      * @param  list<array{code: string, keywords: list<string>}>  $items
      * @return array<string, true>
      */
     private static function headingCodes(string $heading, array $items): array
     {
-        $longest = 0;
-        $codes = [];
+        $owners = [];
         foreach ($items as $item) {
             foreach ($item['keywords'] as $keyword) {
-                $keyword = self::normalise($keyword);
-                $length = mb_strlen($keyword);
-                if ($keyword === '' || $length < $longest || ! str_contains($heading, $keyword)) {
-                    continue;
-                }
-                if ($length > $longest) {
-                    [$longest, $codes] = [$length, []];
-                }
-                $codes[$item['code']] = true;
+                $owners[self::normalise($keyword)][$item['code']] = true;
+            }
+        }
+        $best = null;
+        $codes = [];
+        foreach ($owners as $keyword => $codesOwning) {
+            $position = $keyword === '' || count($codesOwning) > 1 ? false : mb_strpos($heading, (string) $keyword);
+            if ($position === false) {
+                continue;
+            }
+            $rank = [$position, -mb_strlen((string) $keyword)];
+            if ($best === null || $rank < $best) {
+                [$best, $codes] = [$rank, $codesOwning];
             }
         }
 

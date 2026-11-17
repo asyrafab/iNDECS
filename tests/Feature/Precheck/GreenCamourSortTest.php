@@ -62,7 +62,9 @@ final class GreenCamourSortTest extends TestCase
         $this->assertSame(['PELAN_LAMPU_JALAN_ (22).pdf'], $placed('pelan_lampu_jalan'));
         $this->assertSame(['LAIN_LAIN_LUX REPORT.pdf'], $placed('laporan_fotometrik'));
         // The cover letter's subject heading names it, over the enclosures it lists.
-        $this->assertContains('LAIN_LAIN_SURAT PERMOHONAN (1).pdf', $placed('borang_pengemukaan'));
+        // The submission form is headed "BORANG PENGEMUKAAN" though named LJUP; it sits with the cover letter.
+        $this->assertSame(['LAIN_LAIN_LJUP (2).pdf', 'LAIN_LAIN_SURAT PERMOHONAN (1).pdf'], $placed('borang_pengemukaan'));
+        $this->assertSame(['LAIN_LAIN_LJUP KHUSUS.pdf', 'LAIN_LAIN_LJUP UMUM (1).pdf'], $placed('borang_ljup1'));
         // The payment receipt belongs to no checklist item.
         $this->assertNull($documents->firstWhere('original_name', 'LAIN_LAIN_RECEIPT RM250.pdf')?->item_code);
         // Auto-sorting never hides a file: each one is either the current file of one item or in the tray.
@@ -73,7 +75,8 @@ final class GreenCamourSortTest extends TestCase
         fwrite(STDERR, 'Filled title: '.$draft->title.PHP_EOL.'Filled address: '.$draft->site_address.PHP_EOL);
         $this->assertStringStartsWith('CADANGAN PEMBANGUNAN', $draft->title);
         $this->assertStringContainsString('LOT 22067', (string) $draft->site_address);
-        $this->assertSame('LAIN_LAIN_SURAT PERMOHONAN (1).pdf', $draft->prefill_sources['title']['name']);
+        // Either file under Borang pengemukaan (the submission form or the cover letter) carries the subject.
+        $this->assertContains($draft->prefill_sources['title']['name'], $placed('borang_pengemukaan'));
         $this->assertTrue($draft->title_provisional);
     }
 }
