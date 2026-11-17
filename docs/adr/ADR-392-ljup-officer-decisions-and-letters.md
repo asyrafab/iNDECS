@@ -2,7 +2,7 @@
 
 Date: 2026-11-17.
 
-Status: Proposed. The owner requested the next LJUP increment and asked for a recommended process. The departmental outcomes, delegation and letter templates below are recommendations, not confirmed JKEJ policy.
+Status: Increment 1 accepted for implementation by owner on 2026-11-17: internal recommendations and draft letter previews only. Official outcomes, delegation and issued letter templates below remain recommendations, not confirmed JKEJ policy. No official transition or issuance is authorised by this increment.
 
 ## Context
 

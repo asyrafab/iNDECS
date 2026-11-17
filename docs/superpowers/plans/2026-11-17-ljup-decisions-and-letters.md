@@ -1,6 +1,6 @@
 # LJUP decisions and letters — proposed implementation sequence
 
-Design: [ADR-392](../../adr/ADR-392-ljup-officer-decisions-and-letters.md). Status: proposed; departmental policy is not yet confirmed. Base: consolidation PR #2, commit `a2c07d1`. Work on `codex/ljup-decisions-letters`; keep PR #2 unchanged.
+Design: [ADR-392](../../adr/ADR-392-ljup-officer-decisions-and-letters.md). Status: increment 1 authorised and implemented on 2026-11-17; official issuance policy is not yet confirmed. Base: consolidation PR #2, commit `a2c07d1`. Work on `codex/ljup-decisions-letters`; keep PR #2 unchanged. Implementation/verification: [runbook](../../runbooks/ljup-internal-recommendations.md).
 
 ## Increment 1: Internal recommendations and letter drafts
 

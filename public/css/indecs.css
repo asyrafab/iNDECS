@@ -1486,6 +1486,8 @@ html[data-amira-entrance="pending"] [data-amira-entrance] .amira-counter-compose
 .file-row-main p { margin: var(--space-1) 0 0; font-size: var(--font-size-sm); color: var(--color-text-muted); }
 .file-row-main small { display: block; margin-top: var(--space-1); font-size: var(--font-size-xs); color: var(--color-text-muted); }
 .file-board-empty { padding: var(--space-8); background: var(--color-surface); border: var(--rule-hair) dashed var(--color-accent-300); border-radius: var(--radius-md); }
+/* ADR-392: preserve officer-entered paragraphs in escaped internal draft text. */
+.internal-draft-text { white-space: pre-wrap; overflow-wrap: anywhere; }
 .file-board-empty h2 { margin: var(--space-4) 0 var(--space-2); font-size: var(--font-size-xl); }
 .file-board-empty p { margin: 0 0 var(--space-5); color: var(--color-text-muted); max-width: 52ch; }
 .file-board-more { display: inline-flex; align-items: center; gap: var(--space-2); }

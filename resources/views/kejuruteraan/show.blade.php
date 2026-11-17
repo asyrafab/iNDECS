@@ -11,6 +11,9 @@
 </div></div>
 @if (session('status'))<div class="alert alert-success" role="status">{{ session('status') }}</div>@endif
 @if ($errors->any())<div class="alert alert-error" role="alert"><div>@foreach ($errors->all() as $error)<p>{{ $error }}</p>@endforeach</div></div>@endif
+@if (auth()->user()->canPerformLjup('review'))
+    <a class="button button-secondary button-small" href="#syor-dalaman"><x-icon name="file-text" />Syor dalaman & draf surat</a>
+@endif
 
 @if ($view['missing_required'] !== [])
     <div class="alert alert-info"><x-icon name="circle-alert" /><div><strong>Dokumen wajib tidak dilampirkan</strong>
@@ -58,4 +61,5 @@
     @endif
 @if ($collapsed)</details>@else</section>@endif
 @endforeach
+@include('kejuruteraan.partials.recommendations')
 @endsection

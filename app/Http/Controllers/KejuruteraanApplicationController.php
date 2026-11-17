@@ -11,14 +11,19 @@ use App\Airs\Review\MatrixProfileProjection;
 use App\Airs\Review\ProfileFieldReviewService;
 use App\Models\Application;
 use App\Models\ApplicationDocument;
+use App\Models\ApplicationRecommendation;
 use App\Models\PaidCheckJourney;
+use App\Services\ApplicationRecommendationService;
+use App\Services\Kejuruteraan\LjupRecommendationSource;
 use App\Services\Kejuruteraan\OfficerCheckPresenter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 /** Jabatan Kejuruteraan workspace for LJUP applications and their AIRS checks. */
 final class KejuruteraanApplicationController extends Controller
@@ -37,8 +42,44 @@ final class KejuruteraanApplicationController extends Controller
     public function show(Request $request, string $application): View
     {
         $record = $this->application($request, $application);
+        $recommendationContext = null;
+        $recommendations = collect();
+        if ($request->user()->canPerformLjup('review')) {
+            try {
+                $recommendationContext = app(ApplicationRecommendationService::class)->context($request->user(), $record->id, app(LjupRecommendationSource::class));
+            } catch (HttpExceptionInterface $exception) {
+                if ($exception->getStatusCode() !== 409) {
+                    throw $exception;
+                }
+            }
+            $recommendations = ApplicationRecommendation::query()->where('application_id', $record->id)
+                ->with(['actor', 'letterDraft'])->orderByDesc('revision')->get();
+        }
 
-        return view('kejuruteraan.show', ['application' => $record, 'view' => $this->presenter->for($record)]);
+        return view('kejuruteraan.show', ['application' => $record, 'view' => $this->presenter->for($record),
+            'recommendationContext' => $recommendationContext, 'recommendations' => $recommendations,
+            'recommendationOutcomes' => app(LjupRecommendationSource::class)->outcomes()]);
+    }
+
+    public function storeRecommendation(Request $request, string $application, ApplicationRecommendationService $service, LjupRecommendationSource $source): RedirectResponse
+    {
+        $record = $this->application($request, $application);
+        $recommendation = $service->record($request->user(), $record->id, $source, $request->all());
+
+        return redirect()->route('kejuruteraan.recommendations.preview', [$record, $recommendation])
+            ->with('status', 'Syor dalaman dan draf surat disimpan. Tiada keputusan rasmi dikeluarkan.');
+    }
+
+    public function previewRecommendation(Request $request, string $application, string $recommendation): Response
+    {
+        abort_unless($request->user()->canPerformLjup('review'), 403);
+        $record = $this->application($request, $application);
+        $revision = ApplicationRecommendation::query()->where('application_id', $record->id)->with('letterDraft')->findOrFail($recommendation);
+        $draft = $revision->letterDraft;
+        abort_unless($draft && $draft->template_key === 'internal-recommendation' && $draft->template_version === 1, 409);
+
+        return response()->view('kejuruteraan.letters.internal-v1', ['application' => $record, 'recommendation' => $revision, 'draft' => $draft,
+            'letter' => $draft->content_snapshot])->header('Cache-Control', 'no-store')->header('Referrer-Policy', 'no-referrer');
     }
 
     public function document(Request $request, string $application, string $document): StreamedResponse
