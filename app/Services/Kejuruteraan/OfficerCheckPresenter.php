@@ -10,11 +10,14 @@ use App\Airs\Models\ReviewCase;
 use App\Airs\Models\ReviewFindingFeedback;
 use App\Airs\Models\ReviewRule;
 use App\Airs\Models\ReviewVersion;
+use App\Airs\Models\SystemConfigSnapshot;
 use App\Airs\Review\LiveReportScorer;
 use App\Airs\Review\MatrixProfileProjection;
 use App\Airs\Review\MatrixUsageReport;
 use App\Models\Application;
+use App\Models\ApplicationDocument;
 use App\Models\PaidCheckJourney;
+use App\Models\User;
 use App\Services\PaidCheck\ApplicantCheckPresenter;
 use Illuminate\Support\Collection;
 
@@ -39,6 +42,7 @@ final class OfficerCheckPresenter
         $final = $journey?->final_check_number;
 
         return [
+            'background' => $this->background($application, $journey),
             'journey' => $journey,
             'final_check_number' => $final,
             'checks' => $versions->map(fn (ReviewVersion $version) => $this->check($case, $version))->values()->all(),
@@ -113,9 +117,49 @@ final class OfficerCheckPresenter
             'profile_stale' => $profileStale,
             'shadow_outcome' => $version->shadow_outcome,
             'items' => $items,
+            'documents' => $completed ? $this->documentsFor($case, $version) : [],
             'fields' => $completed ? $this->fieldsFor($version) : [],
             'usage' => $this->usage->forVersion($version),
         ];
+    }
+
+    private function background(Application $application, ?PaidCheckJourney $journey): array
+    {
+        $application->loadMissing(['applicationType', 'responsibleDepartment', 'assignee', 'sites', 'lots', 'applicationParties.party']);
+        $draft = $journey?->draft;
+
+        return [
+            'type' => $application->applicationType?->name,
+            'department' => $application->responsibleDepartment?->name,
+            'assignee' => $application->assignee?->name,
+            'submitter' => $draft ? User::query()->whereKey($draft->user_id)->value('name') : null,
+            'sites' => $application->sites->map(fn ($site) => implode(', ', array_filter([$site->development_address, $site->mukim, $site->district])))->all(),
+            'lots' => $application->lots->map(fn ($lot) => implode(', ', array_filter([$lot->lot_number, $lot->mukim, $lot->district])))->all(),
+            'parties' => $application->applicationParties->map(fn ($party) => [
+                'role' => match ($party->role) {
+                    'applicant' => 'Pemohon', 'developer' => 'Pemaju', 'consultant', 'psp' => 'Perunding', 'owner' => 'Pemilik', default => 'Pihak berkaitan'
+                },
+                'name' => $party->submitted_snapshot['name'] ?? $party->party?->name,
+            ])->filter(fn ($party) => filled($party['name']))->values()->all(),
+            'lighting_types' => array_map(fn ($type) => config('airs.lighting_types.'.$type.'.label', $type), $journey?->lighting_types ?? []),
+        ];
+    }
+
+    /** Only preview supported, clean application documents pinned to this check's manifest. */
+    private function documentsFor(ReviewCase $case, ReviewVersion $version): array
+    {
+        $manifest = SystemConfigSnapshot::query()->where('review_version_id', $version->id)->first()?->config_json['document_manifest'] ?? [];
+        $documents = ApplicationDocument::query()->where('application_id', $case->application_id)
+            ->whereIn('id', array_column($manifest, 'id'))->where('scan_status', 'clean')
+            ->whereIn('mime_type', ['application/pdf', 'image/png', 'image/jpeg', 'image/webp'])->get()->keyBy('id');
+
+        return collect($manifest)->filter(fn ($entry) => isset($entry['id'], $entry['sha256'])
+            && $documents->has($entry['id']) && hash_equals($entry['sha256'], $documents[$entry['id']]->checksum_sha256))
+            ->map(fn ($entry) => [
+                'id' => $entry['id'], 'name' => $documents[$entry['id']]->original_name,
+                'revision' => $documents[$entry['id']]->revision_number,
+                'url' => route('kejuruteraan.documents.show', [$case->application_id, $entry['id']]),
+            ])->unique('id')->values()->all();
     }
 
     /** True when an officer correction changed a profile field that an active rule's applicability reads. */

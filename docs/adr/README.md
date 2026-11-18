@@ -157,3 +157,5 @@ Date: YYYY-MM-DD. Status: Proposed | Accepted | Superseded by ADR-MMM.
 - [ADR-392: LJUP officer recommendations, decisions and letters](ADR-392-ljup-officer-decisions-and-letters.md) — internal recommendations/draft previews authorised and implemented; official issuance policy/template confirmation pending.
 
 - [ADR-394: Officer technical-comment workspace](ADR-394-officer-technical-comment-workspace.md) - compact evidence-first findings, explicit filters and protected unsaved comments.
+
+- [ADR-395: Plan viewer and application background](ADR-395-officer-plan-viewer-and-application-background.md) - in-page document review beside comments and recorded application context.

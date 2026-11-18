@@ -20,6 +20,9 @@
         <div class="technical-review-actions"><button type="button" class="button button-secondary button-small" data-review-next>Belum diulas seterusnya<x-icon name="arrow-down" /></button><button type="button" class="button button-ghost button-small" data-review-collapse>Ringkaskan senarai</button></div>
         <p class="muted technical-review-results" data-review-results role="status" aria-live="polite"></p>
     </div>
+    <div class="technical-review-desk">
+        @include('kejuruteraan.partials.plan-viewer')
+        <div class="technical-review-comments">
     <div class="technical-finding-list" id="review-list-{{ $check['number'] }}">
     @foreach ($check['items'] as $item)
         @php
@@ -42,7 +45,7 @@
                             <h4><x-icon name="file-text" />Bukti sumber</h4>
                             @forelse ($item['evidence'] as $evidence)
                                 <div class="technical-evidence-entry">
-                                    @if ($evidence['document_id'])<a href="{{ route('kejuruteraan.documents.show', [$application, $evidence['document_id']]) }}{{ $evidence['page'] ? '#page='.$evidence['page'] : '' }}" target="_blank" rel="noopener">{{ $evidence['document'] }}@if ($evidence['page']), halaman {{ $evidence['page'] }}@endif<x-icon name="arrow-up-right" /></a>
+                                    @if ($evidence['document_id'])<a href="{{ route('kejuruteraan.documents.show', [$application, $evidence['document_id']]) }}{{ $evidence['page'] ? '#page='.$evidence['page'] : '' }}" @if (collect($check['documents'])->contains('id', $evidence['document_id'])) target="technical-document-{{ $check['number'] }}" data-review-evidence="{{ $evidence['document_id'] }}" data-review-page="{{ $evidence['page'] ?? 1 }}" @endif>{{ $evidence['document'] }}@if ($evidence['page']), halaman {{ $evidence['page'] }}@endif<x-icon name="file-text" /></a>
                                     @else<p class="muted">Rujukan dokumen tidak tersedia.</p>@endif
                                     @if ($evidence['quote'])<blockquote>{{ $evidence['quote'] }}</blockquote>@endif
                                 </div>
@@ -66,4 +69,6 @@
     @endforeach
     </div>
     <div class="technical-review-empty" data-review-empty hidden><h4>Tiada dapatan sepadan</h4><p>Ubah carian atau penapis untuk melihat dapatan lain.</p><button type="button" class="button button-secondary button-small" data-review-reset>Reset carian & penapis</button></div>
+        </div>
+    </div>
 </div>

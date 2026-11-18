@@ -87,7 +87,10 @@ final class KejuruteraanApplicationController extends Controller
         $record = $this->application($request, $application);
         $file = ApplicationDocument::query()->where('application_id', $record->id)->findOrFail($document);
 
-        return Storage::disk('local')->response($file->storage_path, $file->original_name, ['Content-Type' => $file->mime_type], 'inline');
+        return Storage::disk('local')->response($file->storage_path, $file->original_name, [
+            'Content-Type' => $file->mime_type, 'X-Frame-Options' => 'SAMEORIGIN',
+            'Content-Security-Policy' => "frame-ancestors 'self'", 'X-Content-Type-Options' => 'nosniff',
+        ], 'inline');
     }
 
     public function storeFeedback(Request $request, string $application, string $finding, FindingFeedbackService $feedback): RedirectResponse
