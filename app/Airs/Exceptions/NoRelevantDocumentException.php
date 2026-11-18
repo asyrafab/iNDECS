@@ -6,6 +6,4 @@ namespace App\Airs\Exceptions;
 
 use RuntimeException;
 
-final class NoRelevantDocumentException extends RuntimeException
-{
-}
+final class NoRelevantDocumentException extends RuntimeException {}

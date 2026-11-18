@@ -100,6 +100,7 @@ final class DraftDropService
                 $target = $source === false ? false : fopen($temp, 'wb');
                 if ($source === false || $target === false) {
                     $result = $result->merge(new DropResult([], [['name' => $entryName, 'reason' => 'Fail dalam ZIP tidak dapat dibaca.']]));
+
                     continue;
                 }
                 // Never trust the declared size: stop copying past the per-file cap.
@@ -108,6 +109,7 @@ final class DraftDropService
                 fclose($target);
                 if ($copied === false || $copied > (int) config('airs.limits.file_bytes')) {
                     $result = $result->merge(new DropResult([], [['name' => $entryName, 'reason' => 'Fail kosong atau melebihi had saiz.']]));
+
                     continue;
                 }
                 $result = $result->merge($this->store($owner, $draft, $temp, $entryName, $extension));

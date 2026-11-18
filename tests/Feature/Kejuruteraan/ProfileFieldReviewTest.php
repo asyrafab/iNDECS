@@ -10,7 +10,9 @@ use App\Airs\Models\ReviewVersion;
 use App\Airs\Review\MatrixProfileProjection;
 use App\Models\Application;
 use App\Models\User;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 final class ProfileFieldReviewTest extends TestCase
@@ -91,8 +93,8 @@ final class ProfileFieldReviewTest extends TestCase
     public function test_field_reviews_are_append_only(): void
     {
         $this->review($this->engineer(), ['field' => 'developer', 'disposition' => 'REJECTED', 'expected_revision' => 0]);
-        $this->expectException(\Illuminate\Database\QueryException::class);
-        \Illuminate\Support\Facades\DB::table('airs.profile_field_reviews')->delete();
+        $this->expectException(QueryException::class);
+        DB::table('airs.profile_field_reviews')->delete();
     }
 
     public function test_building_officer_cannot_review_fields(): void

@@ -85,6 +85,7 @@
                 $slides = array_map(fn ($photo) => [...$photo, 'src' => asset('img/welcome/'.$photo['image'].'.jpg')], $photos);
             @endphp
             <div class="welcome-gallery" aria-label="Slideshow pembangunan" aria-roledescription="karusel" data-welcome-carousel>
+                @include('partials.welcome-garden-circle')
                 @foreach (array_slice($slides, 0, 3) as $position => $photo)
                     <button type="button" class="welcome-photo welcome-photo-slot-{{ $position }}" aria-label="Pilih imej: {{ $photo['label'] }}" data-welcome-photo>
                         <span class="welcome-frame"><img class="photo-{{ $photo['crop'] }}" src="{{ $photo['src'] }}" alt="{{ $photo['alt'] }}" decoding="sync"></span>

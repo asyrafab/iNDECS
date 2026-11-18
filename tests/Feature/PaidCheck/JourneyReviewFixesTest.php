@@ -5,18 +5,19 @@ declare(strict_types=1);
 namespace Tests\Feature\PaidCheck;
 
 use App\Airs\Contracts\DocumentProcessor;
+use App\Airs\Jobs\RunAirsCheck;
 use App\Airs\Models\ReviewVersion;
 use App\Enums\PaidCheckState;
 use App\Models\AcceptedSubmission;
 use App\Models\ApplicantDraft;
 use App\Models\Application;
-use App\Models\CheckPayment;
 use App\Models\PaidCheckJourney;
 use App\Models\User;
 use App\Services\PaidCheck\CheckPaymentService;
 use App\Services\PaidCheck\PaidCheckJourneyService;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Tests\Support\FakeAirsDocumentProcessor;
 use Tests\TestCase;
@@ -150,7 +151,7 @@ final class JourneyReviewFixesTest extends TestCase
 
     public function test_running_result_uses_a_persistent_poller(): void
     {
-        \Illuminate\Support\Facades\Queue::fake([\App\Airs\Jobs\RunAirsCheck::class]);
+        Queue::fake([RunAirsCheck::class]);
         [$draft, $owner] = $this->paid();
         $this->actingAs($owner)->get(route('portal.drafts.edit', $draft))->assertOk()
             ->assertSee('data-check-poll-url', false)->assertSee('setInterval', false)->assertSee('X-Airs-Partial', false);

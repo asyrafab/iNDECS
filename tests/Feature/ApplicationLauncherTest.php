@@ -60,9 +60,10 @@ final class ApplicationLauncherTest extends TestCase
             }
             file_put_contents($directory.'/application-launcher.html', preg_replace('#http://localhost(?::\d+)?#', 'http://127.0.0.1:8008', $response->getContent()));
         }
-        foreach (['iNDECS Perancang', 'iNDECS Bangunan', 'iNDECS Kejuruteraan', 'iNDECS Landskap', 'eOSC+', 'AIRS', 'E-Plan Submission', 'Superadmin'] as $name) {
+        foreach (['iNDECS Planning', 'Jabatan Perancang Bandar', 'iNDECS Building', 'Jabatan Bangunan', 'iNDECS Engineering', 'Jabatan Kejuruteraan', 'iNDECS Landscape', 'Jabatan Landskap', 'NADI', 'E-Plan Submission', 'Superadmin', 'Aplikasi berkaitan'] as $name) {
             $response->assertSee($name);
         }
+        $response->assertDontSee('>AIRS<', false);
         $response->assertSee('href="https://spgis.mbsp.gov.my/ePlanSubmission"', false);
         foreach (['perancang.index', 'bangunan.index', 'osc.meetings.index'] as $route) {
             $this->get(route($route))->assertOk();
@@ -87,7 +88,7 @@ final class ApplicationLauncherTest extends TestCase
     {
         $user = User::factory()->create(['account_type' => 'public', 'role' => 'public_applicant', 'department_id' => null, 'email_verified_at' => now()]);
         $this->post(route('portal.login.store'), ['email' => $user->email, 'password' => 'password', '_welcome_login' => '1'])->assertRedirect(route('home'));
-        $this->get(route('home'))->assertOk()->assertSee('Portal Awam')->assertDontSee('iNDECS Bangunan')->assertDontSee('iNDECS Perancang')
+        $this->get(route('home'))->assertOk()->assertSee('Portal Awam')->assertDontSee('iNDECS Building')->assertDontSee('iNDECS Planning')
             ->assertDontSee('https://spgis.mbsp.gov.my/ePlanSubmission', false);
         $this->assertCount(1, app(ApplicationLauncher::class)->forUser($user));
         $this->get(route('perancang.index'))->assertForbidden();

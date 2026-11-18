@@ -14,14 +14,17 @@
                 @foreach($items as $draft)
                     <li class="file-row">
                         <div class="file-row-main">
-                            <h3><a href="{{ route('portal.drafts.edit', $draft) }}">{{ $draft->title }}</a></h3>
+                            <h3><a href="{{ route('portal.drafts.edit', $draft) }}" aria-label="Sambung draf {{ $draft->title }}">{{ $draft->title }}</a></h3>
                             <p>{{ $draft->applicationType->name }}</p>
-                            <small>Persediaan · Belum dihantar kepada MBSP · dikemas kini <time datetime="{{ $draft->updated_at->toIso8601String() }}">{{ $draft->updated_at->timezone('Asia/Kuala_Lumpur')->format('d/m/Y H:i') }}</time></small>
+                            <div class="file-row-meta">
+                                <span class="status-badge status-pending">Draf · {{ $draft->application_type_id }}</span>
+                                @isset($board['progress'][$draft->id])<span class="status-badge {{ $board['progress'][$draft->id]['ready'] === $board['progress'][$draft->id]['total'] && $board['progress'][$draft->id]['total'] > 0 ? 'status-compliant' : 'status-info' }}">Dokumen {{ $board['progress'][$draft->id]['ready'] }}/{{ $board['progress'][$draft->id]['total'] }}</span>@endisset
+                            </div>
+                            <small>Belum dihantar kepada MBSP · Dikemas kini <time datetime="{{ $draft->updated_at->toIso8601String() }}">{{ $draft->updated_at->timezone('Asia/Kuala_Lumpur')->format('d/m/Y H:i') }}</time></small>
                         </div>
-                        @isset($board['progress'][$draft->id])<span class="status-badge {{ $board['progress'][$draft->id]['ready'] === $board['progress'][$draft->id]['total'] && $board['progress'][$draft->id]['total'] > 0 ? 'status-compliant' : 'status-info' }}">Dokumen {{ $board['progress'][$draft->id]['ready'] }}/{{ $board['progress'][$draft->id]['total'] }}</span>@endisset
-                        <span class="status-badge status-pending">Draf · {{ $draft->application_type_id }}</span>
-                        <a class="button button-secondary button-small" href="{{ route('portal.drafts.edit', $draft) }}" aria-label="Sambung {{ $draft->title }}">Sambung<x-icon name="arrow-right" /></a>
-                        @include('public.drafts.partials.remove')
+                        <div class="file-row-remove">
+                            @include('public.drafts.partials.remove', ['iconOnly' => true])
+                        </div>
                     </li>
                 @endforeach
             </ul>
@@ -37,5 +40,5 @@
     @if($board['draftCount'] > \App\Services\Portal\PortalBoard::ACTIVE_LIMIT)
         <a class="file-board-more" href="{{ route('portal.drafts.index') }}">Semua draf ({{ $board['draftCount'] }})<x-icon name="arrow-right" /></a>
     @endif
-    <p class="file-board-note"><x-icon name="circle-dot" />Draf ialah persediaan anda sahaja. Muat naik dokumen, semakan awal, bayaran dan penghantaran rasmi belum dibuka.</p>
+    <p class="file-board-note"><x-icon name="circle-dot" />Pilih kad untuk menyambung draf. Draf belum dihantar kepada MBSP.</p>
 </div>

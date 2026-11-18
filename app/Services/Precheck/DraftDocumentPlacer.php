@@ -7,6 +7,7 @@ namespace App\Services\Precheck;
 use App\Models\ApplicantDraft;
 use App\Models\ApplicantDraftDocument;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -23,7 +24,7 @@ final class DraftDocumentPlacer
         if ($winner === null || $winner['score'] < (int) config('kaunter.precheck.sort_threshold', 3) || ($winner['name_score'] ?? 0) < 1) {
             return false;
         }
-        if (isset($ranked[1]) && $winner['score'] - $ranked[1]['score'] < (int) config('kaunter.precheck.sort_margin', 2)) {
+        if (isset($ranked[1]) && (int) config('kaunter.precheck.sort_margin', 2) > $winner['score'] - $ranked[1]['score']) {
             return false;
         }
 
@@ -35,7 +36,7 @@ final class DraftDocumentPlacer
             }
             try {
                 $rules = DraftFileRules::forItem($draft, $winner['code']);
-                DraftFileRules::assertFits(\Illuminate\Support\Facades\Storage::disk('local')->path($document->path), $rules);
+                DraftFileRules::assertFits(Storage::disk('local')->path($document->path), $rules);
             } catch (ValidationException) {
                 return false;
             }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\PaidCheckState;
+use App\Models\Concerns\HasExtensionAttributes;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /** A draft's paid AIRS check journey: payment, check 1, optional amendment and check 2, handover. */
 class PaidCheckJourney extends Model
 {
+    use HasExtensionAttributes;
     use HasUlids;
 
     protected $table = 'core.paid_check_journeys';
@@ -31,6 +33,16 @@ class PaidCheckJourney extends Model
     public function payment(): BelongsTo
     {
         return $this->belongsTo(CheckPayment::class, 'payment_id');
+    }
+
+    protected function extensionAttributeCasts(): array
+    {
+        return ['lighting_types' => 'array'];
+    }
+
+    protected function extensionAttributeStorage(): array
+    {
+        return ['table' => 'kejuruteraan.app_ljup_check_particulars', 'key' => 'journey_id', 'fields' => ['lighting_types']];
     }
 
     protected function casts(): array

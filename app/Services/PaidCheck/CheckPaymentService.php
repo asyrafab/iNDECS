@@ -9,6 +9,7 @@ use App\Events\CheckPaymentConfirmed;
 use App\Models\ApplicantDraft;
 use App\Models\AuditLog;
 use App\Models\CheckPayment;
+use App\Models\PaidCheckJourney;
 use App\Models\User;
 use App\Services\Precheck\DraftChecklist;
 use Carbon\CarbonImmutable;
@@ -136,7 +137,7 @@ final class CheckPaymentService
         });
         // A retried callback re-dispatches when an earlier attempt was paid but its journey was never created
         // (the listener failed after the payment committed). The journey service is idempotent.
-        if ($payment->status === 'paid' && ($newlyPaid || ! \App\Models\PaidCheckJourney::query()->where('draft_id', $payment->draft_id)->exists())) {
+        if ($payment->status === 'paid' && ($newlyPaid || ! PaidCheckJourney::query()->where('draft_id', $payment->draft_id)->exists())) {
             CheckPaymentConfirmed::dispatch($payment->id);
         }
 
@@ -160,7 +161,7 @@ final class CheckPaymentService
             // Lock every payment of the draft too, so a concurrent gateway confirmation is seen, not raced.
             CheckPayment::query()->where('draft_id', $draft->id)->lockForUpdate()->get();
             if (CheckPayment::query()->where('draft_id', $draft->id)->where('status', 'paid')->exists()
-                || \App\Models\PaidCheckJourney::query()->where('draft_id', $draft->id)->exists()) {
+                || PaidCheckJourney::query()->where('draft_id', $draft->id)->exists()) {
                 throw ValidationException::withMessages(['payment' => 'Semakan AIRS bagi draf ini telah dibayar atau dikecualikan.']);
             }
             CheckPayment::query()->where('draft_id', $draft->id)->where('status', 'pending')->update(['status' => 'cancelled', 'updated_at' => now()]);

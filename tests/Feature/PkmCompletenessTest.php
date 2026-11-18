@@ -42,8 +42,8 @@ class PkmCompletenessTest extends TestCase
         $this->assertSame(ApplicationStatus::InReview, $application->current_status);
         $this->assertSame($this->officer->id, $application->assigned_to);
         $this->assertNotNull($application->due_date);
-        $this->assertDatabaseCount('app_pkm_completeness_reviews', 1);
-        $this->assertDatabaseCount('app_pkm_completeness_items', 6);
+        $this->assertDatabaseCount('core.completeness_reviews', 1);
+        $this->assertDatabaseCount('core.completeness_items', 6);
     }
 
     public function test_private_document_uploads_are_versioned(): void
@@ -104,7 +104,7 @@ class PkmCompletenessTest extends TestCase
         $application->refresh();
         $this->assertSame(ApplicationStage::FeeAssessment, $application->current_stage);
         $this->assertSame(ApplicationStatus::AwaitingPayment, $application->current_status);
-        $this->assertDatabaseHas('app_pkm_completeness_reviews', ['status' => 'complete']);
+        $this->assertDatabaseHas('core.completeness_reviews', ['status' => 'complete']);
     }
 
     public function test_an_incomplete_application_can_be_returned_and_resubmitted(): void
@@ -127,8 +127,8 @@ class PkmCompletenessTest extends TestCase
 
         $application->refresh();
         $this->assertSame(ApplicationStatus::InReview, $application->current_status);
-        $this->assertDatabaseCount('app_pkm_completeness_reviews', 2);
-        $this->assertDatabaseHas('app_pkm_completeness_reviews', ['cycle_number' => 2, 'status' => 'in_progress']);
+        $this->assertDatabaseCount('core.completeness_reviews', 2);
+        $this->assertDatabaseHas('core.completeness_reviews', ['cycle_number' => 2, 'status' => 'in_progress']);
     }
 
     private function startReview(): Application

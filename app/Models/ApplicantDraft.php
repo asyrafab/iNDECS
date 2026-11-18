@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Concerns\HasExtensionAttributes;
+use App\Support\DepartmentStructure;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
@@ -16,6 +18,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[Fillable(['application_type_id', 'title', 'site_address', 'notes', 'work_type', 'building_category', 'storeys', 'floor_area', 'site_conditions', 'lighting_types'])]
 class ApplicantDraft extends Model
 {
+    use HasExtensionAttributes;
     use HasUlids;
     use SoftDeletes;
 
@@ -69,6 +72,20 @@ class ApplicantDraft extends Model
     public function lightingTypes(): array
     {
         return array_values($this->lighting_types ?? []);
+    }
+
+    protected function extensionAttributeCasts(): array
+    {
+        return ['work_type' => 'string', 'building_category' => 'string', 'storeys' => 'integer',
+            'floor_area' => 'float', 'site_conditions' => 'array', 'lighting_types' => 'array'];
+    }
+
+    protected function extensionAttributeStorage(): array
+    {
+        $type = (string) $this->application_type_id;
+
+        return ['table' => DepartmentStructure::draftTable($type), 'key' => 'draft_id',
+            'fields' => [...self::PARTICULARS, ...($type === 'LJUP' ? ['lighting_types'] : [])]];
     }
 
     protected function casts(): array

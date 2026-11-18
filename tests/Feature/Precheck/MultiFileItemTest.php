@@ -9,14 +9,21 @@ use App\Contracts\TextExtractor;
 use App\Enums\PrecheckLabel;
 use App\Jobs\PrecheckDraftDocument;
 use App\Models\ApplicantDraft;
+use App\Models\ApplicantDraftDocument;
 use App\Models\DocumentRequirement;
 use App\Models\DocumentType;
 use App\Models\User;
 use App\Services\BangunanDocumentCatalogueService;
 use App\Services\Precheck\DraftChecklist;
+use App\Services\Precheck\DraftDocumentPlacer;
+use App\Services\Precheck\DraftDocumentService;
 use App\Services\Precheck\ExtractedText;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
 /** Checklist items that hold several current files (catalogue max_files). */
@@ -87,7 +94,7 @@ final class MultiFileItemTest extends TestCase
     private function republish(array $maxFiles): void
     {
         $admin = User::query()->where('department_id', 'JBANG')->where('role', 'system_admin')->firstOrFail();
-        $version = (int) \Illuminate\Support\Facades\DB::table('core.document_catalogues')->where('application_type_id', 'TEL')->value('version');
+        $version = (int) DB::table('core.document_catalogues')->where('application_type_id', 'TEL')->value('version');
         app(BangunanDocumentCatalogueService::class)->publish('TEL', ['version' => $version, 'source_reference' => 'Ujian', 'items' => [
             ['code' => 'geran', 'name' => 'Geran tanah', 'is_required' => true, 'precheck_keywords' => ['HAKMILIK'], 'max_files' => $maxFiles['geran'] ?? 1],
             ['code' => 'pelan_lantai', 'name' => 'Pelan lantai', 'is_required' => true, 'max_files' => $maxFiles['pelan_lantai'] ?? 3],
@@ -98,26 +105,26 @@ final class MultiFileItemTest extends TestCase
 
     public function test_files_over_a_lowered_limit_stay_visible_and_removable(): void
     {
-        \Illuminate\Support\Facades\Queue::fake();
+        Queue::fake();
         $draft = $this->telDraft($this->applicant());
         $files = [$this->upload($draft, 'pelan_lantai', 'a'), $this->upload($draft, 'pelan_lantai', 'b'), $this->upload($draft, 'pelan_lantai', 'c')];
         $this->republish(['pelan_lantai' => 1]);
 
         $this->assertSame($this->ids($files), $this->ids($this->item($draft, 'pelan_lantai')['documents']));
-        app(\App\Services\Precheck\DraftDocumentService::class)->remove(User::query()->findOrFail($draft->user_id), $files[0]);
+        app(DraftDocumentService::class)->remove(User::query()->findOrFail($draft->user_id), $files[0]);
         $this->assertSame([$files[1]->id, $files[2]->id], $this->ids($this->item($draft, 'pelan_lantai')['documents']));
     }
 
     public function test_raising_the_limit_does_not_revive_replaced_uploads(): void
     {
-        \Illuminate\Support\Facades\Queue::fake();
+        Queue::fake();
         $draft = $this->telDraft($this->applicant());
         $this->upload($draft, 'geran', 'lama');
         $newest = $this->upload($draft, 'geran', 'baru');
         $this->republish(['geran' => 5]);
 
         $this->assertSame([$newest->id], $this->ids($this->item($draft, 'geran')['documents']));
-        app(\App\Services\Precheck\DraftDocumentService::class)->remove(User::query()->findOrFail($draft->user_id), $newest);
+        app(DraftDocumentService::class)->remove(User::query()->findOrFail($draft->user_id), $newest);
         $this->assertSame([], $this->item($draft, 'geran')['documents'], 'Removing a file never brings back a replaced one.');
     }
 
@@ -131,7 +138,7 @@ final class MultiFileItemTest extends TestCase
             return $file;
         });
         $draft->forceFill(['storeys' => 1])->save();
-        $service = app(\App\Services\Precheck\DraftDocumentService::class);
+        $service = app(DraftDocumentService::class);
         $owner = User::query()->findOrFail($draft->user_id);
 
         $service->remove($owner, $files[0]);
@@ -143,7 +150,7 @@ final class MultiFileItemTest extends TestCase
     public function test_place_refuses_a_full_item_and_duplicate_bytes(): void
     {
         $draft = $this->telDraft($this->applicant());
-        $placer = app(\App\Services\Precheck\DraftDocumentPlacer::class);
+        $placer = app(DraftDocumentPlacer::class);
         foreach (['a', 'b', 'c'] as $marker) {
             $placer->place($this->trayFile($draft, $marker), 'pelan_lantai', 'manual');
         }
@@ -155,7 +162,7 @@ final class MultiFileItemTest extends TestCase
     public function test_duplicate_bytes_from_the_tray_are_not_placed_twice(): void
     {
         $draft = $this->telDraft($this->applicant());
-        $placer = app(\App\Services\Precheck\DraftDocumentPlacer::class);
+        $placer = app(DraftDocumentPlacer::class);
         $placer->place($this->trayFile($draft, 'a'), 'pelan_lantai', 'manual');
         $copy = $this->trayFile($draft, 'a-salinan');
         $copy->forceFill(['sha256' => hash('sha256', 'a')])->save();
@@ -196,17 +203,17 @@ final class MultiFileItemTest extends TestCase
         $this->assertSame(PrecheckLabel::Attached, DraftChecklist::label($older->fresh(), []));
     }
 
-    private function pdf(string $marker): \Illuminate\Http\UploadedFile
+    private function pdf(string $marker): UploadedFile
     {
-        return \Illuminate\Http\UploadedFile::fake()->createWithContent($marker.'.pdf', "%PDF-1.4\n% {$marker}\n%%EOF\n");
+        return UploadedFile::fake()->createWithContent($marker.'.pdf', "%PDF-1.4\n% {$marker}\n%%EOF\n");
     }
 
-    private function upload(ApplicantDraft $draft, string $code, string $marker): \App\Models\ApplicantDraftDocument
+    private function upload(ApplicantDraft $draft, string $code, string $marker): ApplicantDraftDocument
     {
-        return app(\App\Services\Precheck\DraftDocumentService::class)->upload(User::query()->findOrFail($draft->user_id), $draft, $code, $this->pdf($marker));
+        return app(DraftDocumentService::class)->upload(User::query()->findOrFail($draft->user_id), $draft, $code, $this->pdf($marker));
     }
 
-    private function trayFile(ApplicantDraft $draft, string $marker): \App\Models\ApplicantDraftDocument
+    private function trayFile(ApplicantDraft $draft, string $marker): ApplicantDraftDocument
     {
         $path = "drafts/{$draft->id}/inbox/{$marker}.pdf";
         Storage::disk('local')->put($path, "%PDF-1.4\n% {$marker}\n%%EOF\n");
@@ -220,14 +227,14 @@ final class MultiFileItemTest extends TestCase
         try {
             $action();
             $this->fail('Expected a refusal.');
-        } catch (\Illuminate\Validation\ValidationException $exception) {
+        } catch (ValidationException $exception) {
             $this->assertSame([$message], $exception->errors()['file'] ?? null);
         }
     }
 
     public function test_upload_adds_to_multi_item_until_full(): void
     {
-        \Illuminate\Support\Facades\Queue::fake();
+        Queue::fake();
         $draft = $this->telDraft($this->applicant());
         $files = [$this->upload($draft, 'pelan_lantai', 'a'), $this->upload($draft, 'pelan_lantai', 'b'), $this->upload($draft, 'pelan_lantai', 'c')];
 
@@ -241,7 +248,7 @@ final class MultiFileItemTest extends TestCase
 
     public function test_duplicate_bytes_refused_in_multi_item(): void
     {
-        \Illuminate\Support\Facades\Queue::fake();
+        Queue::fake();
         $draft = $this->telDraft($this->applicant());
         $this->upload($draft, 'pelan_lantai', 'a');
 
@@ -251,7 +258,7 @@ final class MultiFileItemTest extends TestCase
     public function test_autoplace_fills_multi_item_without_displacing(): void
     {
         $draft = $this->telDraft($this->applicant());
-        $placer = app(\App\Services\Precheck\DraftDocumentPlacer::class);
+        $placer = app(DraftDocumentPlacer::class);
         $ranked = [['code' => 'pelan_lantai', 'score' => 6, 'name_score' => 1]];
         $placed = collect(['a', 'b', 'c'])->map(fn ($marker) => $this->trayFile($draft, $marker));
         foreach ($placed as $file) {
@@ -266,25 +273,25 @@ final class MultiFileItemTest extends TestCase
 
     public function test_assign_into_full_item_refused(): void
     {
-        \Illuminate\Support\Facades\Queue::fake();
+        Queue::fake();
         $draft = $this->telDraft($this->applicant());
         foreach (['a', 'b', 'c'] as $marker) {
             $this->upload($draft, 'pelan_lantai', $marker);
         }
         $loose = $this->trayFile($draft, 'd');
 
-        $this->refused(fn () => app(\App\Services\Precheck\DraftDocumentService::class)->assign(User::query()->findOrFail($draft->user_id), $loose, 'pelan_lantai'),
+        $this->refused(fn () => app(DraftDocumentService::class)->assign(User::query()->findOrFail($draft->user_id), $loose, 'pelan_lantai'),
             'Dokumen ini sudah mempunyai 3 fail. Buang satu fail sebelum menambah.');
     }
 
     public function test_placed_file_in_multi_item_can_be_removed(): void
     {
-        \Illuminate\Support\Facades\Queue::fake();
+        Queue::fake();
         $draft = $this->telDraft($this->applicant());
         $keep = $this->upload($draft, 'pelan_lantai', 'a');
         $drop = $this->upload($draft, 'pelan_lantai', 'b');
         $single = $this->upload($draft, 'geran', 'g');
-        $service = app(\App\Services\Precheck\DraftDocumentService::class);
+        $service = app(DraftDocumentService::class);
         $owner = User::query()->findOrFail($draft->user_id);
 
         $service->remove($owner, $drop);
@@ -301,7 +308,7 @@ final class MultiFileItemTest extends TestCase
         $draft = $this->telDraft($this->applicant());
         $first = $this->draftDocument($draft, 'pelan_lantai', ['text_chars' => 5]);
         $second = $this->draftDocument($draft, 'pelan_lantai', ['text_chars' => 5]);
-        $service = app(\App\Services\Precheck\DraftDocumentService::class);
+        $service = app(DraftDocumentService::class);
         $owner = User::query()->findOrFail($draft->user_id);
 
         $service->confirm($owner, $first);

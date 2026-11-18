@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable(['reference', 'title', 'description', 'overall_status'])]
 class DevelopmentCase extends Model
 {
+    protected $table = 'core.development_cases';
+
     use HasUlids;
 
     public function applications(): HasMany

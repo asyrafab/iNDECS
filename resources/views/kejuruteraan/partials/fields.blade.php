@@ -1,8 +1,9 @@
 {{-- MATRIX-extracted profile fields and officer dispositions. Official application particulars are never changed here. --}}
 @if ($check['fields'] !== [])
 @php($canReview = $view['journey']?->state === \App\Enums\PaidCheckState::HandedOver && $view['final_check_number'] === $check['number'] && auth()->user()->canPerformLjup('review'))
-<div id="profil">
+<div id="{{ $view['final_check_number'] === $check['number'] ? 'profil' : 'profil-'.$check['number'] }}">
     <h3>Profil permohonan (diekstrak oleh MATRIX)</h3>
+    <div class="table-wrap technical-profile-table" role="region" aria-label="Medan profil dan semakan pegawai" tabindex="0">
     <table class="data-table">
         <thead><tr><th>Medan</th><th>Nilai diekstrak</th><th>Semakan pegawai</th>@if ($canReview)<th>Tindakan</th>@endif</tr></thead>
         <tbody>
@@ -29,5 +30,6 @@
         @endforeach
         </tbody>
     </table>
+    </div>
 </div>
 @endif

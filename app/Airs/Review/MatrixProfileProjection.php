@@ -13,7 +13,9 @@ final class MatrixProfileProjection
     public function apply(array $report): array
     {
         $versionId = $report['matrix_review_version_id'] ?? null;
-        if (! $versionId) return $report;
+        if (! $versionId) {
+            return $report;
+        }
         $reviews = ProfileFieldReview::query()->where('review_version_id', $versionId)->orderBy('revision')->get()->groupBy('field');
         $report['profile_field_reviews'] = [];
         $changed = false;
@@ -23,15 +25,19 @@ final class MatrixProfileProjection
             $original = $report['application_profile'][$field] ?? null;
             $value = $latest->disposition === 'REJECTED' ? null : $latest->value;
             $report['application_profile'][$field] = $value;
-            if ($value !== $original) $changed = true;
+            if ($value !== $original) {
+                $changed = true;
+            }
         }
         $report['profile_dependencies_stale'] = $changed;
         if ($changed) {
             // Conservative invalidation: applicability can itself depend on corrected identity/context.
-            foreach ($report['sections'] ?? [] as $sectionIndex => $section) foreach ($section['findings'] ?? [] as $findingIndex => $finding) {
-                $report['sections'][$sectionIndex]['findings'][$findingIndex]['original_status'] = $finding['status'];
-                $report['sections'][$sectionIndex]['findings'][$findingIndex]['status'] = 'PERLU_SEMAKAN_MANUAL';
-                $report['sections'][$sectionIndex]['findings'][$findingIndex]['manual_review_reason'] = 'Maklumat profil dibetulkan; dapatan dan kebolehgunaan perlu disemak semula.';
+            foreach ($report['sections'] ?? [] as $sectionIndex => $section) {
+                foreach ($section['findings'] ?? [] as $findingIndex => $finding) {
+                    $report['sections'][$sectionIndex]['findings'][$findingIndex]['original_status'] = $finding['status'];
+                    $report['sections'][$sectionIndex]['findings'][$findingIndex]['status'] = 'PERLU_SEMAKAN_MANUAL';
+                    $report['sections'][$sectionIndex]['findings'][$findingIndex]['manual_review_reason'] = 'Maklumat profil dibetulkan; dapatan dan kebolehgunaan perlu disemak semula.';
+                }
             }
             $report['application_score'] = ['score' => null, 'label' => 'Skor ditangguhkan: profil dibetulkan', 'suggestion' => 'Semak semula dapatan berdasarkan profil yang dibetulkan.', 'basis' => 'Dapatan asal dan sejarah pembetulan dikekalkan.'];
             foreach ($report['section_checklist'] ?? [] as $index => $section) {
@@ -51,6 +57,7 @@ final class MatrixProfileProjection
             $report['summary']['overall_state_label'] = 'Profil dibetulkan — dapatan perlu disemak semula';
             $report['warnings'][] = 'PROFILE_DEPENDENCIES_STALE';
         }
+
         return $report;
     }
 }

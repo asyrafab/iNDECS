@@ -7,7 +7,6 @@ namespace Tests\Feature\Airs;
 use App\Airs\Enums\FindingStatus;
 use App\Airs\Enums\ReviewCaseStatus;
 use App\Airs\Models\ApplicationProfile;
-use App\Airs\Models\ReviewCase;
 use App\Airs\Models\ReviewFile;
 use App\Airs\Models\ReviewVersion;
 use App\Airs\Review\FindingPolicy;
@@ -15,6 +14,7 @@ use App\Airs\Review\OfficerReferenceCalibrationService;
 use App\Airs\Review\RuleApplicabilityService;
 use App\Airs\Review\RuleRepository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\Support\AirsFixtures;
 use Tests\TestCase;
 
@@ -26,7 +26,7 @@ final class OfficerReferenceCalibrationTest extends TestCase
     {
         parent::setUp();
         $this->seed();
-        \Illuminate\Support\Facades\Storage::fake('local');
+        Storage::fake('local');
     }
 
     public function test_exact_officer_review_reference_keeps_final_complied_status_with_evidence(): void

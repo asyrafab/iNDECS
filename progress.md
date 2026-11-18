@@ -2,6 +2,27 @@
 
 Last updated: 2026-11-18.
 
+## Branch consolidation — 2026-11-18
+
+Consolidated the remaining 24 commits through `codex/focus-review-mode`, which
+contains every other local feature branch. Preserved the guidance-history fix
+from main. Resolved the ADR index collision by renumbering that decision to
+ADR-406, retaining ADR-391 for the MyDigital ID sandbox.
+
+Merged-tree verification: 891 PHP tests / 4514 assertions passed (2 optional
+fixture tests skipped); all 40 JavaScript tests, Pint, production build, Composer
+audit and guarded PostgreSQL migration/seed/rollback/re-migration passed.
+Only `indecs_test` was migrated; no normal application migrations were applied.
+
+`npm audit` remains failing: six high-severity dependency entries trace to
+[GHSA-fc5q-39xc-vjpf](https://github.com/advisories/GHSA-fc5q-39xc-vjpf)
+in the development toolchain. GitHub's advisory lists picomatch through 4.0.7 as
+affected with no patched release, and npm reports 4.0.7 as latest. Retained the
+existing audit gate and dependencies rather than suppressing the finding or
+accepting the suggested major toolchain downgrades. Hosted CI cannot be claimed
+green while this finding remains. Local evidence is in ignored
+`output/merge-*.log`, audit JSON and JUnit XML files.
+
 ## LJUP upload validation — 2026-11-18
 
 Validated baseline `fdf7437` without application code changes: 243 focused tests /
@@ -25,7 +46,7 @@ real scan/text/OCR jobs in about 320 seconds, leaving no pending/failed jobs and
 the expected 11 placed files plus one unmatched receipt. Polling, dialog/file
 preservation, Tab/Escape focus, draft-save preservation and a byte-identical
 download were verified. Found and fixed AMIRA history replacing the validation
-return URL by marking its background GET as AJAX (ADR-391); repeated the duplicate
+return URL by marking its background GET as AJAX (ADR-406); repeated the duplicate
 upload successfully. Post-fix regression: 32 tests / 209 assertions passed;
 JavaScript syntax and diff checks passed. Validation used isolated test data and
 storage; its server/worker are stopped. Remaining limits are in the validation

@@ -52,6 +52,7 @@ final class ZipSafety
             if (! in_array($extension, config('airs.allowed_extensions'), true)) {
                 $warnings[] = basename($name).': diketepikan kerana format fail tidak disokong.';
                 $skipped[] = ['name' => basename($name), 'reason' => 'Jenis fail tidak dibenarkan.'];
+
                 continue;
             }
 
@@ -64,6 +65,7 @@ final class ZipSafety
             if ($size < 1 || $size > $maxFileBytes) {
                 $warnings[] = basename($name).': diketepikan kerana fail kosong atau melebihi had saiz.';
                 $skipped[] = ['name' => basename($name), 'reason' => 'Fail kosong atau melebihi had saiz.'];
+
                 continue;
             }
             $total += $size;

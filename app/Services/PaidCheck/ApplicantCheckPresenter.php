@@ -10,6 +10,7 @@ use App\Airs\Models\ReviewVersion;
 use App\Airs\Models\SystemConfigSnapshot;
 use App\Enums\PaidCheckState;
 use App\Models\ApplicationDocument;
+use App\Models\AuditLog;
 use App\Models\DocumentType;
 use App\Models\PaidCheckJourney;
 use App\Services\Checklist\ChecklistRuleEvaluator;
@@ -45,7 +46,7 @@ final class ApplicantCheckPresenter
         // A running journey whose check never started (recorded as paid_check_start_failed) needs staff, not polling.
         $waitingFor = PaidCheckJourneyService::runningCheckNumber($journey);
         if ($waitingFor !== null && ! $versions->contains('check_number', $waitingFor)
-            && \App\Models\AuditLog::query()->where('auditable_type', PaidCheckJourney::class)->where('auditable_id', $journey->id)
+            && AuditLog::query()->where('auditable_type', PaidCheckJourney::class)->where('auditable_id', $journey->id)
                 ->where('event', 'paid_check_start_failed')->where('after_values->check_number', $waitingFor)->exists()) {
             $checks[] = ['number' => $waitingFor, 'status' => 'failed', 'score' => null, 'items' => [], 'missing_required' => [],
                 'message' => 'Semakan tidak dapat dimulakan. Pegawai JKEJ akan menghubungi anda.'];

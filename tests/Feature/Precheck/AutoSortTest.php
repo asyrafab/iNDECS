@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Precheck;
 
+use App\Contracts\DocumentScanner;
 use App\Contracts\TextExtractor;
 use App\Enums\PrecheckLabel;
 use App\Jobs\PrecheckDraftDocument;
@@ -12,6 +13,8 @@ use App\Models\ApplicantDraftDocument;
 use App\Services\Precheck\DraftChecklist;
 use App\Services\Precheck\ExtractedText;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
 /** Upload-first part 1, Task 3: the pre-check job sorts dropped files into checklist items. */
@@ -27,13 +30,13 @@ final class AutoSortTest extends TestCase
         $this->seed();
         $this->seedTelCatalogue();
         $this->draft = $this->telDraft($this->applicant());
-        \Illuminate\Support\Facades\Storage::fake('local');
+        Storage::fake('local');
         $this->scanner(null);
     }
 
     private function scanner(?string $failure): void
     {
-        $this->app->instance(\App\Contracts\DocumentScanner::class, new class($failure) implements \App\Contracts\DocumentScanner
+        $this->app->instance(DocumentScanner::class, new class($failure) implements DocumentScanner
         {
             public int $calls = 0;
 
@@ -43,7 +46,7 @@ final class AutoSortTest extends TestCase
             {
                 $this->calls++;
                 if ($this->failure !== null) {
-                    throw \Illuminate\Validation\ValidationException::withMessages(['document' => $this->failure]);
+                    throw ValidationException::withMessages(['document' => $this->failure]);
                 }
             }
         });
@@ -52,7 +55,7 @@ final class AutoSortTest extends TestCase
     private function dropped(string $name): ApplicantDraftDocument
     {
         $path = "drafts/{$this->draft->id}/inbox/".uniqid().'.pdf';
-        \Illuminate\Support\Facades\Storage::disk('local')->put($path, "%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n");
+        Storage::disk('local')->put($path, "%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n");
 
         return $this->draftDocument($this->draft, 'x', ['item_code' => null, 'document_type_id' => null, 'sequence' => 0,
             'original_name' => $name, 'path' => $path, 'sha256' => hash('sha256', uniqid('', true)),
@@ -188,7 +191,7 @@ final class AutoSortTest extends TestCase
     {
         $doc = $this->check($this->dropped('geran.pdf'), 'SURAT HAKMILIK');
 
-        $this->assertSame(1, app(\App\Contracts\DocumentScanner::class)->calls);
+        $this->assertSame(1, app(DocumentScanner::class)->calls);
         $this->assertFalse($doc->scan_pending);
         $this->assertSame('geran', $doc->item_code);
     }
@@ -203,7 +206,7 @@ final class AutoSortTest extends TestCase
         $this->assertFalse($doc->scan_pending);
         $this->assertSame('Dokumen ditolak oleh imbasan keselamatan.', $doc->rejected_reason);
         $this->assertSame('done', $doc->precheck_status);
-        \Illuminate\Support\Facades\Storage::disk('local')->assertMissing($dropped->path);
+        Storage::disk('local')->assertMissing($dropped->path);
         $this->assertSame([$doc->id], array_map(fn ($d) => $d->id, app(DraftChecklist::class)->for($this->draft)['unsorted']));
     }
 
@@ -215,6 +218,6 @@ final class AutoSortTest extends TestCase
         $doc = $dropped->fresh();
         $this->assertNotNull($doc->rejected_reason);
         $this->assertFalse($doc->scan_pending);
-        \Illuminate\Support\Facades\Storage::disk('local')->assertMissing($dropped->path);
+        Storage::disk('local')->assertMissing($dropped->path);
     }
 }

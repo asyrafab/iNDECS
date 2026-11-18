@@ -10,7 +10,6 @@ use App\Contracts\TextExtractor;
 use App\Enums\PaidCheckState;
 use App\Jobs\PrecheckDraftDocument;
 use App\Models\ApplicantDraft;
-use App\Models\ApplicantDraftDocument;
 use App\Models\PaidCheckJourney;
 use App\Models\User;
 use App\Services\PaidCheck\CheckPaymentService;

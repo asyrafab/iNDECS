@@ -7,6 +7,7 @@ namespace Tests\Feature\Precheck;
 use App\Contracts\DocumentScanner;
 use App\Models\ApplicantDraftDocument;
 use App\Models\User;
+use App\Services\DocumentCatalogueService;
 use App\Services\Precheck\DraftChecklist;
 use App\Services\Precheck\DraftDropService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -36,7 +37,7 @@ final class GreenCamourSortTest extends TestCase
             public function assertClean(string $path): void {}
         });
         $admin = User::factory()->create(['department_id' => 'JKEJ', 'role' => 'system_admin']);
-        app(\App\Services\DocumentCatalogueService::class)->publish('LJUP', json_decode((string) file_get_contents(database_path('catalogues/ljup.v1.json')), true), $admin);
+        app(DocumentCatalogueService::class)->publish('LJUP', json_decode((string) file_get_contents(database_path('catalogues/ljup.v1.json')), true), $admin);
         $owner = $this->applicant();
         $drops = app(DraftDropService::class);
         $draft = $drops->createDraft($owner, 'LJUP');

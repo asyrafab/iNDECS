@@ -17,7 +17,9 @@ final class EvidenceRetriever
         foreach ($classifications as $classification) {
             $pages = $classification->file->pages;
             // Preserve the legacy provider's input shape; MATRIX receives each relevant page.
-            if ($version->ai_provider !== 'matrix') $pages = collect([$pages->first(fn ($page) => trim((string) $page->embedded_text) !== '') ?? $pages->first()])->filter();
+            if ($version->ai_provider !== 'matrix') {
+                $pages = collect([$pages->first(fn ($page) => trim((string) $page->embedded_text) !== '') ?? $pages->first()])->filter();
+            }
             foreach ($pages as $page) {
                 $text = trim((string) $page->embedded_text."\n".(string) $page->ocr_text);
                 $image = $classification->primary_type === 'SITE_PHOTOGRAPHS';
@@ -27,6 +29,7 @@ final class EvidenceRetriever
                     'preview_path' => $page->preview_path, 'high_res_path' => $page->high_res_path];
             }
         }
+
         return $evidence;
     }
 }

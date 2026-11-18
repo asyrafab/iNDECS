@@ -15,9 +15,7 @@ use ZipArchive;
 
 final class ArchiveExtractor
 {
-    public function __construct(private readonly FileValidator $validator)
-    {
-    }
+    public function __construct(private readonly FileValidator $validator) {}
 
     /** @return list<ReviewFile> */
     public function extract(ReviewCase $case, ReviewFile $archive): array
@@ -60,6 +58,7 @@ final class ArchiveExtractor
                 } catch (InvalidDocumentException $exception) {
                     Storage::disk('local')->delete($path);
                     $warnings[] = basename(str_replace('\\', '/', $entry['name'])).': diketepikan kerana kandungan fail tidak boleh digunakan.';
+
                     continue;
                 }
                 $sha256 = hash_file('sha256', $absolute);

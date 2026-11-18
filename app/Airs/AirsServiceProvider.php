@@ -4,7 +4,12 @@ declare(strict_types=1);
 
 namespace App\Airs;
 
+use App\Airs\Ai\FakeAiProvider;
+use App\Airs\Ai\MatrixClaudeProvider;
+use App\Airs\Ai\OpenAiProvider;
 use App\Airs\Contracts\AiProvider;
+use App\Airs\Contracts\DocumentProcessor;
+use App\Airs\DocumentProcessing\PythonDocumentProcessor;
 use Illuminate\Support\ServiceProvider;
 use RuntimeException;
 
@@ -12,12 +17,12 @@ final class AirsServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->bind(\App\Airs\Contracts\DocumentProcessor::class, \App\Airs\DocumentProcessing\PythonDocumentProcessor::class);
+        $this->app->bind(DocumentProcessor::class, PythonDocumentProcessor::class);
         $this->app->singleton(AiProvider::class, function ($app): AiProvider {
             $class = match ((string) config('airs.provider')) {
-                'fake' => \App\Airs\Ai\FakeAiProvider::class,
-                'openai' => \App\Airs\Ai\OpenAiProvider::class,
-                'matrix' => \App\Airs\Ai\MatrixClaudeProvider::class,
+                'fake' => FakeAiProvider::class,
+                'openai' => OpenAiProvider::class,
+                'matrix' => MatrixClaudeProvider::class,
                 default => throw new RuntimeException('Unsupported AIRS_AI_PROVIDER configuration.'),
             };
 

@@ -9,12 +9,12 @@ use App\Enums\PrecheckLabel;
 use App\Jobs\PrecheckDraftDocument;
 use App\Models\ApplicantDraft;
 use App\Models\ApplicantDraftDocument;
-use App\Models\DocumentType;
 use App\Models\User;
+use App\Services\PaidCheck\PaidCheckJourneyService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Throwable;
 
@@ -75,7 +75,7 @@ final class DraftDocumentService
             }
             $sequence = (int) ApplicantDraftDocument::query()->where('draft_id', $draft->id)->where('item_code', $itemCode)->max('sequence') + 1;
             // A unique name: a file that left this item for the tray keeps its old path, so a sequence-based name could overwrite it.
-            $path = "drafts/{$draft->id}/{$itemCode}/{$sequence}-".\Illuminate\Support\Str::ulid().".{$extension}";
+            $path = "drafts/{$draft->id}/{$itemCode}/{$sequence}-".Str::ulid().".{$extension}";
             if (! Storage::disk('local')->putFileAs(dirname($path), $file, basename($path))) {
                 throw ValidationException::withMessages(['file' => 'Fail tidak dapat disimpan. Cuba lagi.']);
             }
@@ -194,6 +194,6 @@ final class DraftDocumentService
         abort_unless($draft->user_id === $owner->id, 404);
         abort_unless($owner->email_verified_at !== null, 403, 'Sahkan emel anda melalui halaman Akaun saya sebelum menyediakan draf.');
         // After payment, documents change only inside the single amendment window.
-        abort_unless(\App\Services\PaidCheck\PaidCheckJourneyService::draftEditable($draft), 403, 'Draf dikunci semasa semakan AIRS.');
+        abort_unless(PaidCheckJourneyService::draftEditable($draft), 403, 'Draf dikunci semasa semakan AIRS.');
     }
 }

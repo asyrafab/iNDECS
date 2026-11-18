@@ -17,6 +17,12 @@ final class BangunanApplication extends Model
 
     protected $table = 'bangunan.app_pb_applications';
 
+    protected $primaryKey = 'application_id';
+
+    public $incrementing = false;
+
+    protected $keyType = 'string';
+
     public function application(): BelongsTo
     {
         return $this->belongsTo(Application::class);

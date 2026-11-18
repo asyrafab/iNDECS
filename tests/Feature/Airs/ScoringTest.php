@@ -76,13 +76,25 @@ final class ScoringTest extends TestCase
         {
             public function __construct(private AiProvider $inner) {}
 
-            public function classifyDocument(array $input): array { return $this->inner->classifyDocument($input); }
+            public function classifyDocument(array $input): array
+            {
+                return $this->inner->classifyDocument($input);
+            }
 
-            public function extractApplicationProfile(array $input): array { return $this->inner->extractApplicationProfile($input); }
+            public function extractApplicationProfile(array $input): array
+            {
+                return $this->inner->extractApplicationProfile($input);
+            }
 
-            public function evaluateRule(array $input): array { throw new MatrixTaskException('MATRIX_REVIEW_BUDGET'); }
+            public function evaluateRule(array $input): array
+            {
+                throw new MatrixTaskException('MATRIX_REVIEW_BUDGET');
+            }
 
-            public function generateReport(array $input): array { return $this->inner->generateReport($input); }
+            public function generateReport(array $input): array
+            {
+                return $this->inner->generateReport($input);
+            }
         });
 
         app(RuleEvaluationService::class)->evaluate($version, $profile, collect([$aiRule]));

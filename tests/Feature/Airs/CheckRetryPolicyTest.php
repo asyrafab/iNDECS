@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Airs;
 
 use App\Airs\Ai\MatrixReviewGate;
+use App\Airs\CheckService;
 use App\Airs\Contracts\AiProvider;
 use App\Airs\Enums\EvaluationMethod;
 use App\Airs\Enums\ReviewCaseStatus;
@@ -97,13 +98,25 @@ final class CheckRetryPolicyTest extends TestCase
         {
             public function __construct(private AiProvider $inner) {}
 
-            public function classifyDocument(array $input): array { return $this->inner->classifyDocument($input); }
+            public function classifyDocument(array $input): array
+            {
+                return $this->inner->classifyDocument($input);
+            }
 
-            public function extractApplicationProfile(array $input): array { return $this->inner->extractApplicationProfile($input); }
+            public function extractApplicationProfile(array $input): array
+            {
+                return $this->inner->extractApplicationProfile($input);
+            }
 
-            public function evaluateRule(array $input): array { throw new MatrixTaskException('MATRIX_INVALID_WORKER_RESPONSE'); }
+            public function evaluateRule(array $input): array
+            {
+                throw new MatrixTaskException('MATRIX_INVALID_WORKER_RESPONSE');
+            }
 
-            public function generateReport(array $input): array { return $this->inner->generateReport($input); }
+            public function generateReport(array $input): array
+            {
+                return $this->inner->generateReport($input);
+            }
         });
 
         $this->expectExceptionMessage('MATRIX_INVALID_WORKER_RESPONSE');
@@ -144,7 +157,7 @@ final class CheckRetryPolicyTest extends TestCase
         $this->assertGreaterThan(900, (int) config('queue.connections.airs.retry_after'));
 
         $version = $this->airsVersion($this->airsCase());
-        app(\App\Airs\CheckService::class)->rerun(tap($version)->forceFill(['status' => 'FAILED'])->save() ? $version->fresh() : $version);
+        app(CheckService::class)->rerun(tap($version)->forceFill(['status' => 'FAILED'])->save() ? $version->fresh() : $version);
         Queue::assertPushed(RunAirsCheck::class, fn ($pushed) => $pushed->connection === 'airs' && $pushed->queue === 'airs');
     }
 

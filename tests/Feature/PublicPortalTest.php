@@ -5,11 +5,15 @@ namespace Tests\Feature;
 use App\Models\ApplicantDraft;
 use App\Models\ApplicationType;
 use App\Models\Department;
+use App\Models\LibraryDocument;
 use App\Models\User;
+use App\Services\Library\LibraryService;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Tests\Feature\Portal\BuildsApplicants;
 use Tests\TestCase;
 
@@ -68,7 +72,7 @@ class PublicPortalTest extends TestCase
 
     public function test_application_chooser_filters_types_and_prefills_only_an_available_type(): void
     {
-        ApplicationType::query()->create(['id' => 'PL', 'name' => 'Unreleased landscape intake', 'primary_department_id' => 'JPBD', 'is_active' => true]);
+        ApplicationType::query()->updateOrCreate(['id' => 'PL'], ['name' => 'Unreleased landscape intake', 'primary_department_id' => 'JLAND', 'is_active' => true]);
         ApplicationType::query()->create(['id' => 'PB', 'name' => 'Inactive building intake', 'primary_department_id' => 'JPBD', 'is_active' => false]);
         $this->actingAs($this->applicant())->get(route('portal.home'))->assertOk()
             ->assertSee('Fail saya')->assertSee('Permohonan baharu')
@@ -127,7 +131,7 @@ class PublicPortalTest extends TestCase
     {
         $internal = $this->libraryDocument('Nota dalaman', 'internal');
         $retired = $this->libraryDocument('Garis lama', 'public');
-        app(\App\Services\Library\LibraryService::class)->retire($this->libraryAuthor(), $retired);
+        app(LibraryService::class)->retire($this->libraryAuthor(), $retired);
         $this->actingAs($this->applicant())->get(route('portal.home'))->assertOk()
             ->assertDontSee('Nota dalaman')->assertDontSee('Garis lama');
         $this->get(route('portal.library.download', $internal))->assertNotFound();
@@ -225,13 +229,13 @@ class PublicPortalTest extends TestCase
         return $this->libraryAuthor ??= User::factory()->create(['department_id' => 'JPBD', 'role' => 'penolong_pengarah']);
     }
 
-    private function libraryDocument(string $title, string $visibility): \App\Models\LibraryDocument
+    private function libraryDocument(string $title, string $visibility): LibraryDocument
     {
-        \Illuminate\Support\Facades\Storage::fake('local');
+        Storage::fake('local');
 
-        return app(\App\Services\Library\LibraryService::class)->create($this->libraryAuthor(), [
+        return app(LibraryService::class)->create($this->libraryAuthor(), [
             'title' => $title, 'category' => 'garis_panduan', 'visibility' => $visibility, 'application_type_ids' => ['PKM'],
-        ], \Illuminate\Http\UploadedFile::fake()->createWithContent('dokumen.pdf', "%PDF-1.4\n%%EOF\n"));
+        ], UploadedFile::fake()->createWithContent('dokumen.pdf', "%PDF-1.4\n%%EOF\n"));
     }
 
     public function test_draft_quota_is_per_owner_and_list_is_paginated(): void
@@ -247,5 +251,4 @@ class PublicPortalTest extends TestCase
         $this->actingAs($this->applicant('other@example.test'))->post(route('portal.drafts.store'), $this->data())->assertRedirect();
         $this->assertDatabaseCount('core.applicant_drafts', 101);
     }
-
 }

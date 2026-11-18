@@ -17,6 +17,8 @@ use Illuminate\Database\Eloquent\Model;
 ])]
 class AuditLog extends Model
 {
+    protected $table = 'core.audit_logs';
+
     public const UPDATED_AT = null;
 
     protected static function booted(): void

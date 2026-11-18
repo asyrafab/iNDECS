@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Enums\CompletenessItemStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
@@ -18,9 +17,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'checked_by',
     'checked_at',
 ])]
-class PkmCompletenessItem extends Model
+class PkmCompletenessItem extends CompletenessItem
 {
-    protected $table = 'app_pkm_completeness_items';
+    protected $table = 'core.completeness_items';
 
     public function review(): BelongsTo
     {

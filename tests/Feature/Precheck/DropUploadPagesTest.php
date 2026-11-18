@@ -7,10 +7,12 @@ namespace Tests\Feature\Precheck;
 use App\Contracts\DocumentScanner;
 use App\Models\ApplicantDraft;
 use App\Models\ApplicantDraftDocument;
+use App\Models\ApplicationType;
 use App\Models\DocumentType;
-use App\Models\User;
+use App\Services\Precheck\DraftChecklist;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -218,9 +220,9 @@ final class DropUploadPagesTest extends TestCase
         $path = sys_get_temp_dir().DIRECTORY_SEPARATOR.uniqid().'.zip';
         $zip = new \ZipArchive;
         $zip->open($path, \ZipArchive::CREATE);
-        $zip->addFromString('../evil.pdf', "%PDF-1.4
+        $zip->addFromString('../evil.pdf', '%PDF-1.4
 %%EOF
-");
+');
         $zip->close();
 
         $response = $this->actingAs($this->applicant())->postJson(route('portal.drafts.drop'), ['application_type_id' => 'TEL',
@@ -243,7 +245,7 @@ final class DropUploadPagesTest extends TestCase
 
         $this->actingAs($owner)->delete(route('portal.drafts.documents.remove', [$draft, $latest]))->assertRedirect();
 
-        $this->assertSame([], app(\App\Services\Precheck\DraftChecklist::class)->for($draft->fresh())['unsorted']);
+        $this->assertSame([], app(DraftChecklist::class)->for($draft->fresh())['unsorted']);
     }
 
     public function test_placing_a_stale_item_file_clears_its_older_versions(): void
@@ -252,21 +254,21 @@ final class DropUploadPagesTest extends TestCase
         $draft = $this->telDraft($owner, ['storeys' => 4]);
         $this->draftDocument($draft, 'pelan_struktur');
         $latest = $this->draftDocument($draft, 'pelan_struktur');
-        Storage::disk('local')->put($latest->path, "%PDF-1.4
+        Storage::disk('local')->put($latest->path, '%PDF-1.4
 %%EOF
-");
+');
         $draft->forceFill(['storeys' => 1])->save();
 
         $this->actingAs($owner)->post(route('portal.drafts.documents.assign', [$draft, $latest]), ['item_code' => 'pelan_lantai'])->assertRedirect();
 
-        $this->assertSame([], app(\App\Services\Precheck\DraftChecklist::class)->for($draft->fresh())['unsorted']);
+        $this->assertSame([], app(DraftChecklist::class)->for($draft->fresh())['unsorted']);
         $this->assertSame('pelan_lantai', $latest->fresh()->item_code);
     }
 
     public function test_drop_refuses_a_type_without_a_published_checklist(): void
     {
-        $type = \App\Models\ApplicationType::query()->portal()->pluck('id')
-            ->first(fn ($id) => ! \Illuminate\Support\Facades\DB::table('core.document_catalogues')->where('application_type_id', $id)->exists());
+        $type = ApplicationType::query()->portal()->pluck('id')
+            ->first(fn ($id) => ! DB::table('core.document_catalogues')->where('application_type_id', $id)->exists());
         $this->assertNotNull($type, 'Test needs a portal type without a catalogue.');
 
         $this->actingAs($this->applicant())->post(route('portal.drafts.drop'), ['application_type_id' => $type, 'files' => [$this->pdf('a.pdf')]])

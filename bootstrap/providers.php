@@ -1,8 +1,9 @@
 <?php
 
+use App\Airs\AirsServiceProvider;
 use App\Providers\AppServiceProvider;
 
 return [
     AppServiceProvider::class,
-    App\Airs\AirsServiceProvider::class,
+    AirsServiceProvider::class,
 ];

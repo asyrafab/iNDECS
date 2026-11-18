@@ -26,10 +26,10 @@ identity provider** for a family of cooperating systems:
 
 | Application | Department | Application types |
 |---|---|---|
-| iNDECS Perancang | Jabatan Perancang Bandar | PKM |
-| iNDECS Bangunan | Jabatan Bangunan | PB, PBK, PBS, PMT, TEL |
-| iNDECS Kejuruteraan | Jabatan Kejuruteraan | PKT, PKP |
-| iNDECS Landskap | Jabatan Landskap | PL |
+| iNDECS Planning | Jabatan Perancang Bandar | PKM |
+| iNDECS Building | Jabatan Bangunan | PB, PBK, PBS, PMT, TEL |
+| iNDECS Engineering | Jabatan Kejuruteraan | PKT, PKP |
+| iNDECS Landscape | Jabatan Landskap | PL |
 
 | Cooperating system | Relationship |
 |---|---|
@@ -140,7 +140,7 @@ Light and dark modes are token-only: `data-theme` on `<html>`, switched by
 
 - ADR-371 adopts department artwork in existing permission-filtered application tiles (64px), workspace switcher entries/summary and departmental topbar context (compact 32px). `.application-icon-department` removes the extra rounded/tinted icon container. Planned K/L tiles remain unlinked and keep existing visibility checks. System/public branding and nondepartment entries keep their identities; action icons stay Lucide. This supersedes the initial preview-only delivery boundary below.
 
-- K subsequently follows the same raster-backed approach as L: `scripts/brand/kejuruteraan-soft.png` preserves the owner's supplied K reference with quieter blueprint lines (ADR-370). Its supplied dimension labels are decorative artwork only. K/L use embedded images in the shared SVG wrappers; P/B remain vector. Do not regenerate K from the superseded authored bridge geometry.
+- E (Jabatan Kejuruteraan / iNDECS Engineering, replacing K) follows the same raster-backed approach as L: `scripts/brand/kejuruteraan-soft.png` preserves the owner's supplied blueprint bridge reference with quieter blueprint lines and a centred white `E` (ADR-370). Its supplied dimension labels are decorative artwork only. E/L use embedded images in the shared SVG wrappers; P/B remain vector. Do not regenerate E from the superseded authored bridge geometry.
 
 - L artwork update under ADR-370: use the owner's supplied `scripts/brand/landskap-approved.png` directly through the generated L SVG wrappers. This is intentionally raster-backed artwork preserving the exact reference, not a pure-vector redraw. Do not replace it with the rejected procedural botanical patterns. P/B/K remain vector.
 
@@ -336,11 +336,36 @@ indicator uses one square = standalone application, two = linked pair, three = d
   `staff:superadmin <staff_number>` for explicit audited promotion to the existing
   unscoped `system_admin` role. Never infer privileges from a staff number at login.
 
+## LJUP internal recommendations (2026-11-17)
+
+ADR-392 increment 1 adds append-only recommendations and letter drafts in `core`, through `ApplicationRecommendationService` and the scoped `LjupRecommendationSource`. Existing LJUP review permission is required. Only handed-over final completed checks with matching accepted-submission evidence can be used. Save a new revision; never mutate previous recommendations or letter snapshots. `.internal-draft-text` preserves escaped officer paragraphs. Draft previews say `DRAF — BUKAN SURAT RASMI`; no official status transition, reference, signature, public verification or applicant delivery is implemented.
+
+## MyDigital ID local sandbox milestone (2026-11-17)
+
+ADR-391 adds default-off, non-production-only identity linking and email OTP on separate `/portal/mydigitalid` and `/portal/otp` routes. Existing public and staff login methods remain unchanged. Only allowlisted existing verified public/guest accounts may link; OTP never creates accounts. `config/mydigitalid.php` keeps real provider transport off; local notifications force the array mailer. Never copy officer-supplied credentials or promote sandbox links to production. See `docs/runbooks/mydigitalid-sandbox.md` for verification and pending provider gates. Company groups and downstream MBSP SSO remain later milestones.
+
 ## Independent AMIRA backend (2026-11-04)
 
 AMIRA backend ownership was moved to C:\Users\Asyra\Documents\AMIRA under ADR-353 (2026-11-04). It is an independent prepared-guidance/catalogue service; conversation, model inference and record retrieval remain unimplemented. AIRS retains its review AiProvider and UI/assets. iNDECS keeps local guidance with no new remote dependency. Future assistant APIs belong to AMIRA, with scoped source APIs and iNDECS identity; free applicant guidance stays local and uses no paid AI.
 
 ## Public portal preparation (2026-11-04)
+
+ADR-389 replaces native removal confirmation with `#draft-remove-confirm` and
+the `.draft-remove-hold` control. `portal.js` requires a continuous hold before
+submitting the original form; short/released/cancelled holds never submit.
+Keep triggers disabled until initialized. Document and removal dialogs animate
+their backdrop and exit before closing; preserve reduced motion and focus return.
+
+ADR-388 supersedes the Sambung cue and legend in ADR-386/387: `.file-row-remove`
+places the accessible red `.file-row-trash` action at the card's upper right.
+Reading dots are horizontal, attention triangles match the other shapes visually,
+and `.precheck-dialog[open]` uses a token-based entrance animation. Keep reduced
+motion support, status tooltips and the separate removal hit area.
+
+ADR-387 makes each `.file-row` in Fail saya a whole-card native link via the
+title link's stretched pseudo-element. `.file-row-meta` groups type/progress;
+`.file-row-actions` contains the Sambung cue and separate removal form. Keep the
+removal form above the link hit area, and provide whole-card keyboard focus.
 
 ADR-385 presents the upload checklist as a raised `.precheck-window`, using
 `.precheck-compact-list`, `.precheck-document`, `.precheck-status-icon` and
@@ -487,3 +512,63 @@ The shared service connector, review workspace and payment/version guards are im
 The architectural introduction adds `.building-garden`: natural grass inside the lower-right circular landscape element, with a stone walking path along its arc. SVG clips/masks follow the approved logo footprint; the path is wider inward during the material phase for legibility. It fades into the unchanged shared logo at the existing symbol transition. Preserve existing planting and timing. Reduced motion hides the material garden and shows the final mark. The lawn and stone texture join the existing asset decode/failure fallback. Provenance is in `public/img/brand/README.md`.
 
 ADR-382 refines the opening garden with `.building-garden-edging`, `.building-garden-joints` and `.building-garden-contact`: narrow textured stone borders within the existing footprint, fine paving joints and a restrained grass contact seam. They share the garden animation; the final mark and timing stay unchanged.
+
+
+## Standard department database structure (2026-11-17)
+
+ADR-393 standardises storage across all four departments. Operational applications,
+parties, sites, lots, documents, requirements, references, histories and audit live in
+`core`; public identity and Laravel infrastructure remain in `public`. Department
+extensions use an `application_id` ULID primary/foreign key, timestamps and restrictive
+deletion. Prefixes: `perancang.app_pkm_`, `bangunan.app_pb_`,
+`kejuruteraan.app_pkt_` / `app_pkp_` / `app_ljup_`, `landskap.app_pl_`.
+`App\Support\DepartmentStructure` is the storage registry; it grants no access.
+Bangunan's numeric `id` remains a unique compatibility identifier. PostgreSQL guards
+extension type and creates engineering/landscape extension rows atomically.
+
+`core.completeness_reviews` / `core.completeness_items` hold completeness cycles for
+any department. Existing PKM classes are compatibility adapters preserving audit
+identifiers; catalogue snapshots remain in the distinct shared document-checklist
+model. Preserve existing workflow rules and in-flight state during schema changes.
+
+Draft project particulars live in departmental `*_draft_particulars` tables through
+`HasExtensionAttributes`; use the existing `ApplicantDraft` model API inside the
+existing authorised, locked transaction. Query-builder bulk writes bypass this API
+and must explicitly target the appropriate extension. LJUP journey lighting snapshots
+live in `kejuruteraan.app_ljup_check_particulars`, independently of editable drafts.
+PKT/PKP/PL registration is inactive infrastructure only; no new intake is enabled.
+See `docs/runbooks/department-database-standardisation.md` for migration and recovery.
+
+## Officer technical comments (2026-11-17)
+
+ADR-394 uses `.technical-review`, `.technical-review-tools`, `.technical-finding`, `.technical-evidence`, `.technical-ai`, `.technical-officer` and their shared subcomponents in `indecs.css`. Native finding disclosures separate evidence, labelled AI explanation and officer assessment. `officer-review.js` adds explicit search/section/review filters, next-unreviewed navigation and page-local unsaved-edit protection; never autosave comments or put them in browser storage. Historical checks remain read-only. New comments require an explicit officer status; saved assessments and validation input prefill only their own finding. Keep document links scoped, confidence visible, and append-only history unchanged. Profile tables use the keyboard-accessible `.table-wrap.technical-profile-table` region on narrow screens.
+
+## Officer plan viewer (2026-11-18)
+
+ADR-395 adds recorded application background above the review and a `.technical-review-desk` with a sticky `.technical-plan` beside `.technical-review-comments`. `officer-documents.js` selects only same-origin URLs from the check's manifest-filtered document list; evidence links and finding navigation update the named iframe/page without submitting comments. Preserve scoped private document authorization, original historical versions and delayed historical iframe loading. Do not embed HTML/SVG/archives or substitute MATRIX fields for authoritative background. Narrow screens stack the viewer and comments; existing unsaved-edit safeguards stay active.
+
+## Resizable officer review (2026-11-18)
+
+ADR-396 adds `.technical-panel-divider` and progressive `.technical-review-desk.is-resizable` / `.is-narrow` states through `officer-panel-split.js`. Read minimum pane width/default ratio from tokens. Pointer/keyboard resizing must retain comments and the existing iframe; disable iframe pointer events only during capture. Persist only a numeric per-user layout ratio, tolerate unavailable storage, preserve readable widths and stack on narrow screens. Focus mode is a separate proposal in ADR-396, not implemented by this increment.
+
+## Focus Review (2026-11-18)
+
+ADR-397 makes `review=focus` the default LJUP officer view; `review=overview` retains the complete overview. `.review-context-disclosure`, `.review-secondary-details`, `.review-analysis-details`, `.review-filter-disclosure` and `.technical-review-queue` keep context expandable and one active finding beside the resizable plan. Save/next uses the existing append-only feedback service, then selects the next unreviewed scoped finding server-side. Never advance on validation failure or treat completion as an official decision. Queue navigation preserves page-local edits; comments are never stored in browser storage.
+
+## Persistent review task summary (2026-11-18)
+
+ADR-398 adds `.review-task-status`, `.review-task-card`, `.review-task-progress` and `.review-task-score`: a sticky top-right summary of the final/latest check, saved officer-comment progress and advisory score. Header/summary measurements in `officer-review.js` keep the plan, divider and finding anchors clear. Never count unsaved text as completed work or show a stale profile score as current.
+
+ADR-399 refines the summary into a native `.review-task-tool` disclosure, collapsed by default, with `.review-task-toggle` and `.review-task-compact-score` keeping saved progress and the advisory score visible. Use the soft teal ground, accent border and Lucide task icon to distinguish this floating tool; disclosure changes remeasure its sticky offset without touching comments or documents.
+
+ADR-400 adds `officer-task-tool.js` for bounded pointer/keyboard movement, cancellation/reset and explicit next-unsettled navigation. Dark semantic tool tokens colour the advisory score red below `airs.score_threshold`, amber below `airs.officer_score_good_threshold` (default 80), and green at/above it; deferred/unknown stays navy. Unsettled includes unreviewed or saved assessments other than Ditunaikan/Tidak berkaitan. Never treat colour as approval or navigation as saving; keep positioning page-local.
+
+ADR-401 supersedes the dark amber tool surface with owner-requested bright yellow/black tokens. The collapsed tool has capsule ends and morphs into its expanded card with optional CSS interpolation. Its stable sticky rail must never change height on disclosure; only header height may update review-wide offsets. Keep reduced-motion and native disclosure fallbacks.
+
+ADR-402 records the owner-requested glossy glass exception for `.review-task-tool` only: token-defined gradient, translucent score surface, backdrop blur and inset sheen. Preserve opaque fallback, bright yellow/black attention, readable text and stable capsule layout; do not extend glass/gradients to other workspace sections.
+
+ADR-403 removes the floating tool reset/legend and Home reset shortcut, shortens its collapsed score label to Skor, renders a bare drag grip with retained keyboard focus, and replaces the outer outline with a thicker white glass token border.
+
+ADR-404 is retired: its temporary colour/status preview controls and overrides are removed. The floating tool uses only server-derived score bands, task status and saved progress in every environment.
+
+ADR-405 supersedes page-local-only positioning with a versioned, per-officer localStorage preference containing only open/closed state and numeric viewport coordinates. Restore and clamp after save/next or reload; cancelled drags must not overwrite it. Missing/corrupt/blocked storage must leave the tool usable. Never store comments, scores, application/document identifiers or URLs.

@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['id', 'name', 'primary_department_id', 'is_active'])]
 class ApplicationType extends Model
 {
+    protected $table = 'core.application_types';
+
     public $incrementing = false;
 
     protected $keyType = 'string';

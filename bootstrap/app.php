@@ -2,10 +2,13 @@
 
 use App\Http\Middleware\EnsureBangunanAccess;
 use App\Http\Middleware\EnsureBangunanLegacyAccess;
+use App\Http\Middleware\EnsureKejuruteraanAccess;
+use App\Http\Middleware\EnsureLandskapAccess;
 use App\Http\Middleware\EnsureOscAccess;
 use App\Http\Middleware\EnsurePkmAccess;
 use App\Http\Middleware\EnsurePkmPermission;
 use App\Http\Middleware\EnsurePublicAccess;
+use App\Http\Middleware\SandboxIdentitySession;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -18,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->web(append: [SandboxIdentitySession::class]);
         $middleware->alias([
             'bangunan.access' => EnsureBangunanAccess::class,
             'bangunan.legacy' => EnsureBangunanLegacyAccess::class,
@@ -25,7 +29,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'perancang.access' => EnsurePkmAccess::class,
             'perancang.permission' => EnsurePkmPermission::class,
             'public.access' => EnsurePublicAccess::class,
-            'kejuruteraan.access' => \App\Http\Middleware\EnsureKejuruteraanAccess::class,
+            'kejuruteraan.access' => EnsureKejuruteraanAccess::class,
+            'landskap.access' => EnsureLandskapAccess::class,
         ]);
         $middleware->redirectUsersTo(function (Request $request): string {
             $user = $request->user();
@@ -36,6 +41,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
             if ($user?->canAccessBangunan()) {
                 return route('bangunan.index');
+            }
+
+            if ($user?->canAccessLandskap() && ! $user->canAccessPkm()) {
+                return route('landskap.index');
             }
 
             if ($user?->canAccessBangunanLegacy() && ! $user->canAccessPkm()) {

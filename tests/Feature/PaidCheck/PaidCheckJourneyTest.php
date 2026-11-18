@@ -9,16 +9,21 @@ use App\Airs\Models\ReviewVersion;
 use App\Enums\ApplicationStage;
 use App\Enums\ApplicationStatus;
 use App\Enums\PaidCheckState;
+use App\Models\ApplicantDraft;
 use App\Models\Application;
 use App\Models\ApplicationDocument;
+use App\Models\CheckPayment;
 use App\Models\PaidCheckJourney;
 use App\Models\User;
+use App\Services\DocumentCatalogueService;
 use App\Services\PaidCheck\CheckPaymentService;
 use App\Services\PaidCheck\PaidCheckJourneyService;
+use App\Services\Precheck\DraftDocumentService;
 use App\Services\WorkingCalendar;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Tests\Support\FakeAirsDocumentProcessor;
 use Tests\TestCase;
 
@@ -36,7 +41,7 @@ final class PaidCheckJourneyTest extends TestCase
         config(['airs.fee_sen' => 15000]);
     }
 
-    private function pay(\App\Models\ApplicantDraft $draft, string $event = 'evt-1'): \App\Models\CheckPayment
+    private function pay(ApplicantDraft $draft, string $event = 'evt-1'): CheckPayment
     {
         $owner = User::query()->findOrFail($draft->user_id);
         $payment = app(CheckPaymentService::class)->start($owner, $draft, true);
@@ -102,7 +107,7 @@ final class PaidCheckJourneyTest extends TestCase
         $this->ljupUpload($draft, 'laporan_fotometrik');
         $stale = $this->ljupUpload($draft, 'gambar_tapak');
         // JKEJ republishes the checklist without the photo item: the old upload no longer applies.
-        app(\App\Services\DocumentCatalogueService::class)->publish('LJUP', ['version' => 1, 'source_reference' => 'Ujian v2', 'items' => [
+        app(DocumentCatalogueService::class)->publish('LJUP', ['version' => 1, 'source_reference' => 'Ujian v2', 'items' => [
             ['code' => 'pelan_lampu', 'name' => 'Pelan Lampu Jalan', 'is_required' => true],
             ['code' => 'laporan_fotometrik', 'name' => 'Laporan Fotometrik', 'is_required' => true],
         ]], User::query()->where('role', 'senior_engineering_officer')->firstOrFail());
@@ -110,10 +115,10 @@ final class PaidCheckJourneyTest extends TestCase
         try {
             $this->pay($draft);
             $this->fail('Payment should wait for the unsorted file.');
-        } catch (\Illuminate\Validation\ValidationException $exception) {
-            $this->assertSame([\App\Services\PaidCheck\CheckPaymentService::UNSORTED], $exception->errors()['payment']);
+        } catch (ValidationException $exception) {
+            $this->assertSame([CheckPaymentService::UNSORTED], $exception->errors()['payment']);
         }
-        app(\App\Services\Precheck\DraftDocumentService::class)->remove($owner, $stale);
+        app(DraftDocumentService::class)->remove($owner, $stale);
         $this->pay($draft->fresh());
 
         $this->assertNull(ApplicationDocument::query()->where('checksum_sha256', $stale->sha256)->first());

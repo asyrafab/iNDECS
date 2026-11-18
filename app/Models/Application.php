@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Airs\Models\ReviewCase;
 use App\Enums\ApplicationStage;
 use App\Enums\ApplicationStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -34,6 +35,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 ])]
 class Application extends Model
 {
+    protected $table = 'core.applications';
+
     use HasUlids;
 
     public function scopePkm(Builder $query): Builder
@@ -96,7 +99,27 @@ class Application extends Model
 
     public function airsCase(): HasOne
     {
-        return $this->hasOne(\App\Airs\Models\ReviewCase::class);
+        return $this->hasOne(ReviewCase::class);
+    }
+
+    public function earthworks(): HasOne
+    {
+        return $this->hasOne(EarthworksApplication::class);
+    }
+
+    public function drainage(): HasOne
+    {
+        return $this->hasOne(DrainageApplication::class);
+    }
+
+    public function ljup(): HasOne
+    {
+        return $this->hasOne(LjupApplication::class);
+    }
+
+    public function landscape(): HasOne
+    {
+        return $this->hasOne(LandscapeApplication::class);
     }
 
     public function bangunan(): HasOne

@@ -9,11 +9,11 @@ use App\Airs\CheckService;
 use App\Airs\Events\AirsCheckCompleted;
 use App\Airs\Models\ReviewVersion;
 use App\Airs\Models\SystemConfigSnapshot;
-use App\Models\AcceptedSubmission;
 use App\Enums\ApplicationStage;
 use App\Enums\ApplicationStatus;
 use App\Enums\DocumentVerificationStatus;
 use App\Enums\PaidCheckState;
+use App\Models\AcceptedSubmission;
 use App\Models\ApplicantDraft;
 use App\Models\ApplicantDraftDocument;
 use App\Models\Application;
@@ -79,6 +79,7 @@ final class PaidCheckJourneyService
             $journey = new PaidCheckJourney;
             $journey->forceFill(['draft_id' => $draft->id, 'application_id' => $application->id, 'payment_id' => $payment->id,
                 'state' => PaidCheckState::Check1Running, 'lighting_types' => $draft->lightingTypes()])->save();
+            $application->ljup()->update(['lighting_types' => json_encode($draft->lightingTypes(), JSON_THROW_ON_ERROR)]);
             $this->audit($journey, 'paid_check_started', null, ['application_id' => $application->id, 'payment_id' => $payment->id], $draft->user_id);
             $created = true;
 
@@ -139,6 +140,7 @@ final class PaidCheckJourneyService
             }
             $changes = $this->reviseDocuments($draft, $locked->application);
             $locked->forceFill(['amended_at' => now(), 'state' => PaidCheckState::Check2Running, 'lighting_types' => $draft->lightingTypes()])->save();
+            $locked->application->ljup()->update(['lighting_types' => json_encode($draft->lightingTypes(), JSON_THROW_ON_ERROR)]);
             $this->audit($locked, 'amendment_submitted', null, $changes + ['lighting_types' => $draft->lightingTypes()], $owner->id);
 
             return $locked;

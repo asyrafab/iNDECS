@@ -32,6 +32,8 @@ Thumbs.db
 
 # Generated runtime/preview output
 /output
+/tmp/
+**/.build-picture-deck/
 
 # AIRS Python worker
 __pycache__/

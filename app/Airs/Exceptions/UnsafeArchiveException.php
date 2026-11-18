@@ -6,6 +6,4 @@ namespace App\Airs\Exceptions;
 
 use RuntimeException;
 
-final class UnsafeArchiveException extends RuntimeException
-{
-}
+final class UnsafeArchiveException extends RuntimeException {}

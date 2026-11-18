@@ -35,11 +35,6 @@
         <p class="precheck-note precheck-contract">Semakan ini membantu menyediakan dokumen sebelum penyerahan. Kandungan teknikal dan pematuhan akan disemak dalam proses rasmi.</p>
         @error('file')<p class="field-error" role="alert">{{ $message }}</p>@enderror
         @include('public.drafts.partials.unsorted')
-        <ul class="precheck-legend" aria-label="Petunjuk status dokumen">
-            @foreach ([['label' => \App\Enums\PrecheckLabel::Attached, 'text' => 'Dilampirkan'], ['label' => \App\Enums\PrecheckLabel::Pending, 'text' => 'Sedang dibaca'], ['label' => \App\Enums\PrecheckLabel::Missing, 'text' => 'Belum dikemukakan'], ['label' => \App\Enums\PrecheckLabel::NeedsConfirmation, 'text' => 'Untuk perhatian']] as $legend)
-                <li><span aria-hidden="true">@include('public.drafts.partials.status-icon', ['label' => $legend['label']])</span><span>{{ $legend['text'] }}</span></li>
-            @endforeach
-        </ul>
         @php($airsEnabled = (config('airs.modules.'.$draft->application_type_id.'.enabled') ?? false) === true)
         @php($fee = \App\Services\PaidCheck\CheckPaymentService::feeSen())
         @unless ($checkResult ?? null)

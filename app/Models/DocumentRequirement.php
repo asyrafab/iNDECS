@@ -21,6 +21,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 ])]
 class DocumentRequirement extends Model
 {
+    protected $table = 'core.document_requirements';
+
     public function applicationType(): BelongsTo
     {
         return $this->belongsTo(ApplicationType::class);

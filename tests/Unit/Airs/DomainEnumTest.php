@@ -6,7 +6,6 @@ namespace Tests\Unit\Airs;
 
 use App\Airs\Enums\FindingStatus;
 use App\Airs\Enums\ReviewCaseStatus;
-use App\Enums\UserRole;
 use PHPUnit\Framework\TestCase;
 
 final class DomainEnumTest extends TestCase

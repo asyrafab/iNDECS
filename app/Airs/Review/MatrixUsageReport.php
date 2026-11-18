@@ -26,6 +26,7 @@ final class MatrixUsageReport
             $known = array_values(array_filter(array_column($rows, $field), fn ($value) => $value !== null));
             $totals[$field] = ['known_total' => array_sum($known), 'unknown_runs' => count($rows) - count($known)];
         }
+
         return ['cost_kind' => 'CLIENT_ESTIMATE_NOT_INVOICE', 'currency' => 'USD', 'review_version_id' => $version->id,
             'allocation' => 'Rule runs are direct costs. Classification/profile runs are shared overhead, counted once. Deterministic checks use no extra LLM call.',
             'totals' => $totals, 'runs' => $rows];

@@ -1,0 +1,17 @@
+# Officer plan viewer and application background
+
+Decision: [ADR-395](../adr/ADR-395-officer-plan-viewer-and-application-background.md). No migration or new permission is needed.
+
+The LJUP review page starts with recorded application background: type, address/description, status, current workflow stage, submission/handover dates, final check, responsible department, assigned officer, submitting account, declared lighting types and recorded parties. Registered site/lot details are available in a disclosure. A party's submitted name snapshot is preferred over later registry edits. Missing data is labelled explicitly; MATRIX extraction stays in its separate profile section.
+
+Each completed check has a plan/document panel beside the finding and comment list on wide screens. On narrow screens it stacks above the list. The desktop panel stays visible under the workspace header while officers move through findings. PDF zoom, search and page controls are provided by the browser; the additional page input and evidence links navigate to the cited page.
+
+Only supported clean PDF/PNG/JPEG/WebP application documents in that check's frozen manifest are offered, with matching document ID and checksum. Historical checks retain their original document versions and do not load an iframe while collapsed. HTML/SVG/archives are not offered for embedding. A finding without a previewable source is labelled; the user can select another document or use its existing evidence link.
+
+Opening a finding or following an evidence link selects its first previewable evidence in the same panel. Selecting another document/page does not submit, clear or store comments. ADR-394's unsaved-edit markers and navigation warnings remain active. No third-party document viewer or public storage URL is used.
+
+All document requests still use the existing application-scoped private endpoint and current session authorization. Responses permit same-origin framing only and disable MIME sniffing. Client code only uses same-origin HTTP(S) URLs from the server-rendered selector. If native preview is unsupported, an explicit same-tab document link is available; leaving the page still invokes the existing unsaved-comment warning. Without JavaScript, evidence links target the named iframe and a document list is available.
+
+Verification includes scoped/foreign document access, original-versus-amended check versions, safe MIME/scan filtering, recorded background/party snapshots and response framing headers. Four JavaScript tests cover source/page switching, validation, historical lazy loading and rejection of external viewer URLs. Synthetic browser checks use a two-page drawing fixture and synthetic application records, verifying real PDF rendering, inline evidence navigation, unchanged comment text and a 390px mobile viewport. No real applicant document or operational record is changed by verification.
+
+Local verification on 2026-11-18: full current-workspace PostgreSQL regression passed 882 tests (880 passed, two skipped), 4,393 assertions, zero failures. All 32 JavaScript tests, targeted PHP formatting, production frontend build and diff whitespace checks pass. The four new server tests passed with 40 assertions. The existing uncommitted database-standardisation work was retained separately and is included in the full-workspace test state. Hosted CI remains subject to the GitHub billing blocker already recorded in the earlier draft PRs; no hosted pass is claimed.

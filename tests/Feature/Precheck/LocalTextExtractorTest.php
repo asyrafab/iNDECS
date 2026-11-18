@@ -4,6 +4,7 @@ namespace Tests\Feature\Precheck;
 
 use App\Services\Precheck\LocalTextExtractor;
 use Symfony\Component\Process\ExecutableFinder;
+use Symfony\Component\Process\Process;
 use Tests\TestCase;
 
 /**
@@ -48,7 +49,7 @@ class LocalTextExtractorTest extends TestCase
         $pdf = $this->dir.'/source.pdf';
         file_put_contents($pdf, $this->textPdf('SURAT HAKMILIK NO LOT 4412'));
         $path = $this->dir.'/geran.png';
-        (new \Symfony\Component\Process\Process([config('kaunter.precheck.ghostscript'), '-dSAFER', '-dBATCH', '-dNOPAUSE', '-dQUIET',
+        (new Process([config('kaunter.precheck.ghostscript'), '-dSAFER', '-dBATCH', '-dNOPAUSE', '-dQUIET',
             '-sDEVICE=png16m', '-r200', '-sOutputFile='.$path, $pdf]))->mustRun();
         $result = app(LocalTextExtractor::class)->extract($path, 'image/png');
         $this->assertTrue($result->ocrUsed);

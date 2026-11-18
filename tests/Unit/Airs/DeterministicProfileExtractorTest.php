@@ -12,7 +12,7 @@ final class DeterministicProfileExtractorTest extends TestCase
 {
     public function test_extracts_labelled_ljup_profile_and_prefers_full_submission_title(): void
     {
-        $extractor = new DeterministicProfileExtractor();
+        $extractor = new DeterministicProfileExtractor;
         $result = $extractor->extract(['documents' => [
             [
                 'filename' => 'LJUP Umum.pdf',
@@ -38,7 +38,7 @@ TEXT,
                 'filename' => 'Cover Letter.pdf',
                 'document_type' => 'SUBMISSION_LETTER',
                 'pages' => [[
-                    'text' => "PERMOHONAN KELULUSAN PELAN LAMPU JALAN BAGI CADANGAN PEMBANGUNAN SKIM PERUMAHAN YANG MENGANDUNGI 48 UNIT RUMAH TERES DI ATAS LOT 936, MUKIM 6, BERTAM, KEPALA BATAS, PULAU PINANG. UNTUK: TETUAN BILLION SITE SDN. BHD.",
+                    'text' => 'PERMOHONAN KELULUSAN PELAN LAMPU JALAN BAGI CADANGAN PEMBANGUNAN SKIM PERUMAHAN YANG MENGANDUNGI 48 UNIT RUMAH TERES DI ATAS LOT 936, MUKIM 6, BERTAM, KEPALA BATAS, PULAU PINANG. UNTUK: TETUAN BILLION SITE SDN. BHD.',
                     'ocr_text' => '',
                 ]],
             ],
@@ -62,7 +62,7 @@ TEXT,
 
     public function test_specific_forms_and_cover_letters_win_over_incidental_terms(): void
     {
-        $provider = new FakeAiProvider();
+        $provider = new FakeAiProvider;
 
         $special = $provider->classifyDocument([
             'filename' => 'LJUP Khusus.pdf',

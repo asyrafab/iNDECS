@@ -5,8 +5,8 @@ namespace Tests\Feature\Library;
 use App\Models\User;
 use App\Services\PublicIdentityService;
 use Database\Seeders\LibrarySeeder;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class LibraryPermissionsTest extends TestCase
@@ -43,7 +43,7 @@ class LibraryPermissionsTest extends TestCase
     public function test_penolong_pengarah_gets_workspace_access_but_no_decision_powers(): void
     {
         $granted = DB::table('core.role_permissions')->where('role_id', 'penolong_pengarah')->pluck('permission_name')->unique()->sort()->values()->all();
-        $this->assertSame(['bangunan.application.access', 'bangunan.legacy.view', 'library.manage', 'library.view', 'osc.meeting.view', 'perancang.pkm.access'], $granted);
+        $this->assertSame(['bangunan.application.access', 'bangunan.legacy.view', 'landskap.pl.access', 'library.manage', 'library.view', 'osc.meeting.view', 'perancang.pkm.access'], $granted);
         // Re-running the seeder (as the migration does on existing databases) removes any earlier wider copy.
         DB::table('core.role_permissions')->insert(['role_id' => 'penolong_pengarah', 'permission_name' => 'osc.agenda.endorse', 'department_id' => 'JBANG', 'application_type_id' => null, 'created_at' => now(), 'updated_at' => now()]);
         $this->seed(LibrarySeeder::class);

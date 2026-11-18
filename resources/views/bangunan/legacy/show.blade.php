@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', $record->pmn_no_rujukan.' · iNDECS Bangunan')
+@section('title', $record->pmn_no_rujukan.' · iNDECS Building')
 
 @section('content')
     <div class="record-heading">

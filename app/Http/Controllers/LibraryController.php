@@ -12,7 +12,9 @@ use App\Services\Library\LibraryService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /** ADR-362: staff department library. Every staff role reads; only a Penolong Pengarah changes. */
@@ -94,11 +96,11 @@ final class LibraryController extends Controller
         abort_unless($request->user()->canViewLibrary(), 403);
     }
 
-    private function file(Request $request): \Illuminate\Http\UploadedFile
+    private function file(Request $request): UploadedFile
     {
         $file = $request->file('file');
-        if (! $file instanceof \Illuminate\Http\UploadedFile) {
-            throw \Illuminate\Validation\ValidationException::withMessages(['file' => 'Medan fail dokumen diperlukan.']);
+        if (! $file instanceof UploadedFile) {
+            throw ValidationException::withMessages(['file' => 'Medan fail dokumen diperlukan.']);
         }
 
         return $file;

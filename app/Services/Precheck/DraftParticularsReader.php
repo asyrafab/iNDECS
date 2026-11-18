@@ -74,6 +74,6 @@ final class DraftParticularsReader
 
     private static function tidy(string $value, int $max): string
     {
-        return rtrim(mb_substr(trim($value), 0, $max), " .,;:");
+        return rtrim(mb_substr(trim($value), 0, $max), ' .,;:');
     }
 }

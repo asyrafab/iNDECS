@@ -8,6 +8,10 @@ use App\Http\Controllers\BangunanLegacyController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Gis\BoundaryController;
 use App\Http\Controllers\Gis\TileController;
+use App\Http\Controllers\KejuruteraanApplicationController;
+use App\Http\Controllers\LandskapApplicationController;
+use App\Http\Controllers\LandskapDocumentCatalogueController;
+use App\Http\Controllers\LandskapDocumentController;
 use App\Http\Controllers\LibraryController;
 use App\Http\Controllers\Osc\AgendaItemController;
 use App\Http\Controllers\Osc\AgendaPaperController;
@@ -21,9 +25,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 require __DIR__.'/public.php';
+require __DIR__.'/identity-sandbox.php';
 
-Route::middleware('auth')->group(function (): void {
-});
+Route::middleware('auth')->group(function (): void {});
 
 Route::middleware('guest')->group(function (): void {
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
@@ -52,6 +56,9 @@ Route::get('/dashboard', function (Request $request) {
     }
     if ($request->user()->canAccessBangunan()) {
         return to_route('bangunan.index');
+    }
+    if ($request->user()->canAccessLandskap() && ! $request->user()->canAccessPkm()) {
+        return to_route('landskap.index');
     }
     if ($request->user()->canAccessBangunanLegacy() && ! $request->user()->canAccessPkm()) {
         return to_route('bangunan.legacy.index');
@@ -130,13 +137,32 @@ Route::middleware(['auth', 'bangunan.legacy'])->prefix('bangunan')->name('bangun
 
 // Jabatan Kejuruteraan: LJUP applications and their AIRS checks (ADR-383).
 Route::middleware(['auth', 'kejuruteraan.access'])->prefix('kejuruteraan')->name('kejuruteraan.')->group(function (): void {
-    Route::get('/', [\App\Http\Controllers\KejuruteraanApplicationController::class, 'index'])->name('index');
-    Route::get('/applications/{application}', [\App\Http\Controllers\KejuruteraanApplicationController::class, 'show'])->whereUlid('application')->name('show');
-    Route::get('/applications/{application}/documents/{document}', [\App\Http\Controllers\KejuruteraanApplicationController::class, 'document'])->whereUlid(['application', 'document'])->name('documents.show');
-    Route::post('/applications/{application}/findings/{finding}/feedback', [\App\Http\Controllers\KejuruteraanApplicationController::class, 'storeFeedback'])
+    Route::get('/', [KejuruteraanApplicationController::class, 'index'])->name('index');
+    Route::get('/applications/{application}', [KejuruteraanApplicationController::class, 'show'])->whereUlid('application')->name('show');
+    Route::post('/applications/{application}/recommendations', [KejuruteraanApplicationController::class, 'storeRecommendation'])
+        ->whereUlid('application')->middleware('throttle:30,1')->name('recommendations.store');
+    Route::get('/applications/{application}/recommendations/{recommendation}/preview', [KejuruteraanApplicationController::class, 'previewRecommendation'])
+        ->whereUlid(['application', 'recommendation'])->name('recommendations.preview');
+    Route::get('/applications/{application}/documents/{document}', [KejuruteraanApplicationController::class, 'document'])->whereUlid(['application', 'document'])->name('documents.show');
+    Route::post('/applications/{application}/findings/{finding}/feedback', [KejuruteraanApplicationController::class, 'storeFeedback'])
         ->whereUlid(['application', 'finding'])->middleware('throttle:30,1')->name('findings.feedback');
-    Route::post('/applications/{application}/fields', [\App\Http\Controllers\KejuruteraanApplicationController::class, 'storeFieldReview'])
+    Route::post('/applications/{application}/fields', [KejuruteraanApplicationController::class, 'storeFieldReview'])
         ->whereUlid('application')->middleware('throttle:30,1')->name('fields.review');
+});
+
+Route::middleware(['auth', 'landskap.access'])->prefix('landskap')->name('landskap.')->group(function (): void {
+    Route::get('/', [LandskapApplicationController::class, 'index'])->name('index');
+    Route::get('/create', [LandskapApplicationController::class, 'create'])->name('create');
+    Route::post('/', [LandskapApplicationController::class, 'store'])->name('store');
+    Route::get('/applications/{application}', [LandskapApplicationController::class, 'show'])->name('show');
+    Route::post('/applications/{application}/transition', [LandskapApplicationController::class, 'transition'])->name('transition');
+    Route::get('/document-catalogue/{type}', [LandskapDocumentCatalogueController::class, 'edit'])->name('document-catalogue.edit');
+    Route::post('/document-catalogue/{type}', [LandskapDocumentCatalogueController::class, 'publish'])->name('document-catalogue.publish');
+    Route::get('/applications/{application}/documents', [LandskapDocumentController::class, 'index'])->name('documents.index');
+    Route::post('/applications/{application}/documents/initialise', [LandskapDocumentController::class, 'initialise'])->name('documents.initialise');
+    Route::post('/applications/{application}/documents/items/{item}', [LandskapDocumentController::class, 'store'])->name('documents.store');
+    Route::post('/applications/{application}/documents/items/{item}/verify', [LandskapDocumentController::class, 'verify'])->name('documents.verify');
+    Route::get('/applications/{application}/documents/files/{document}', [LandskapDocumentController::class, 'download'])->name('documents.download');
 });
 
 Route::middleware(['auth', 'osc.access'])->prefix('osc')->name('osc.')->group(function (): void {

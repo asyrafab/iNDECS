@@ -8,6 +8,7 @@ use App\Airs\Contracts\DocumentProcessor;
 use App\Contracts\DocumentScanner;
 use App\Jobs\PrecheckDraftDocument;
 use App\Models\ApplicantDraft;
+use App\Models\ApplicantDraftDocument;
 use App\Models\ApplicationDocument;
 use App\Models\PaidCheckJourney;
 use App\Models\User;
@@ -77,7 +78,7 @@ final class MultiFileCheckTest extends TestCase
     {
         [$draft, $owner, $journey] = $this->paidWithPhotos(['foto-a.pdf', 'foto-b.pdf', 'foto-c.pdf']);
         $kept = ApplicationDocument::query()->where('application_id', $journey->application_id)->where('original_name', 'foto-a.pdf')->sole();
-        \App\Models\ApplicantDraftDocument::query()->where('draft_id', $draft->id)->where('original_name', 'foto-b.pdf')->delete();
+        ApplicantDraftDocument::query()->where('draft_id', $draft->id)->where('original_name', 'foto-b.pdf')->delete();
         $this->ljupUpload($draft, 'gambar_tapak', null, ['original_name' => 'foto-d.pdf']);
 
         $this->actingAs($owner)->post(route('portal.drafts.check.amend', $draft), ['confirm_amendment' => '1'])->assertRedirect();

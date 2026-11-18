@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Airs;
 
+use App\Airs\DocumentProcessing\DocumentRelevanceService;
 use App\Airs\Enums\ReviewCaseStatus;
 use App\Airs\Exceptions\NoRelevantDocumentException;
 use App\Airs\Models\DocumentClassification;
 use App\Airs\Models\ReviewCase;
 use App\Airs\Models\ReviewFile;
 use App\Airs\Models\ReviewVersion;
-use App\Airs\DocumentProcessing\DocumentRelevanceService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\Support\AirsFixtures;
 use Tests\TestCase;
 
@@ -23,7 +24,7 @@ final class DocumentRelevanceServiceTest extends TestCase
     {
         parent::setUp();
         $this->seed();
-        \Illuminate\Support\Facades\Storage::fake('local');
+        Storage::fake('local');
     }
 
     public function test_one_relevant_document_accepts_case_and_ignores_unrelated_file(): void

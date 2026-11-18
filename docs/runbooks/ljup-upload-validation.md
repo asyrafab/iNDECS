@@ -2,7 +2,7 @@
 
 Initial automated validation used code baseline `fdf7437`, with no failures in
 those checks. Follow-up browser/worker validation below found and fixed one
-validation-return defect (ADR-391).
+validation-return defect (ADR-406).
 
 ## Results
 
@@ -102,7 +102,7 @@ Browser observations:
   Saving succeeded, confirming the provisional draft rather than losing those
   edits to a stale-version error.
 - A duplicate per-item upload was rejected without adding a document. After the
-  ADR-391 fix, its error appeared on the draft instead of navigating to JSON.
+  ADR-406 fix, its error appeared on the draft instead of navigating to JSON.
 - A scanned LJUP PDF downloaded successfully and its SHA-256 matched the original.
 - No browser console warnings/errors were captured in the final check.
 
@@ -113,7 +113,7 @@ navigation and replaced the session's previous URL, so duplicate-upload
 validation without a Referer redirected to the history JSON. The history fetch
 now identifies itself as AJAX. The same duplicate upload was repeated in the
 browser and returned to the draft with `Fail yang sama telah dimuat naik.`
-See [ADR-391](../adr/ADR-391-guidance-history-preserves-return-url.md).
+See [ADR-406](../adr/ADR-406-guidance-history-preserves-return-url.md).
 
 Post-fix verification: **32 tests, 209 assertions passed** for
 `CounterLayoutTest|PortalPrecheckPagesTest|PublicPortalTest`; JavaScript syntax

@@ -13,7 +13,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /** The applicant's own AIRS check results and evidence documents. Owner only; everything else 404s. */

@@ -23,7 +23,9 @@ final class AiTaskRunner
             $cached = AiRun::query()->where('review_version_id', $version->id)->where('task_type', $task)->where('rule_id', $ruleId)
                 ->where('provider', 'matrix')->where('model', config('airs.matrix.model'))->where('schema_id', $schemaId)
                 ->where('prompt_version', config('airs.prompt_version'))->where('request_hash', $requestHash)->where('status', 'SUCCEEDED')->latest()->first();
-            if ($cached) return $cached->parsed_response + ['_ai_run_id' => $cached->id];
+            if ($cached) {
+                return $cached->parsed_response + ['_ai_run_id' => $cached->id];
+            }
             $input['_matrix_context'] = app(MatrixReviewGate::class)->context($version, $requestId);
         }
         $attempt = AiRun::query()->where('review_version_id', $version->id)->where('task_type', $task)->where('rule_id', $ruleId)->count() + 1;
@@ -42,10 +44,13 @@ final class AiTaskRunner
             $this->recordMetadata($run, $meta);
             if ($matrix) {
                 $current = app(MatrixReviewGate::class)->context($version, $requestId, false);
-                if ($current['document_set_version'] !== $input['_matrix_context']['document_set_version']) throw new MatrixTaskException('MATRIX_STALE_SOURCE');
+                if ($current['document_set_version'] !== $input['_matrix_context']['document_set_version']) {
+                    throw new MatrixTaskException('MATRIX_STALE_SOURCE');
+                }
             }
             $validated = $validator($response);
             $run->forceFill(['parsed_response' => $validated, 'status' => 'SUCCEEDED', 'completed_at' => now()])->save();
+
             return $validated + ['_ai_run_id' => $run->id];
         } catch (\Throwable $exception) {
             if ($exception instanceof MatrixTaskException && $exception->usageMetadata !== []) {
@@ -63,7 +68,9 @@ final class AiTaskRunner
     private function recordMetadata(AiRun $run, array $meta): void
     {
         $rawPath = 'airs/'.ReviewVersion::findOrFail($run->review_version_id)->review_case_id.'/ai/'.$run->id.'.json';
-        if (! Storage::disk('local')->put($rawPath, (string) ($meta['raw_response'] ?? '{}'))) throw new \RuntimeException('AI audit storage unavailable.');
+        if (! Storage::disk('local')->put($rawPath, (string) ($meta['raw_response'] ?? '{}'))) {
+            throw new \RuntimeException('AI audit storage unavailable.');
+        }
         $run->forceFill([
             'provider_request_id' => $meta['provider_request_id'] ?? null, 'model' => $meta['model'] ?? $run->model,
             'raw_response_path' => $rawPath, 'latency_ms' => $meta['latency_ms'] ?? null,

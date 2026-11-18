@@ -7,12 +7,12 @@ namespace Tests\Feature\Airs;
 use App\Airs\Enums\EvaluationMethod;
 use App\Airs\Enums\FindingStatus;
 use App\Airs\Enums\ReviewCaseStatus;
-use App\Airs\Models\ReviewCase;
 use App\Airs\Models\ReviewFinding;
 use App\Airs\Models\ReviewRule;
 use App\Airs\Models\ReviewVersion;
 use App\Airs\Review\FindingAggregator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\Support\AirsFixtures;
 use Tests\TestCase;
 
@@ -24,7 +24,7 @@ final class FindingAggregatorTest extends TestCase
     {
         parent::setUp();
         $this->seed();
-        \Illuminate\Support\Facades\Storage::fake('local');
+        Storage::fake('local');
     }
 
     public function test_material_issue_controls_summary_without_approval_language(): void

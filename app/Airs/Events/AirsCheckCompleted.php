@@ -15,6 +15,5 @@ final class AirsCheckCompleted
         public readonly string $reviewVersionId,
         public readonly string $applicationId,
         public readonly int $checkNumber,
-    ) {
-    }
+    ) {}
 }

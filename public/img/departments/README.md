@@ -4,15 +4,12 @@ P's vector contour opacity is reduced by 45%, from 0.5 to 0.275, using
 --opacity-department-perancang-pattern. Both sizes preserve the existing geometry,
 letter, frame and gradient while matching K/L's quieter background treatment.
 
-## Current K artwork
+## Current E (Engineering / Jabatan Kejuruteraan) artwork
 
-K now uses scripts/brand/kejuruteraan-soft.png, a built-in ImageGen edit of the
-owner-supplied kejuruteraan-approved.png. The edit prompt reduced bridge,
-blueprint grid, dimension guide and small-label contrast by approximately 45%
-while preserving the white K, dark blue frame, gradient and supplied composition.
+Engineering (`kejuruteraan`) now uses `scripts/brand/kejuruteraan-soft.png` with a centred white `E` (replacing the earlier `K` to align with the English module names: Planning, Building, Engineering, Landscape). The blueprint bridge, grid, dimension guides (`36.00 m`, `8.50 m`, `28.00 m`), dark blue frame and gradient preserve the softened ~45% contrast of `kejuruteraan-approved.png`.
 The dimension labels are decorative source artwork, not application measurements.
-Both K variants embed the edited PNG inside an SVG viewport. K and L are
-raster-backed SVGs; P and B remain vector. Earlier authored K geometry is
+Both `kejuruteraan` variants embed the edited PNG inside an SVG viewport. Engineering (`E`) and Landscape (`L`) are
+raster-backed SVGs; Planning (`P`) and Building (`B`) remain vector. Earlier authored K geometry is
 superseded for active rendering. Both reference originals remain unchanged.
 
 ## Current L artwork

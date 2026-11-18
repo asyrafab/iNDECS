@@ -18,6 +18,8 @@ use Illuminate\Database\Eloquent\Model;
 ])]
 class Lot extends Model
 {
+    protected $table = 'core.lots';
+
     use HasUlids;
 
     protected function casts(): array

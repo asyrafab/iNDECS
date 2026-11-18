@@ -11,6 +11,9 @@
         <testsuite name="Feature">
             <directory>tests/Feature</directory>
         </testsuite>
+        <testsuite name="SandboxConcurrency">
+            <directory>tests/Concurrency</directory>
+        </testsuite>
     </testsuites>
     <source>
         <include>

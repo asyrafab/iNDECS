@@ -6,6 +6,4 @@ namespace App\Airs\Exceptions;
 
 use RuntimeException;
 
-final class InvalidAiResponseException extends RuntimeException
-{
-}
+final class InvalidAiResponseException extends RuntimeException {}

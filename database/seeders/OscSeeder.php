@@ -45,6 +45,8 @@ class OscSeeder extends Seeder
             ['senior_planning_officer', 'JPBD', [$view, $propose, $endorse]],
             ['building_officer', 'JBANG', [$view, $propose]],
             ['senior_building_officer', 'JBANG', [$view, $propose, $endorse]],
+            ['landscape_officer', 'JLAND', [$view, $propose]],
+            ['senior_landscape_officer', 'JLAND', [$view, $propose, $endorse]],
             ['system_admin', null, [$view, $manage, $propose, $endorse]],
         ];
 

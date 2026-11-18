@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Airs;
 
+use App\Airs\Ai\FakeAiProvider;
 use App\Airs\Contracts\AiProvider;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -38,7 +39,7 @@ final class ModuleFoundationTest extends TestCase
     {
         $this->assertSame('fake', config('airs.provider'));
         $this->assertFalse(config('airs.matrix.enabled'));
-        $this->assertInstanceOf(\App\Airs\Ai\FakeAiProvider::class, app(AiProvider::class));
+        $this->assertInstanceOf(FakeAiProvider::class, app(AiProvider::class));
     }
 
     public function test_case_belongs_to_application_and_tracks_latest_check(): void
