@@ -325,3 +325,6 @@
 :root { --color-review-critical-text: #ffe4e4; --color-review-compliant-text: #e2ffe9; }
 
 :root { --color-review-glass-attention-control: #ffffff12; --color-review-glass-attention-control-hover: #ffffff24; }
+
+/* ADR-403: thicker white glass rim. */
+:root { --rule-review-glass: 3px; --color-review-glass-border: #ffffffe6; }

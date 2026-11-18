@@ -8,7 +8,6 @@
     $taskLow = max(0, min(100, (int) config('airs.score_threshold', 50)));
     $taskGood = max($taskLow, min(100, (int) config('airs.officer_score_good_threshold', 80)));
     $taskTone = $taskScore === null ? 'pending' : ($taskScore < $taskLow ? 'critical' : ($taskScore < $taskGood ? 'attention' : 'compliant'));
-    $taskScoreLabel = ['pending' => 'Belum tersedia', 'critical' => 'Rendah', 'attention' => 'Sederhana', 'compliant' => 'Baik'][$taskTone];
     $taskLabel = match (true) {
         $taskCheck === null => 'Tiada semakan',
         ($taskCheck['status'] ?? null) === 'FAILED' => 'Analisis gagal',
@@ -22,9 +21,9 @@
 <aside class="review-task-status" data-review-task-status aria-label="Status tugasan dan skor nasihat">
     <details class="review-task-tool" data-task-tool data-score-tone="{{ $taskTone }}" data-task-check="{{ $taskCheck['number'] ?? '' }}">
         <summary class="review-task-toggle">
-            <button type="button" class="review-task-drag" data-task-drag hidden aria-label="Alih panel. Seret atau gunakan anak panah. Home untuk kedudukan asal; Escape membatalkan seretan." title="Alih panel"><x-icon name="grip-vertical" /></button>
+            <button type="button" class="review-task-drag" data-task-drag hidden aria-label="Alih panel. Seret atau gunakan anak panah. Escape membatalkan seretan." title="Alih panel"><x-icon name="grip-vertical" /></button>
             <span>Semakan @if ($taskCompleted && $taskTotal > 0)<strong>{{ $taskReviewed }}/{{ $taskTotal }}</strong><span class="sr-only"> diulas</span>@endif</span>
-            <span class="review-task-compact-score">Skor nasihat <strong>@if ($taskCompleted && $taskCheck['profile_stale'])Ditangguhkan @elseif ($taskCompleted && $taskCheck['officer_score'] !== null){{ $taskCheck['officer_score'] }}/100 @else Belum tersedia @endif</strong></span>
+            <span class="review-task-compact-score">Skor <strong>@if ($taskCompleted && $taskCheck['profile_stale'])Ditangguhkan @elseif ($taskCompleted && $taskCheck['officer_score'] !== null){{ $taskCheck['officer_score'] }}/100 @else Belum tersedia @endif</strong></span>
             @if ($taskUnsettled->isNotEmpty())<a class="review-task-jump" data-task-jump href="#finding-{{ $taskUnsettled->first()['finding_id'] }}" title="Lompat ke dapatan belum selesai">Belum selesai {{ $taskUnsettled->count() }}<x-icon name="arrow-down" /></a>@endif
             <x-icon name="chevron-down" class="review-task-chevron" />
         </summary>
@@ -45,7 +44,5 @@
             @endif
         </div>
         </div>
-        <p class="review-task-legend">Skor {{ $taskScoreLabel }} · Merah &lt; {{ $taskLow }}, kuning ≥ {{ $taskLow }} dan &lt; {{ $taskGood }}, hijau ≥ {{ $taskGood }}. Nasihat sahaja.</p>
-        <button type="button" class="review-task-reset" data-task-reset hidden>Kedudukan asal</button>
     </details>
 </aside>

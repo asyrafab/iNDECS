@@ -53,11 +53,13 @@ ADR-398 adds a persistent top-right task summary for the final check (or the lat
 
 ADR-399 starts the floating tool collapsed: the compact strip retains saved progress and advisory score. Click or use Enter/Space on the task strip to expand/collapse task details. Its teal treatment distinguishes it from record sections; collapsing reclaims plan space without changing the document or unsaved comments.
 
-ADR-400 adds a dedicated drag grip (mouse/pen/touch or arrow keys; Shift moves faster), Home/reset for the original corner, and Escape to cancel dragging. Position is page-local and clamped below the workspace header on resize. **Belum selesai** advances through this check’s unreviewed or still-unresolved assessments, wrapping without saving any edits.
+ADR-400 adds a dedicated drag grip (mouse/pen/touch or arrow keys; Shift moves faster), Escape to cancel dragging. Position is page-local and clamped below the workspace header on resize. **Belum selesai** advances through this check’s unreviewed or still-unresolved assessments, wrapping without saving any edits.
 
 Dark tool colours describe the advisory score: red below `AIRS_SCORE_THRESHOLD` (default 50), amber up to `AIRS_OFFICER_SCORE_GOOD_THRESHOLD` (default 80), green from that visual boundary. The green boundary is clamped to at least the red boundary; unavailable/deferred scores stay navy. These colours are separate from saved-comment progress and official decisions.
 
 ADR-401 changes the yellow band to bright yellow with black text/outline. The collapsed tool has semicircular ends and morphs into the expanded card where supported; reduced motion disables this animation. Its collapsed rail stays the same size when toggled, so the plan, comment sections and divider no longer move or resize with the tool.
+
+ADR-403 simplifies the tool: bare drag grip, **Skor** on the compact surface and a thicker white glass outline. Position reset (including Home) and the colour legend are removed; pointer/arrow movement and Escape cancellation remain. Expanded score context still states that it is not an official decision.
 
 ## Verification
 

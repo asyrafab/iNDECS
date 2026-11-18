@@ -173,3 +173,5 @@ Date: YYYY-MM-DD. Status: Proposed | Accepted | Superseded by ADR-MMM.
 - [ADR-401: Capsule review tool and isolated expansion](ADR-401-capsule-tool-and-isolated-expansion.md) - bright yellow/black, shape morphing and stable review layout.
 
 - [ADR-402: Glossy glass review tool](ADR-402-glossy-glass-review-tool.md) - owner-approved, tool-only gradient/glass finish with an opaque fallback.
+
+- [ADR-403: Simplified glass tool controls](ADR-403-simplified-glass-tool-controls.md) - bare grip, shorter score label, removed reset/legend and white glass rim.

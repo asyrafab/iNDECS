@@ -5,7 +5,6 @@
     const workspace = document.querySelector('.page-content');
     if (!tool || !header || !workspace) return;
     const handle = tool.querySelector('[data-task-drag]');
-    const reset = tool.querySelector('[data-task-reset]');
     const gap = parseFloat(getComputedStyle(tool).getPropertyValue('--space-2'));
     if (!Number.isFinite(gap)) return;
     let offset = {x: 0, y: 0}, desired = null, drag = null;
@@ -33,8 +32,7 @@
         if (!commit) { offset = previous.offset; desired = previous.desired; paint(); reflow(); }
         if (handle.hasPointerCapture(previous.id)) handle.releasePointerCapture(previous.id);
     };
-    const restore = () => { finish(false); offset = {x: 0, y: 0}; desired = null; paint(); reflow(); };
-    handle.hidden = false; reset.hidden = false;
+    handle.hidden = false;
     handle.addEventListener('click', event => { event.preventDefault(); event.stopPropagation(); });
     handle.addEventListener('pointerdown', event => {
         if (event.button !== 0 || event.isPrimary === false || drag) return;
@@ -53,14 +51,12 @@
     handle.addEventListener('lostpointercapture', () => finish(false));
     handle.addEventListener('keydown', event => {
         if (event.key === 'Escape') { event.preventDefault(); finish(false); return; }
-        if (event.key === 'Home') { event.preventDefault(); restore(); return; }
         const step = event.shiftKey ? 40 : 10;
         const delta = {ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step]}[event.key];
         if (!delta || drag) return;
         event.preventDefault(); event.stopPropagation();
         const rect = tool.getBoundingClientRect(); desired = place(rect.left + delta[0], rect.top + delta[1]);
     });
-    reset.addEventListener('click', restore);
     tool.querySelector('[data-task-jump]')?.addEventListener('click', event => {
         const root = document.getElementById(`review-list-${tool.dataset.taskCheck}`);
         const rows = [...root?.querySelectorAll('[data-review-finding]') || []];

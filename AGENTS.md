@@ -540,3 +540,5 @@ ADR-400 adds `officer-task-tool.js` for bounded pointer/keyboard movement, cance
 ADR-401 supersedes the dark amber tool surface with owner-requested bright yellow/black tokens. The collapsed tool has capsule ends and morphs into its expanded card with optional CSS interpolation. Its stable sticky rail must never change height on disclosure; only header height may update review-wide offsets. Keep reduced-motion and native disclosure fallbacks.
 
 ADR-402 records the owner-requested glossy glass exception for `.review-task-tool` only: token-defined gradient, translucent score surface, backdrop blur and inset sheen. Preserve opaque fallback, bright yellow/black attention, readable text and stable capsule layout; do not extend glass/gradients to other workspace sections.
+
+ADR-403 removes the floating tool reset/legend and Home reset shortcut, shortens its collapsed score label to Skor, renders a bare drag grip with retained keyboard focus, and replaces the outer outline with a thicker white glass token border.

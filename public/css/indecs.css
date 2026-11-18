@@ -1907,3 +1907,7 @@ html[data-amira-entrance="pending"] [data-amira-entrance] .amira-counter-compose
 
 /* Clear glass retains contrasting control fills for the yellow score band. */
 .review-task-tool[data-score-tone="attention"] { --color-review-glass-control: var(--color-review-glass-attention-control); --color-review-glass-control-hover: var(--color-review-glass-attention-control-hover); }
+
+/* ADR-403: bare drag grip and a thicker white glass rim. */
+.review-task-tool { border: var(--rule-review-glass) solid var(--color-review-glass-border); }
+.review-task-tool .review-task-drag, .review-task-tool .review-task-drag:hover { border: 0; background: transparent; }
