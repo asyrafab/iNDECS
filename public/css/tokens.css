@@ -303,3 +303,20 @@
   --size-review-task-rail-narrow: 128px;
   --width-review-task-tool: 480px;
 }
+
+/* ADR-402: owner-requested glass exception, floating review tool only. */
+:root {
+  --color-review-glass-neutral: #102a43ed;
+  --color-review-glass-critical: #482a33ed;
+  --color-review-glass-attention: #ffdf00e8;
+  --color-review-glass-compliant: #173c31ed;
+  --color-review-gloss-highlight: #ffffff1f;
+  --color-review-gloss-attention-highlight: #ffffff80;
+  --color-review-gloss-clear: #ffffff00;
+  --color-review-gloss-shade: #0000001a;
+  --color-review-glass-control: #ffffff12;
+  --color-review-glass-control-hover: #ffffff24;
+  --blur-review-glass: 12px;
+  --saturation-review-glass: 1.3;
+  --shadow-review-glass: inset 0 1px 0 #ffffff80, inset 0 -1px 0 #00000026, 0 8px 24px #102a4326;
+}

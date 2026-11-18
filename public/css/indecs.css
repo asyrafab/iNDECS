@@ -1891,3 +1891,16 @@ html[data-amira-entrance="pending"] [data-amira-entrance] .amira-counter-compose
   .review-task-tool[open]::details-content { block-size: auto; }
 }
 @media (max-width: 600px) { .officer-review-page { --review-status-height: var(--size-review-task-rail-narrow); } }
+
+/* ADR-402: glossy glass is an owner-approved exception for this tool alone. */
+.review-task-tool { --task-glass: var(--color-review-glass-neutral); --task-gloss: var(--color-review-gloss-highlight); background-color: var(--task-bg); background-image: linear-gradient(145deg, var(--task-gloss), var(--color-review-gloss-clear) 46%, var(--color-review-gloss-shade)); box-shadow: var(--shadow-review-glass); }
+.review-task-tool[data-score-tone="critical"] { --task-glass: var(--color-review-glass-critical); }
+.review-task-tool[data-score-tone="attention"] { --task-glass: var(--color-review-glass-attention); --task-gloss: var(--color-review-gloss-attention-highlight); }
+.review-task-tool[data-score-tone="compliant"] { --task-glass: var(--color-review-glass-compliant); }
+.review-task-tool .review-task-card { background: transparent; }
+.review-task-tool .review-task-drag, .review-task-tool .review-task-jump, .review-task-tool .review-task-reset { background: var(--color-review-glass-control); transition: background-color var(--duration-fast) var(--ease-standard); }
+.review-task-tool .review-task-drag:hover, .review-task-tool .review-task-jump:hover, .review-task-tool .review-task-reset:hover { background: var(--color-review-glass-control-hover); }
+@supports ((backdrop-filter: blur(0)) or (-webkit-backdrop-filter: blur(0))) {
+  .review-task-tool { background-color: var(--task-glass); backdrop-filter: blur(var(--blur-review-glass)) saturate(var(--saturation-review-glass)); -webkit-backdrop-filter: blur(var(--blur-review-glass)) saturate(var(--saturation-review-glass)); }
+}
+@media print { .review-task-tool { background: var(--task-bg); box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; } }

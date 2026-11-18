@@ -171,3 +171,5 @@ Date: YYYY-MM-DD. Status: Proposed | Accepted | Superseded by ADR-MMM.
 - [ADR-400: Movable review tool and advisory colours](ADR-400-draggable-advisory-review-tool.md) - bounded dragging, unresolved navigation and advisory score bands.
 
 - [ADR-401: Capsule review tool and isolated expansion](ADR-401-capsule-tool-and-isolated-expansion.md) - bright yellow/black, shape morphing and stable review layout.
+
+- [ADR-402: Glossy glass review tool](ADR-402-glossy-glass-review-tool.md) - owner-approved, tool-only gradient/glass finish with an opaque fallback.
