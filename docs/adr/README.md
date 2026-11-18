@@ -176,4 +176,4 @@ Date: YYYY-MM-DD. Status: Proposed | Accepted | Superseded by ADR-MMM.
 
 - [ADR-403: Simplified glass tool controls](ADR-403-simplified-glass-tool-controls.md) - bare grip, shorter score label, removed reset/legend and white glass rim.
 
-- [ADR-404: Local task-tool display preview](ADR-404-local-task-tool-preview.md) - labelled colour/status previews without record changes.
+- [ADR-404: Local task-tool display preview](ADR-404-local-task-tool-preview.md) - retired; temporary controls removed, actual score/status drives the tool.

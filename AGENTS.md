@@ -543,4 +543,4 @@ ADR-402 records the owner-requested glossy glass exception for `.review-task-too
 
 ADR-403 removes the floating tool reset/legend and Home reset shortcut, shortens its collapsed score label to Skor, renders a bare drag grip with retained keyboard focus, and replaces the outer outline with a thicker white glass token border.
 
-ADR-404 adds a local/testing-only Ujian paparan disclosure for floating-tool colour and task-label previews. Overrides must show an Ujian badge; never change scores, counters, findings, application state, storage or server data. Production does not render the controls; Paparan sebenar/reload restores recorded presentation.
+ADR-404 is retired: its temporary colour/status preview controls and overrides are removed. The floating tool uses only server-derived score bands, task status and saved progress in every environment.
