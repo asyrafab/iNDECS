@@ -1904,3 +1904,6 @@ html[data-amira-entrance="pending"] [data-amira-entrance] .amira-counter-compose
   .review-task-tool { background-color: var(--task-glass); backdrop-filter: blur(var(--blur-review-glass)) saturate(var(--saturation-review-glass)); -webkit-backdrop-filter: blur(var(--blur-review-glass)) saturate(var(--saturation-review-glass)); }
 }
 @media print { .review-task-tool { background: var(--task-bg); box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; } }
+
+/* Clear glass retains contrasting control fills for the yellow score band. */
+.review-task-tool[data-score-tone="attention"] { --color-review-glass-control: var(--color-review-glass-attention-control); --color-review-glass-control-hover: var(--color-review-glass-attention-control-hover); }
