@@ -51,6 +51,8 @@ Finding navigation alone does not save. Edited comments remain in the page, are 
 
 ADR-398 adds a persistent top-right task summary for the final check (or the latest check before final handover). It shows saved comment progress and the existing advisory score after officer comments. Unsaved edits do not increase progress; profile corrections defer the displayed score. The summary stays below the wrapping workspace header on narrow screens.
 
+ADR-399 starts the floating tool collapsed: the compact strip retains saved progress and advisory score. Click or use Enter/Space on the task strip to expand/collapse task details. Its teal treatment distinguishes it from record sections; collapsing reclaims plan space without changing the document or unsaved comments.
+
 ## Verification
 
 `php artisan test` (uses `indecs_test`, the fake AI provider and a sync `airs` queue). The real-package acceptance test runs with `PLAN_REVIEW_GREEN_CAMOUR_PATH="<folder of the 12 PDFs>" php artisan test --filter=GreenCamourAcceptanceTest`.

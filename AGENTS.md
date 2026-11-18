@@ -532,3 +532,5 @@ ADR-397 makes `review=focus` the default LJUP officer view; `review=overview` re
 ## Persistent review task summary (2026-11-18)
 
 ADR-398 adds `.review-task-status`, `.review-task-card`, `.review-task-progress` and `.review-task-score`: a sticky top-right summary of the final/latest check, saved officer-comment progress and advisory score. Header/summary measurements in `officer-review.js` keep the plan, divider and finding anchors clear. Never count unsaved text as completed work or show a stale profile score as current.
+
+ADR-399 refines the summary into a native `.review-task-tool` disclosure, collapsed by default, with `.review-task-toggle` and `.review-task-compact-score` keeping saved progress and the advisory score visible. Use the soft teal ground, accent border and Lucide task icon to distinguish this floating tool; disclosure changes remeasure its sticky offset without touching comments or documents.

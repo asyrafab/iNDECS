@@ -166,5 +166,6 @@
             const observer = new ResizeObserver(measure);
             observer.observe(workspaceHeader); observer.observe(taskStatus);
         } else window.addEventListener('resize', measure);
+        taskStatus.querySelector('details')?.addEventListener('toggle', measure);
     }
 })();

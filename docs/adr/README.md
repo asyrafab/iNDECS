@@ -165,3 +165,5 @@ Date: YYYY-MM-DD. Status: Proposed | Accepted | Superseded by ADR-MMM.
 - [ADR-397: Focus Review and save comment / next finding](ADR-397-focus-review-and-save-next.md) - one active finding beside the plan, expandable context and save-before-advance navigation.
 
 - [ADR-398: Persistent officer task status and advisory score](ADR-398-floating-review-task-status.md) - top-right saved progress and advisory score remain visible while scrolling.
+
+- [ADR-399: Collapsible floating review task tool](ADR-399-collapsible-review-task-tool.md) - compact default strip with explicit expansion and a distinct teal tool treatment.
