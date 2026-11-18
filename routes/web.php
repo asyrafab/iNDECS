@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Route;
 
 require __DIR__.'/public.php';
 require __DIR__.'/identity-sandbox.php';
+require __DIR__.'/tasks.php';
 
 Route::middleware('auth')->group(function (): void {});
 

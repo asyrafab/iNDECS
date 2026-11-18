@@ -144,6 +144,7 @@ class DatabaseSeeder extends Seeder
         $this->call(GisLayerSeeder::class);
         // After module seeders so Penolong Pengarah mirrors every department access grant (ADR-362).
         $this->call(LibrarySeeder::class);
+        $this->call(OfficerTaskSeeder::class);
     }
 
     private function seedCorePermissions(): void
