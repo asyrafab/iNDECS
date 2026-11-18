@@ -47,13 +47,13 @@ ADR-397 defaults the officer record to **Semakan fokus**: one finding beside the
 
 Choose an officer status and use **Simpan ulasan & seterusnya** to append the attributed comment, then open the next finding without a saved officer assessment (wrapping to earlier pending findings). **Simpan sahaja** stays on the current finding. Invalid input stays on the same finding with its entered values. When every finding has an officer comment, the page reports that fact and links to internal recommendations; it does not issue a decision or change application status.
 
-Finding navigation alone does not save. Edited comments remain in the page, are marked in the selector, and trigger a departure warning. Save edits before leaving or switching modes. Browser storage contains only the existing numeric panel-width preference. Historical checks remain read-only and load their plan only when opened.
+Finding navigation alone does not save. Edited comments remain in the page, are marked in the selector, and trigger a departure warning. Save edits before leaving or switching modes. Browser storage contains only layout preferences: the numeric panel-width ratio and per-officer floating-tool position/open state. Historical checks remain read-only and load their plan only when opened.
 
 ADR-398 adds a persistent top-right task summary for the final check (or the latest check before final handover). It shows saved comment progress and the existing advisory score after officer comments. Unsaved edits do not increase progress; profile corrections defer the displayed score. The summary stays below the wrapping workspace header on narrow screens.
 
 ADR-399 starts the floating tool collapsed: the compact strip retains saved progress and advisory score. Click or use Enter/Space on the task strip to expand/collapse task details. Its teal treatment distinguishes it from record sections; collapsing reclaims plan space without changing the document or unsaved comments.
 
-ADR-400 adds a dedicated drag grip (mouse/pen/touch or arrow keys; Shift moves faster), Escape to cancel dragging. Position is page-local and clamped below the workspace header on resize. **Belum selesai** advances through this check’s unreviewed or still-unresolved assessments, wrapping without saving any edits.
+ADR-400 adds a dedicated drag grip (mouse/pen/touch or arrow keys; Shift moves faster), Escape to cancel dragging. Position is clamped below the workspace header on resize; ADR-405 now remembers it per officer. **Belum selesai** advances through this check’s unreviewed or still-unresolved assessments, wrapping without saving any edits.
 
 Dark tool colours describe the advisory score: red below `AIRS_SCORE_THRESHOLD` (default 50), amber up to `AIRS_OFFICER_SCORE_GOOD_THRESHOLD` (default 80), green from that visual boundary. The green boundary is clamped to at least the red boundary; unavailable/deferred scores stay navy. These colours are separate from saved-comment progress and official decisions.
 
@@ -62,6 +62,8 @@ ADR-401 changes the yellow band to bright yellow with black text/outline. The co
 ADR-403 simplifies the tool: bare drag grip, **Skor** on the compact surface and a thicker white glass outline. Position reset (including Home) and the colour legend are removed; pointer/arrow movement and Escape cancellation remain. Expanded score context still states that it is not an official decision.
 
 The temporary ADR-404 preview controls have been removed. The floating tool automatically shows the current recorded task status, saved progress and advisory score band in every environment.
+
+ADR-405 remembers the floating tool’s position and open/closed state in this browser for each officer, including after **Simpan ulasan & seterusnya**. It stores only numeric coordinates and disclosure state, tolerates unavailable/corrupt storage, and restores within the current screen bounds. Cancelled drags do not replace the saved position. No application data or comments are stored.
 
 ## Verification
 

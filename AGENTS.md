@@ -544,3 +544,5 @@ ADR-402 records the owner-requested glossy glass exception for `.review-task-too
 ADR-403 removes the floating tool reset/legend and Home reset shortcut, shortens its collapsed score label to Skor, renders a bare drag grip with retained keyboard focus, and replaces the outer outline with a thicker white glass token border.
 
 ADR-404 is retired: its temporary colour/status preview controls and overrides are removed. The floating tool uses only server-derived score bands, task status and saved progress in every environment.
+
+ADR-405 supersedes page-local-only positioning with a versioned, per-officer localStorage preference containing only open/closed state and numeric viewport coordinates. Restore and clamp after save/next or reload; cancelled drags must not overwrite it. Missing/corrupt/blocked storage must leave the tool usable. Never store comments, scores, application/document identifiers or URLs.

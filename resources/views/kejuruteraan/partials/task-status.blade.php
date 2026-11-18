@@ -19,7 +19,7 @@
     };
 @endphp
 <aside class="review-task-status" data-review-task-status aria-label="Status tugasan dan skor nasihat">
-    <details class="review-task-tool" data-task-tool data-score-tone="{{ $taskTone }}" data-task-check="{{ $taskCheck['number'] ?? '' }}">
+    <details class="review-task-tool" data-task-tool data-task-user="{{ auth()->id() }}" data-score-tone="{{ $taskTone }}" data-task-check="{{ $taskCheck['number'] ?? '' }}">
         <summary class="review-task-toggle">
             <button type="button" class="review-task-drag" data-task-drag hidden aria-label="Alih panel. Seret atau gunakan anak panah. Escape membatalkan seretan." title="Alih panel"><x-icon name="grip-vertical" /></button>
             <span>Semakan @if ($taskCompleted && $taskTotal > 0)<strong>{{ $taskReviewed }}/{{ $taskTotal }}</strong><span class="sr-only"> diulas</span>@endif</span>

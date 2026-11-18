@@ -1,4 +1,4 @@
-/* ADR-400: page-local layout only; navigation never saves or assesses findings. */
+/* ADR-405: persist only officer-scoped layout; navigation never saves or assesses findings. */
 (() => {
     const tool = document.querySelector('[data-task-tool]');
     const header = document.querySelector('.topbar');
@@ -7,7 +7,27 @@
     const handle = tool.querySelector('[data-task-drag]');
     const gap = parseFloat(getComputedStyle(tool).getPropertyValue('--space-2'));
     if (!Number.isFinite(gap)) return;
+    const storageKey = tool.dataset.taskUser ? `indecs.technical-review.task.${tool.dataset.taskUser}` : null;
     let offset = {x: 0, y: 0}, desired = null, drag = null;
+    let saved = null;
+    try {
+        const value = storageKey ? JSON.parse(localStorage.getItem(storageKey)) : null;
+        const position = value?.position;
+        if (value?.version === 1 && typeof value.open === 'boolean'
+            && (position === null || (Number.isFinite(position?.x) && Number.isFinite(position?.y)))) {
+            saved = {open: value.open, position: position ? {x: position.x, y: position.y} : null};
+        }
+    } catch { /* Optional layout preference: corrupted or blocked storage uses the default. */ }
+    const persist = () => {
+        if (!storageKey || drag) return;
+        try { localStorage.setItem(storageKey, JSON.stringify({version: 1, open: tool.open, position: desired})); }
+        catch { /* Saving a comment must still work when browser storage is unavailable. */ }
+    };
+    if (saved) {
+        tool.classList.add('is-restoring-layout');
+        tool.open = saved.open; desired = saved.position;
+        requestAnimationFrame(() => requestAnimationFrame(() => tool.classList.remove('is-restoring-layout')));
+    }
     const paint = () => { tool.style.transform = `translate(${offset.x}px, ${offset.y}px)`; };
     const place = (x, y) => {
         const rect = tool.getBoundingClientRect();
@@ -31,6 +51,7 @@
         document.documentElement.classList.remove('review-task-dragging');
         if (!commit) { offset = previous.offset; desired = previous.desired; paint(); reflow(); }
         if (handle.hasPointerCapture(previous.id)) handle.releasePointerCapture(previous.id);
+        if (commit) persist();
     };
     handle.hidden = false;
     handle.addEventListener('click', event => { event.preventDefault(); event.stopPropagation(); });
@@ -56,6 +77,7 @@
         if (!delta || drag) return;
         event.preventDefault(); event.stopPropagation();
         const rect = tool.getBoundingClientRect(); desired = place(rect.left + delta[0], rect.top + delta[1]);
+        persist();
     });
     tool.querySelector('[data-task-jump]')?.addEventListener('click', event => {
         const root = document.getElementById(`review-list-${tool.dataset.taskCheck}`);
@@ -70,7 +92,8 @@
         if (location.hash === `#${next.id}`) window.dispatchEvent(new Event('hashchange'));
         else location.hash = next.id;
     });
-    tool.addEventListener('toggle', reflow);
+    tool.addEventListener('toggle', () => { reflow(); persist(); });
+    document.querySelectorAll('[data-review-form]').forEach(form => form.addEventListener('submit', persist));
     window.addEventListener('resize', reflow);
     window.addEventListener('scroll', () => { if (desired) reflow(); }, {passive: true});
     window.addEventListener('blur', () => finish(false));

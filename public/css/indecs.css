@@ -1917,3 +1917,6 @@ html[data-amira-entrance="pending"] [data-amira-entrance] .amira-counter-compose
 
 /* Neutral is a distinct blue-grey glass state with the same dark labels. */
 .review-task-tool[data-score-tone="pending"] { --task-bg: var(--color-review-neutral-bg); --task-text: var(--color-review-neutral-text); --task-gloss: var(--color-review-gloss-attention-highlight); --color-review-glass-control: var(--color-review-glass-attention-control); --color-review-glass-control-hover: var(--color-review-glass-attention-control-hover); }
+
+/* ADR-405: restore the officer's saved disclosure without replaying its morph. */
+.review-task-tool.is-restoring-layout, .review-task-tool.is-restoring-layout::details-content { transition: none; }
