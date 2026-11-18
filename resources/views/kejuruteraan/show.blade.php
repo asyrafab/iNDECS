@@ -3,6 +3,7 @@
 @section('content')
 @php($focusReview = request()->query('review') !== 'overview')
 <div class="officer-review-page" data-review-page data-review-mode="{{ $focusReview ? 'focus' : 'overview' }}">
+@include('kejuruteraan.partials.task-status')
 @php($statusLabels = ['DITUNAIKAN' => 'Ditunaikan', 'BELUM_DITUNAIKAN' => 'Belum ditunaikan', 'TIDAK_BERKAITAN' => 'Tidak berkaitan', 'TIDAK_DAPAT_DIKESAN' => 'Tidak dapat dikesan', 'PERLU_SEMAKAN_MANUAL' => 'Perlu semakan manual', 'PERLU_SEMAKAN_MANUAL_PEGAWAI' => 'Perlu semakan pegawai'])
 <div class="record-heading"><div>
     <a href="{{ route('kejuruteraan.index') }}" class="back-link"><x-icon name="arrow-left" /> Kembali ke senarai</a>

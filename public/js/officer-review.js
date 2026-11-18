@@ -152,4 +152,19 @@
         }
     };
     revealContext(); window.addEventListener('hashchange', revealContext);
+    // ADR-398: keep the task summary and plan clear of the wrapping workspace header.
+    const reviewPage = document.querySelector('[data-review-page]');
+    const taskStatus = document.querySelector('[data-review-task-status]');
+    const workspaceHeader = document.querySelector('.topbar');
+    if (reviewPage && taskStatus && workspaceHeader) {
+        const measure = () => {
+            reviewPage.style.setProperty('--review-header-offset', `${Math.ceil(workspaceHeader.getBoundingClientRect().height)}px`);
+            reviewPage.style.setProperty('--review-status-height', `${Math.ceil(taskStatus.getBoundingClientRect().height)}px`);
+        };
+        measure();
+        if (typeof ResizeObserver === 'function') {
+            const observer = new ResizeObserver(measure);
+            observer.observe(workspaceHeader); observer.observe(taskStatus);
+        } else window.addEventListener('resize', measure);
+    }
 })();

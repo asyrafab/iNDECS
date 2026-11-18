@@ -49,6 +49,8 @@ Choose an officer status and use **Simpan ulasan & seterusnya** to append the at
 
 Finding navigation alone does not save. Edited comments remain in the page, are marked in the selector, and trigger a departure warning. Save edits before leaving or switching modes. Browser storage contains only the existing numeric panel-width preference. Historical checks remain read-only and load their plan only when opened.
 
+ADR-398 adds a persistent top-right task summary for the final check (or the latest check before final handover). It shows saved comment progress and the existing advisory score after officer comments. Unsaved edits do not increase progress; profile corrections defer the displayed score. The summary stays below the wrapping workspace header on narrow screens.
+
 ## Verification
 
 `php artisan test` (uses `indecs_test`, the fake AI provider and a sync `airs` queue). The real-package acceptance test runs with `PLAN_REVIEW_GREEN_CAMOUR_PATH="<folder of the 12 PDFs>" php artisan test --filter=GreenCamourAcceptanceTest`.

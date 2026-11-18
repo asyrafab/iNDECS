@@ -1832,3 +1832,19 @@ html[data-amira-entrance="pending"] [data-amira-entrance] .amira-counter-compose
 .technical-evidence > summary:focus-visible, .technical-officer-latest > summary:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
 [data-review-mode="focus"] .technical-evidence { border: var(--rule-hair) solid var(--color-border); border-radius: var(--radius-sm); padding: var(--space-3); }
 .technical-officer-latest[open] > summary { margin-bottom: var(--space-3); }
+
+/* ADR-398: persistent saved-task progress and advisory score. */
+.review-task-status { position: sticky; top: calc(var(--review-header-offset, calc(var(--space-16) + var(--space-4))) + var(--space-2)); z-index: 15; display: flex; justify-content: flex-end; padding-block: var(--space-2); margin-bottom: var(--space-4); pointer-events: none; }
+.review-task-card { pointer-events: auto; display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-5); max-width: 100%; padding: var(--space-3) var(--space-4); background: var(--color-surface); border: var(--rule-hair) solid var(--color-border); border-radius: var(--radius-md); box-shadow: var(--shadow-raised); }
+.review-task-progress, .review-task-score { display: grid; align-content: start; gap: var(--space-1); }
+.review-task-card .eyebrow, .review-task-card .muted { font-size: var(--font-size-xs); }
+.review-task-card strong { color: var(--color-navy); font-size: var(--font-size-sm); font-variant-numeric: tabular-nums; }
+.review-task-score { padding-left: var(--space-4); border-left: var(--rule-hair) solid var(--color-border-soft); }
+.review-task-score strong { color: var(--color-accent-700); }
+.review-task-score small { font-size: var(--font-size-xs); font-weight: 400; color: var(--color-text-muted); }
+.officer-review-page .technical-finding { scroll-margin-top: calc(var(--review-header-offset, calc(var(--space-16) + var(--space-4))) + var(--review-status-height, 0px) + var(--space-6)); }
+@media (min-width: 1101px) {
+  .officer-review-page .technical-review-desk.is-resizable .technical-plan { top: calc(var(--review-header-offset, calc(var(--space-16) + var(--space-4))) + var(--review-status-height, 0px) + var(--space-4)); height: calc(100dvh - var(--review-header-offset, calc(var(--space-16) + var(--space-4))) - var(--review-status-height, 0px) - var(--space-8)); }
+  .officer-review-page .technical-divider-grip { top: calc(var(--review-header-offset, calc(var(--space-16) + var(--space-4))) + var(--review-status-height, 0px) + var(--space-4)); }
+}
+@media print { .review-task-status { position: static; box-shadow: none; } }

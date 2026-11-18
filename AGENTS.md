@@ -528,3 +528,7 @@ ADR-396 adds `.technical-panel-divider` and progressive `.technical-review-desk.
 ## Focus Review (2026-11-18)
 
 ADR-397 makes `review=focus` the default LJUP officer view; `review=overview` retains the complete overview. `.review-context-disclosure`, `.review-secondary-details`, `.review-analysis-details`, `.review-filter-disclosure` and `.technical-review-queue` keep context expandable and one active finding beside the resizable plan. Save/next uses the existing append-only feedback service, then selects the next unreviewed scoped finding server-side. Never advance on validation failure or treat completion as an official decision. Queue navigation preserves page-local edits; comments are never stored in browser storage.
+
+## Persistent review task summary (2026-11-18)
+
+ADR-398 adds `.review-task-status`, `.review-task-card`, `.review-task-progress` and `.review-task-score`: a sticky top-right summary of the final/latest check, saved officer-comment progress and advisory score. Header/summary measurements in `officer-review.js` keep the plan, divider and finding anchors clear. Never count unsaved text as completed work or show a stale profile score as current.

@@ -163,3 +163,5 @@ Date: YYYY-MM-DD. Status: Proposed | Accepted | Superseded by ADR-MMM.
 - [ADR-396: Resizable review panels](ADR-396-resizable-review-panels.md) - accessible panel resizing; focused review mode proposed separately.
 
 - [ADR-397: Focus Review and save comment / next finding](ADR-397-focus-review-and-save-next.md) - one active finding beside the plan, expandable context and save-before-advance navigation.
+
+- [ADR-398: Persistent officer task status and advisory score](ADR-398-floating-review-task-status.md) - top-right saved progress and advisory score remain visible while scrolling.

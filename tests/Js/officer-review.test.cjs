@@ -28,7 +28,7 @@ function boot(hash='', focused=false, failedIndex=null) {
     root.children={'[data-review-finding]':rows,'[data-review-search]':search,'[data-review-filter]':filter,'[data-review-section]':section,'[data-review-results]':results,'[data-review-empty]':empty,'[data-review-tools]':tools,'[data-review-reset]':reset,'[data-review-collapse]':collapse,'[data-review-next]':[next,...rows.map(r=>r.rowNext)],'[data-review-form]':rows.map(r=>r.form)};
     const queue=new Node(),queueSelect=new Node(),prev=new Node(),queueNext=new Node(),position=new Node();queue.hidden=true;queueSelect.options=rows.map((row,index)=>({value:row.id,dataset:{queueLabel:'Dapatan '+index}}));Object.assign(root.children,{'[data-review-queue]':queue,'[data-review-queue-select]':queueSelect,'[data-review-queue-prev]':prev,'[data-review-queue-next]':queueNext,'[data-review-queue-prev], [data-review-queue-next]':[prev,queueNext],'[data-review-active-position]':position});
     const location={hash};
-    vm.runInNewContext(readFileSync(require.resolve('../../public/js/officer-review.js'),'utf8'),{document:{querySelectorAll:()=>[root]},window,location,history:{replaceState(a,b,value){location.hash=value;}}});
+    vm.runInNewContext(readFileSync(require.resolve('../../public/js/officer-review.js'),'utf8'),{document:{querySelectorAll:()=>[root],querySelector:()=>null},window,location,history:{replaceState(a,b,value){location.hash=value;}}});
     return {root,rows,window,search,filter,section,results,empty,tools,next,collapse,reset,location,parent,queue,queueSelect,prev,queueNext,position};
 }
 test('search, review and section filters combine; reset restores all rows',()=>{
