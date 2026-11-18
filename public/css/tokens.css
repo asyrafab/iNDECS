@@ -105,6 +105,8 @@
   --shadow-raised: 0 8px 28px #102a4314;
   --shadow-sm: var(--shadow-raised); --shadow-md: var(--shadow-raised); --shadow-lg: var(--shadow-raised);
   --sidebar-width: 248px; --assistant-width: 360px; --icon-size: 18px; --control-height: 44px;
+  --size-technical-pane-min: 320px;
+  --ratio-technical-plan-default: .55;
   --duration-fast: 160ms; --duration-normal: 280ms; --duration-slow: 600ms;
   --ease-standard: cubic-bezier(.2, .7, .2, 1);
   --duration-mark-story: 8000ms;
