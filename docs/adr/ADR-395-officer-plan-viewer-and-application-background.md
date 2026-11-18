@@ -1,0 +1,11 @@
+# ADR-395: Plan viewer beside comments and application background
+
+Date: 2026-11-18. Status: accepted under the owner's request.
+
+The officer review page opens with recorded application background, application status, workflow stage and paid-check journey status. Show registered type/reference, submission/handover dates, site/lot particulars, recorded parties, submitter and assignee where available; absent information stays explicitly unrecorded. Keep authoritative recorded details separate from MATRIX-extracted fields and AI findings. No inferred identity, application state or legal decision is introduced.
+
+For each completed check, place a persistent document viewer beside its technical-comment list on wide screens, stacking on narrow screens. The selector contains only clean PDF/image application documents in that check's frozen document manifest, matched by ID and checksum within the authorised application. Do not silently show a later revision in historical checks. Evidence links target the same in-page viewer and use the referenced page when supplied. Opening a finding or navigating to the next finding selects its first previewable evidence; manually selecting another document does not discard comments. Browser PDF controls supply zoom/search/page navigation; an explicit same-tab document fallback remains available if inline viewing is unsupported.
+
+Use the existing scoped private document endpoint and session authorization, not public storage URLs or third-party viewers. The viewer loads only server-rendered selector URLs; reject arbitrary/external URLs in client state. Do not embed HTML/SVG/archive uploads. Empty or unsupported previews are labelled and retain evidence links. Selectors and native named iframe links remain usable without JavaScript. Avoid loading iframes in collapsed historical checks until requested.
+
+Preserve ADR-394 search, review progress, explicit officer assessments, append-only history and unsaved-edit protection. Switching plans/pages never submits a form, changes status or stores document/comment contents in browser storage. Shared token-based layout, BM labels and keyboard focus apply; no new migration or permission is required.

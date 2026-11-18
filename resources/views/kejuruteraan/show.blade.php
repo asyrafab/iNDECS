@@ -6,9 +6,9 @@
     <a href="{{ route('kejuruteraan.index') }}" class="back-link"><x-icon name="arrow-left" /> Kembali ke senarai</a>
     <div class="record-reference-row"><span class="record-type">LJUP</span><span class="record-reference">{{ $application->application_reference }}</span>
         <span class="status-badge status-{{ $application->current_status->value }}">{{ $application->current_status->label() }}</span></div>
-    <h1>{{ $application->title }}</h1><p>{{ $application->description }}</p>
-    <p class="muted">{{ $view['journey']?->state->label() ?? 'Tiada semakan berbayar' }} · Peringkat: {{ $application->current_stage->label() }}</p>
+    <h1>{{ $application->title }}</h1>
 </div></div>
+@include('kejuruteraan.partials.background')
 @if ($errors->any())<div class="alert alert-error" role="alert"><div>@foreach ($errors->all() as $error)<p>{{ $error }}</p>@endforeach</div></div>@endif
 @if (auth()->user()->canPerformLjup('review'))
     <a class="button button-secondary button-small" href="#syor-dalaman"><x-icon name="file-text" />Syor dalaman & draf surat</a>
@@ -46,4 +46,5 @@
 @endforeach
 @include('kejuruteraan.partials.recommendations')
 <script src="{{ asset('js/officer-review.js') }}" defer></script>
+<script src="{{ asset('js/officer-documents.js') }}" defer></script>
 @endsection
