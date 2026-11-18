@@ -35,7 +35,7 @@ test('opening another finding updates the viewer and page input validates before
  ui.page.value='7';const event=ui.page.emit('keydown',{key:'Enter'});assert.equal(event.prevented,true);assert.match(ui.frame.getAttribute('src'),/page=7/);
 });
 test('historical frames load only when their check is opened',()=>{
- const ui=boot({historical:true});assert.equal(ui.frame.getAttribute('src'),null);
+ const ui=boot({historical:true});assert.equal(ui.frame.getAttribute('src'),null);ui.rows[0].emit('toggle');assert.equal(ui.frame.getAttribute('src'),null);
  ui.parent.open=true;ui.parent.emit('toggle');assert.match(ui.frame.getAttribute('src'),/documents\/A/);
 });
 test('external URLs are never placed in the frame and modified-clicks retain native behavior',()=>{

@@ -41,6 +41,14 @@ An LJUP draft (Jabatan Kejuruteraan) declares its lighting types and uses the fr
 
 ADR-392 adds internal recommendations and frozen draft letter previews through shared core services. Use the `Syor dalaman & draf surat` link on an LJUP record. See the [internal recommendation runbook](ljup-internal-recommendations.md). This prepares internal records only; official decisions, issued letters and post-handover correction requests remain separate work.
 
+## Focus Review
+
+ADR-397 defaults the officer record to **Semakan fokus**: one finding beside the resizable plan, a finding selector with previous/next navigation, and expandable background, evidence, AI explanation, extracted profile and recommendations. Application reference and status stay visible at the top. **Gambaran keseluruhan** restores the full overview.
+
+Choose an officer status and use **Simpan ulasan & seterusnya** to append the attributed comment, then open the next finding without a saved officer assessment (wrapping to earlier pending findings). **Simpan sahaja** stays on the current finding. Invalid input stays on the same finding with its entered values. When every finding has an officer comment, the page reports that fact and links to internal recommendations; it does not issue a decision or change application status.
+
+Finding navigation alone does not save. Edited comments remain in the page, are marked in the selector, and trigger a departure warning. Save edits before leaving or switching modes. Browser storage contains only the existing numeric panel-width preference. Historical checks remain read-only and load their plan only when opened.
+
 ## Verification
 
 `php artisan test` (uses `indecs_test`, the fake AI provider and a sync `airs` queue). The real-package acceptance test runs with `PLAN_REVIEW_GREEN_CAMOUR_PATH="<folder of the 12 PDFs>" php artisan test --filter=GreenCamourAcceptanceTest`.

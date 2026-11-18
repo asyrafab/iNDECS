@@ -161,3 +161,5 @@ Date: YYYY-MM-DD. Status: Proposed | Accepted | Superseded by ADR-MMM.
 - [ADR-395: Plan viewer and application background](ADR-395-officer-plan-viewer-and-application-background.md) - in-page document review beside comments and recorded application context.
 
 - [ADR-396: Resizable review panels](ADR-396-resizable-review-panels.md) - accessible panel resizing; focused review mode proposed separately.
+
+- [ADR-397: Focus Review and save comment / next finding](ADR-397-focus-review-and-save-next.md) - one active finding beside the plan, expandable context and save-before-advance navigation.

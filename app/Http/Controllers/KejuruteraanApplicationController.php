@@ -99,10 +99,29 @@ final class KejuruteraanApplicationController extends Controller
         $record = $this->application($request, $application);
         $found = ReviewFinding::query()->whereKey($finding)
             ->whereHas('reviewVersion.reviewCase', fn ($query) => $query->where('application_id', $record->id))->firstOrFail();
-        $data = $request->validate(['officer_status' => ['required', 'string'], 'officer_comment' => ['nullable', 'string', 'max:2000']]);
+        $data = $request->validate(['officer_status' => ['required', 'string'], 'officer_comment' => ['nullable', 'string', 'max:2000'],
+            'after_save' => ['nullable', Rule::in(['stay', 'next'])], 'review_mode' => ['nullable', Rule::in(['focus', 'overview'])]]);
         $feedback->record($request->user(), $found, $data['officer_status'], $data['officer_comment'] ?? null);
 
-        return redirect(route('kejuruteraan.show', $record).'#finding-'.$found->id)->with('status', 'Ulasan pegawai bagi '.$found->rule_id.' disimpan.');
+        if (($data['after_save'] ?? 'stay') === 'next') {
+            $version = $found->reviewVersion()->firstOrFail();
+            $next = $this->presenter->nextUnreviewed($version, $found->id);
+            if ($next !== null) {
+                return redirect(route('kejuruteraan.show', ['application' => $record->id, 'review' => 'focus', 'finding' => $next]).'#finding-'.$next)
+                    ->with('status', 'Ulasan disimpan. Teruskan dengan dapatan seterusnya yang belum diulas.');
+            }
+
+            return redirect(route('kejuruteraan.show', ['application' => $record->id, 'review' => 'focus']).'#review-complete-'.$version->check_number)
+                ->with('status', 'Ulasan disimpan. Semua dapatan dalam semakan ini telah mempunyai ulasan pegawai. Ini bukan keputusan rasmi.');
+        }
+
+        $parameters = ['application' => $record->id];
+        if (isset($data['review_mode'])) {
+            $parameters['review'] = $data['review_mode'];
+            $parameters['finding'] = $found->id;
+        }
+
+        return redirect(route('kejuruteraan.show', $parameters).'#finding-'.$found->id)->with('status', 'Ulasan pegawai bagi '.$found->rule_id.' disimpan.');
     }
 
     public function storeFieldReview(Request $request, string $application, ProfileFieldReviewService $fields): RedirectResponse

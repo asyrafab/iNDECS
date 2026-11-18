@@ -524,3 +524,7 @@ ADR-395 adds recorded application background above the review and a `.technical-
 ## Resizable officer review (2026-11-18)
 
 ADR-396 adds `.technical-panel-divider` and progressive `.technical-review-desk.is-resizable` / `.is-narrow` states through `officer-panel-split.js`. Read minimum pane width/default ratio from tokens. Pointer/keyboard resizing must retain comments and the existing iframe; disable iframe pointer events only during capture. Persist only a numeric per-user layout ratio, tolerate unavailable storage, preserve readable widths and stack on narrow screens. Focus mode is a separate proposal in ADR-396, not implemented by this increment.
+
+## Focus Review (2026-11-18)
+
+ADR-397 makes `review=focus` the default LJUP officer view; `review=overview` retains the complete overview. `.review-context-disclosure`, `.review-secondary-details`, `.review-analysis-details`, `.review-filter-disclosure` and `.technical-review-queue` keep context expandable and one active finding beside the resizable plan. Save/next uses the existing append-only feedback service, then selects the next unreviewed scoped finding server-side. Never advance on validation failure or treat completion as an official decision. Queue navigation preserves page-local edits; comments are never stored in browser storage.

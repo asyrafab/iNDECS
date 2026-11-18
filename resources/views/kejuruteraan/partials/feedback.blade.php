@@ -5,17 +5,18 @@
     $latestFeedback = collect($item['feedback_history'])->last();
 @endphp
 @if ($latestFeedback)
-    <div class="technical-officer-latest">
+    <details class="technical-officer-latest" @if (!($focusReview ?? false)) open @endif><summary>Ulasan terakhir · {{ $latestFeedback['officer'] }}</summary>
         <p><strong>Pegawai: {{ $statusLabels[$item['officer_status']] ?? $item['officer_status'] }}</strong></p>
         @if ($item['officer_comment'])<p class="internal-draft-text">{{ $item['officer_comment'] }}</p>@endif
         <small class="muted">{{ $latestFeedback['officer'] }} · {{ $latestFeedback['at']?->setTimezone(config('app.display_timezone', 'Asia/Kuala_Lumpur'))->format('d/m/Y H:i') }}</small>
-    </div>
+    </details>
 @else
-    <p class="muted">Belum ada penilaian pegawai bagi dapatan ini.</p>
+    <p class="muted technical-officer-empty">Belum ada penilaian pegawai bagi dapatan ini.</p>
 @endif
 @if ($canComment)
     <form method="POST" action="{{ route('kejuruteraan.findings.feedback', [$application, $item['finding_id']]) }}" class="technical-feedback-form" data-review-form>
         @csrf
+        <input type="hidden" name="review_mode" value="{{ ($focusReview ?? false) ? 'focus' : 'overview' }}">
         <input type="hidden" name="feedback_finding_id" value="{{ $item['finding_id'] }}">
         <label class="field"><span>Status pegawai</span><select name="officer_status" required>
             <option value="">Pilih status pegawai</option>
@@ -26,7 +27,7 @@
             <details class="technical-standard-comment"><summary>Ulasan piawai untuk rujukan</summary><p class="internal-draft-text" data-review-standard-text>{{ $item['standard_comment'] }}</p><button type="button" class="button button-ghost button-small" data-review-use-standard hidden>Masukkan ke dalam ulasan</button></details>
         @endif
         @if ($isFailedForm && $errors->any())<p class="alert alert-error" role="alert">Ulasan ini belum disimpan. Semak status dan panjang ulasan, kemudian cuba semula.</p>@endif
-        <div class="technical-feedback-actions"><button class="button button-primary button-small" type="submit">Simpan ulasan<x-icon name="check" /></button><button class="button button-ghost button-small" type="button" data-review-next hidden>Belum diulas seterusnya<x-icon name="arrow-down" /></button></div>
+        <div class="technical-feedback-actions">@if ($focusReview ?? false)<button class="button button-primary" type="submit" name="after_save" value="next">Simpan ulasan & seterusnya<x-icon name="arrow-right" /></button><button class="button button-secondary button-small" type="submit" name="after_save" value="stay">Simpan sahaja</button>@else<button class="button button-primary button-small" type="submit" name="after_save" value="stay">Simpan ulasan<x-icon name="check" /></button>@endif<button class="button button-ghost button-small" type="button" data-review-next data-review-overview-next hidden>Belum diulas seterusnya<x-icon name="arrow-down" /></button></div>
         <small class="muted">Setiap simpanan menambah rekod sejarah. Dapatan AI tidak diubah.</small>
     </form>
 @else
