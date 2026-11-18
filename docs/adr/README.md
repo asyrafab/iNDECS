@@ -145,3 +145,5 @@ Date: YYYY-MM-DD. Status: Proposed | Accepted | Superseded by ADR-MMM.
 - [ADR-386: Compact shaped document status icons](ADR-386-document-status-icon-shapes.md)
 
 - [ADR-390: Fill draft details from dropped documents](ADR-390-draft-prefill-from-documents.md)
+
+- [ADR-391: Guidance history preserves the applicant return URL](ADR-391-guidance-history-preserves-return-url.md)

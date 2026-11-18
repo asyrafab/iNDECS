@@ -1,6 +1,35 @@
 # iNDECS Progress
 
-Last updated: 2026-10-29.
+Last updated: 2026-11-18.
+
+## LJUP upload validation — 2026-11-18
+
+Validated baseline `fdf7437` without application code changes: 243 focused tests /
+897 assertions passed on guarded PostgreSQL `indecs_test`, followed by the real
+12-PDF Green Camour package (1 test / 23 assertions passed). All uploads remain
+visible: 11 placed, with the receipt in the unmatched tray. The LJUP-named
+submission form and cover letter share Borang pengemukaan; Umum/Khusus remain
+under LJUP 1. Draft title/address prefill remained provisional for confirmation.
+
+The local published catalogue matches the nine checked-in items' keywords and
+five-file limits. The configured ClamAV adapter scanned a real submission form;
+both portal JavaScript files passed syntax checks. No normal application records
+or catalogue configuration were changed. Browser interactions, asynchronous worker
+operation and live payment remain unverified in this increment. See the
+[validation record](docs/runbooks/ljup-upload-validation.md) for commands, evidence
+and test-double boundaries.
+
+Follow-up browser/worker validation completed on the same date: the real browser
+accepted all 12 PDFs in two batches; the separate database worker completed 12
+real scan/text/OCR jobs in about 320 seconds, leaving no pending/failed jobs and
+the expected 11 placed files plus one unmatched receipt. Polling, dialog/file
+preservation, Tab/Escape focus, draft-save preservation and a byte-identical
+download were verified. Found and fixed AMIRA history replacing the validation
+return URL by marking its background GET as AJAX (ADR-391); repeated the duplicate
+upload successfully. Post-fix regression: 32 tests / 209 assertions passed;
+JavaScript syntax and diff checks passed. Validation used isolated test data and
+storage; its server/worker are stopped. Remaining limits are in the validation
+record, including actual drag/folder/ZIP gestures and live payment.
 
 ## eOSC+ Plan 2: meeting map (ADR-315)
 

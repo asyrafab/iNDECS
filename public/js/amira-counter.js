@@ -89,7 +89,7 @@
                     'Content-Type': 'application/json', Accept: 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                 }, body: JSON.stringify({ ...payload, draft_id: counter.dataset.draftId || null }),
-            } : { signal: abort.signal, credentials: 'same-origin', headers: { Accept: 'application/json' } });
+            } : { signal: abort.signal, credentials: 'same-origin', headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } });
             if (!response.ok) throw new Error('guidance-request-failed');
             return response.json();
             } finally { clearTimeout(timeout); }
