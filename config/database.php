@@ -83,7 +83,7 @@ return [
             'charset' => env('DB_CHARSET', 'utf8'),
             'prefix' => '',
             'prefix_indexes' => true,
-            'search_path' => 'public,core,bangunan,integration,airs',
+            'search_path' => 'public,core,perancang,bangunan,kejuruteraan,landskap,integration,airs',
             // ADR-314: the application timezone is UTC; Laravel writes timestamps without an offset, so the
             // session must also be UTC or timestamptz values shift by the server's local offset.
             'timezone' => env('DB_TIMEZONE', 'UTC'),

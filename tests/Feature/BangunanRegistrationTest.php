@@ -223,8 +223,8 @@ final class BangunanRegistrationTest extends TestCase
         $before = DB::table('core.role_permissions')->count();
         $this->seed(BangunanWorkflowSeeder::class);
         $this->seed(BangunanWorkflowSeeder::class);
-        $this->assertDatabaseCount('core.workflow_templates', 5);
-        $this->assertDatabaseCount('core.workflow_transitions', 20);
+        $this->assertDatabaseCount('core.workflow_templates', 6);
+        $this->assertDatabaseCount('core.workflow_transitions', 24);
         $this->assertDatabaseCount('core.role_permissions', $before);
     }
 

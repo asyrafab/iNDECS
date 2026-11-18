@@ -62,6 +62,18 @@ class User extends Authenticatable
         return $this->canPerformLjup('access');
     }
 
+    /** PL (Jabatan Landskap) permissions: access, register, review, documents.upload, documents.verify, documents.configure. */
+    public function canPerformLandskap(string $action): bool
+    {
+        return $this->is_active && $this->account_type === 'staff'
+            && app(CorePermissionService::class)->userCan($this, 'landskap.pl.'.$action, $this->department_id, 'PL');
+    }
+
+    public function canAccessLandskap(): bool
+    {
+        return $this->canPerformLandskap('access');
+    }
+
     public function canPerformBangunan(string $action, string $type): bool
     {
         return in_array($type, BangunanApplication::TYPES, true)
@@ -135,7 +147,7 @@ class User extends Authenticatable
         if (! $this->is_active || $this->account_type !== 'staff') {
             return false;
         }
-        if ($this->canAccessOsc() || $this->canPerformPkm('perancang.pkm.register')) {
+        if ($this->canAccessOsc() || $this->canPerformPkm('perancang.pkm.register') || $this->canPerformLandskap('register')) {
             return true;
         }
         foreach (BangunanApplication::TYPES as $type) {
@@ -149,7 +161,8 @@ class User extends Authenticatable
 
     public function canAccessStaffWorkspace(): bool
     {
-        return $this->canAccessPkm() || $this->canAccessBangunan() || $this->canAccessBangunanLegacy() || $this->canAccessOsc()
+        return $this->canAccessPkm() || $this->canAccessBangunan() || $this->canAccessBangunanLegacy()
+            || $this->canAccessKejuruteraan() || $this->canAccessLandskap() || $this->canAccessOsc()
             || $this->canManageLibrary((string) $this->department_id);
     }
 
@@ -159,6 +172,7 @@ class User extends Authenticatable
         return match (true) {
             $this->canAccessBangunan() => route('bangunan.index'),
             $this->canAccessPkm() => route('dashboard'),
+            $this->canAccessLandskap() => route('landskap.index'),
             $this->canAccessBangunanLegacy() => route('bangunan.legacy.index'),
             ! $this->canAccessOsc() && $this->canViewLibrary() => route('library.index'),
             default => route('osc.meetings.index'),
@@ -180,9 +194,11 @@ class User extends Authenticatable
 
     public function canAccessApplication(Application $application): bool
     {
-        $canAccess = $application->application_type_id === 'PKM'
-            ? $this->canAccessPkm()
-            : ($application->responsible_department_id === 'JBANG' && $this->canPerformBangunan('access', $application->application_type_id));
+        $canAccess = match ($application->application_type_id) {
+            'PKM' => $this->canAccessPkm(),
+            'PL' => $application->responsible_department_id === 'JLAND' && $this->canAccessLandskap(),
+            default => $application->responsible_department_id === 'JBANG' && $this->canPerformBangunan('access', $application->application_type_id),
+        };
 
         if (! $canAccess) {
             return false;

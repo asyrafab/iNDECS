@@ -16,6 +16,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 ])]
 class DocumentType extends Model
 {
+    protected $table = 'core.document_types';
+
     public function requirements(): HasMany
     {
         return $this->hasMany(DocumentRequirement::class);

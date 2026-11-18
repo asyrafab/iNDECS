@@ -28,9 +28,14 @@
   --color-department-landskap-deep: #286343;
   --color-department-landskap-frame: #17452d;
   --color-department-landskap-line: #d2efc5;
+  --color-garden-blade-light: #8ccf66;
+  --color-garden-blade-mid: #5ea342;
+  --color-garden-blade-deep: #2f6b22;
+  --color-garden-wind-sheen: #dff7c74d;
   --color-department-letter: var(--color-on-accent);
   --shadow-department-icon: 0 6px 8px #102a4326;
   --size-department-icon: 64px;
+  --width-application-dialog: 880px;
   --width-esri-logo: 112px;
   --filter-esri-logo: none;
   --size-department-icon-compact: 32px;

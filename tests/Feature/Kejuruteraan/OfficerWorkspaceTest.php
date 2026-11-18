@@ -108,7 +108,7 @@ final class OfficerWorkspaceTest extends TestCase
     {
         [$application] = $this->paidLjup();
         $this->actingAs($this->engineer())->get(route('kejuruteraan.show', $application))->assertOk()
-            ->assertSee('iNDECS Kejuruteraan')->assertSee('Jabatan Kejuruteraan')->assertDontSee('Jabatan Perancang Bandar');
+            ->assertSee('iNDECS Engineering')->assertSee('Jabatan Kejuruteraan')->assertDontSee('Jabatan Perancang Bandar');
     }
 
     public function test_earlier_check_is_collapsed_under_the_final_check(): void
@@ -127,7 +127,7 @@ final class OfficerWorkspaceTest extends TestCase
     public function test_launcher_shows_kejuruteraan_for_engineering_officer(): void
     {
         $apps = app(ApplicationLauncher::class)->forUser($this->engineer());
-        $tile = collect($apps)->firstWhere('name', 'iNDECS Kejuruteraan');
+        $tile = collect($apps)->firstWhere('name', 'iNDECS Engineering');
         $this->assertNotNull($tile);
         $this->assertSame(route('kejuruteraan.index'), $tile['url']);
     }

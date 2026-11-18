@@ -30,6 +30,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 ])]
 class ApplicationDocument extends Model
 {
+    protected $table = 'core.application_documents';
+
     use HasUlids;
 
     public function application(): BelongsTo

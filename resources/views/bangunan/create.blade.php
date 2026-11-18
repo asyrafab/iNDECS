@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Daftar permohonan Bangunan')
 @section('content')
-<div class="page-heading"><a href="{{ route('bangunan.index') }}" class="back-link">Kembali ke senarai</a><span class="eyebrow">iNDECS Bangunan</span><h1>Daftar permohonan baharu</h1><p>Maklumat bertanda * wajib diisi. Nombor rujukan dijana mengikut jenis permohonan dan tahun penerimaan.</p></div>
+<div class="page-heading"><a href="{{ route('bangunan.index') }}" class="back-link">Kembali ke senarai</a><span class="eyebrow">iNDECS Building</span><h1>Daftar permohonan baharu</h1><p>Maklumat bertanda * wajib diisi. Nombor rujukan dijana mengikut jenis permohonan dan tahun penerimaan.</p></div>
 @if ($errors->any())<div class="alert alert-error validation-summary" role="alert"><div><strong>Sila semak maklumat berikut.</strong><ul>@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div></div>@endif
 <form method="POST" action="{{ route('bangunan.store') }}" class="application-form">
 @csrf

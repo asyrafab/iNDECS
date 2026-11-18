@@ -72,7 +72,7 @@ class PublicPortalTest extends TestCase
 
     public function test_application_chooser_filters_types_and_prefills_only_an_available_type(): void
     {
-        ApplicationType::query()->create(['id' => 'PL', 'name' => 'Unreleased landscape intake', 'primary_department_id' => 'JPBD', 'is_active' => true]);
+        ApplicationType::query()->updateOrCreate(['id' => 'PL'], ['name' => 'Unreleased landscape intake', 'primary_department_id' => 'JLAND', 'is_active' => true]);
         ApplicationType::query()->create(['id' => 'PB', 'name' => 'Inactive building intake', 'primary_department_id' => 'JPBD', 'is_active' => false]);
         $this->actingAs($this->applicant())->get(route('portal.home'))->assertOk()
             ->assertSee('Fail saya')->assertSee('Permohonan baharu')

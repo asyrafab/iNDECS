@@ -89,6 +89,16 @@
 .welcome-learn > a svg { width: var(--space-16); height: var(--space-8); fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .welcome-gallery { position: relative; isolation: isolate; overflow: visible; width: min(100%, calc(100svh - var(--space-16) - var(--space-8))); max-height: 100%; aspect-ratio: 1; justify-self: end; }
 .welcome-photo { position: absolute; overflow: hidden; width: 60%; aspect-ratio: 1; margin: 0; padding: 0; border: 0; background: var(--color-surface); box-shadow: var(--shadow-welcome-photo); cursor: pointer; text-align: left; touch-action: none; left: calc(var(--photo-position) * 38%); top: calc((1 - var(--photo-position)) * 38%); opacity: var(--photo-opacity, 1); transition: transform var(--duration-slow) var(--ease-standard); }
+.welcome-garden-circle { position: absolute; z-index: 0; left: 38%; top: 38%; overflow: hidden; width: 60%; aspect-ratio: 1; margin: 0; padding: 0; border: 0; border-radius: 50%; background: var(--color-surface); box-shadow: var(--shadow-welcome-photo); cursor: pointer; touch-action: manipulation; }
+.welcome-garden-circle[hidden] { display: none; }
+.welcome-garden-ring { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.welcome-garden-ring .building-garden-edging { stroke: url(#welcome-edging-stone); }
+.welcome-garden-grass path { fill: none; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.welcome-garden-blade-deep { stroke: var(--color-garden-blade-deep); stroke-width: 1.4; opacity: .75; }
+.welcome-garden-blade-mid { stroke: var(--color-garden-blade-mid); stroke-width: 1.2; opacity: .88; }
+.welcome-garden-blade-light { stroke: var(--color-garden-blade-light); stroke-width: 1; opacity: .92; }
+.welcome-garden-gust { fill: none; stroke: var(--color-garden-wind-sheen); stroke-width: 1.5; stroke-linecap: round; pointer-events: none; }
+.welcome-garden-plant { cursor: pointer; filter: drop-shadow(var(--shadow-material-plant)); transform-box: fill-box; transform-origin: center; }
 .welcome-frame { display: block; position: absolute; inset: 0; overflow: hidden; }
 .welcome-frame img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .welcome-frame .photo-klang { object-position: center top; transform: scale(1.8); transform-origin: 100% 0; }
@@ -1231,30 +1241,32 @@ body.map-mode .map-stage { position: absolute; inset: 0; height: auto; border: 0
 .layout-marker { position: absolute; display: grid; place-items: center; width: 22px; height: 22px; transform: translate(-50%, -50%); border: 2px solid var(--color-surface); border-radius: 50%; background: var(--color-accent-700); color: var(--color-on-accent); font-size: var(--font-size-xs); font-weight: 600; pointer-events: none; }
 
 /* ADR-344: shared, permission-filtered application chooser. */
-.application-dialog { width: min(calc(100% - var(--space-8)), 760px); max-height: calc(100dvh - var(--space-8)); margin: auto; padding: var(--space-8); overflow-y: auto; border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); color: var(--color-text); box-shadow: var(--shadow-raised); }
+.application-dialog { width: min(calc(100% - var(--space-8)), var(--width-application-dialog)); max-height: calc(100dvh - var(--space-8)); margin: auto; padding: var(--space-8); overflow-y: auto; border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); color: var(--color-text); box-shadow: var(--shadow-raised); }
 .application-dialog { text-align: center; }
 .application-dialog-head { position: relative; display: flex; align-items: center; justify-content: center; gap: var(--space-4); min-height: var(--control-height); margin-bottom: var(--space-4); }
 .application-dialog-head .icon-button { position: absolute; right: 0; }
 .application-dialog h2 { margin: 0 0 var(--space-2); color: var(--color-navy); font-size: var(--font-size-heading); }
 .application-dialog p { margin: 0 0 var(--space-5); color: var(--color-text-muted); }
-.application-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); margin-top: var(--space-5); }
-.application-tile { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-3); padding: var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); color: var(--color-text); text-align: center; text-decoration: none; transition: transform var(--duration-normal) var(--ease-standard); }
+.application-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-3); margin-top: var(--space-5); }
+.application-section-divider { display: flex; align-items: center; justify-content: center; gap: var(--space-3); margin-top: var(--space-6); padding-top: var(--space-5); border-top: 1px solid var(--color-border-soft); text-align: center; }
+.application-section-divider + .application-grid { margin-top: var(--space-3); }
+.application-tile { flex: 0 1 calc((100% - (var(--space-3) * 3)) / 4); min-width: 170px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: var(--space-3); padding: var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); color: var(--color-text); text-align: center; text-decoration: none; transition: transform var(--duration-normal) var(--ease-standard); }
 .application-tile strong { color: var(--color-navy); font-weight: var(--font-heading-weight); font-size: var(--font-size-lg); }
 .application-tile > span:not(.application-icon) { font-size: var(--font-size-sm); }
 .application-tile:hover { transform: scale(var(--scale-application-hover)); }
 .application-tile[href]:hover { border-color: var(--color-accent); background: var(--color-accent-100); }
 .application-tile[href]:active { background: var(--color-accent-200); }
-.application-icon { display: inline-flex; padding: var(--space-3); border-radius: var(--radius-md); background: var(--color-bg-soft); color: var(--color-accent-700); }
+.application-icon { display: inline-flex; align-items: center; justify-content: center; margin-inline: auto; padding: var(--space-3); border-radius: var(--radius-md); background: var(--color-bg-soft); color: var(--color-accent-700); }
 .application-icon .icon { width: var(--space-8); height: var(--space-8); }
 .application-icon-department, .application-icon-brand { padding: 0; border-radius: 0; background: transparent; }
-.application-brand-logo { display: block; width: var(--size-department-icon); height: var(--size-department-icon); object-fit: contain; }
+.application-brand-logo { display: block; width: var(--size-department-icon); height: var(--size-department-icon); margin-inline: auto; object-fit: contain; }
 .application-icon-esri { width: var(--width-esri-logo); max-width: 100%; height: var(--size-department-icon); padding: var(--space-2); }
 .application-icon-esri .application-brand-logo { width: 100%; height: 100%; filter: var(--filter-esri-logo); }
 .eosc-icon { display: inline-block; width: var(--size-department-icon); height: var(--size-department-icon); object-fit: contain; flex: none; vertical-align: middle; }
 .eosc-icon-compact { width: var(--size-department-icon-compact); height: var(--size-department-icon-compact); }
 .application-tile-unavailable { background: var(--color-bg); color: var(--color-text-muted); }
-@media (max-width: 660px) { .application-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .application-dialog { padding: var(--space-5); } }
-@media (max-width: 380px) { .application-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 780px) { .application-tile { flex-basis: calc((100% - var(--space-3)) / 2); } .application-dialog { padding: var(--space-5); } }
+@media (max-width: 420px) { .application-tile { flex-basis: 100%; } }
 
 /* Public action entrance (ADR-359). Department workspaces retain their sidebar. */
 .portal-page { min-height: 100dvh; display: flex; flex-direction: column; background: var(--color-bg-soft); }

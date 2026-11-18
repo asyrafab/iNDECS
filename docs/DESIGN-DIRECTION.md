@@ -16,10 +16,10 @@ direction shared with AIRS and to the programme in `docs/bangunan/`. Department 
 
 | Application | Full name | Menu | Route prefix | Table prefix | Type codes | Reference format |
 |---|---|---|---|---|---|---|
-| Perancang | iNDECS Perancang | Perancang | `/perancang` | `APP_PKM_` | PKM | `PKM/2026/00125` |
-| Bangunan | iNDECS Bangunan | Bangunan | `/bangunan` | `APP_PB_` | PB, PBK, PBS, PMT, TEL | `PB/2026/00310`, `PBK/2026/00042`, `TEL/2026/00007` |
-| Kejuruteraan | iNDECS Kejuruteraan | Kejuruteraan | `/kejuruteraan` | `APP_PKT_`, `APP_PKP_` | PKT, PKP | `PKT/2026/00054` |
-| Landskap | iNDECS Landskap | Landskap | `/landskap` | `APP_PL_` | PL | `PL/2026/00021` |
+| Planning | iNDECS Planning | Planning | `/perancang` | `APP_PKM_` | PKM | `PKM/2026/00125` |
+| Building | iNDECS Building | Building | `/bangunan` | `APP_PB_` | PB, PBK, PBS, PMT, TEL | `PB/2026/00310`, `PBK/2026/00042`, `TEL/2026/00007` |
+| Engineering | iNDECS Engineering | Engineering | `/kejuruteraan` | `APP_PKT_`, `APP_PKP_`, `APP_LJUP_` | PKT, PKP, LJUP | `PKT/2026/00054` |
+| Landscape | iNDECS Landscape | Landscape | `/landskap` | `APP_PL_` | PL | `PL/2026/00021` |
 | eOSC | eOSC (Pendaftaran kertas; NADI > eOSC untuk mesyuarat) | eOSC | `/osc` | `core.osc_` | — | `Bil. 21/2026` |
 
 Bangunan type codes: PB pelan bangunan penuh; PBK Pelan Tambahan / Ubahsuai Kecil; PBS
@@ -39,6 +39,17 @@ Platform name is always `iNDECS` (lowercase i, uppercase NDECS). English name:
 Intergrated Development Control System. Bahasa Melayu: Sistem Bersepada Kawalan
 Pembangunan. Tagline (login and print only): Satu Platform, Pelbagai Permohonan
 Pembangunan. The Bangunan module is always `iNDECS Bangunan`; no other brand.
+
+### Database ownership (ADR-393)
+
+Shared operational tables live in `core`. Extensions live in `perancang`, `bangunan`,
+`kejuruteraan` and `landskap`, with the lowercase prefixes above, keyed by
+`application_id` (ULID primary/foreign key), timestamps and restrictive deletion.
+The existing Bangunan numeric ID is retained as a unique compatibility identifier.
+Draft particulars use matching departmental extension tables keyed by `draft_id`;
+LJUP's paid-check lighting snapshot uses `journey_id`. Existing shared identity and
+Laravel infrastructure remain in `public`; historical/imported schemas are preserved.
+Storage parity does not enable unimplemented services or equate departmental workflows.
 
 ## 2. Screen inventory
 

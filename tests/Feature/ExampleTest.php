@@ -44,10 +44,10 @@ class ExampleTest extends TestCase
         $this->get(route('login'))->assertOk()->assertSee('Log masuk ke iNDECS');
         $this->get(route('about'))->assertOk()
             ->assertSee('Kenali iNDECS', false)
-            ->assertSee('iNDECS Perancang')
-            ->assertSee('iNDECS Bangunan')
-            ->assertSee('iNDECS Kejuruteraan')
-            ->assertSee('iNDECS Landskap')
+            ->assertSee('iNDECS Planning')
+            ->assertSee('iNDECS Building')
+            ->assertSee('iNDECS Engineering')
+            ->assertSee('iNDECS Landscape')
             ->assertSee('Soalan lazim')
             ->assertSee('portal awam belum dibuka')
             ->assertSee('href="'.route('portal.email').'"', false);

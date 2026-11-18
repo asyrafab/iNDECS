@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\DB;
 final class LibrarySeeder extends Seeder
 {
     /** Read/workspace permissions a Penolong Pengarah mirrors from their department's senior officer. */
-    private const PP_ACCESS = ['bangunan.application.access', 'bangunan.legacy.view', 'perancang.pkm.access', 'osc.meeting.view'];
+    private const PP_ACCESS = ['bangunan.application.access', 'bangunan.legacy.view', 'landskap.pl.access', 'perancang.pkm.access', 'osc.meeting.view'];
 
     public function run(): void
     {
@@ -34,7 +34,7 @@ final class LibrarySeeder extends Seeder
             // (register, review, verify, propose, endorse, configure). Earlier wider copies are removed.
             DB::table('core.role_permissions')->where('role_id', 'penolong_pengarah')
                 ->whereNotIn('permission_name', array_merge(self::PP_ACCESS, ['library.manage', 'library.view']))->delete();
-            DB::table('core.role_permissions')->whereIn('role_id', ['senior_building_officer', 'senior_planning_officer'])
+            DB::table('core.role_permissions')->whereIn('role_id', ['senior_building_officer', 'senior_planning_officer', 'senior_landscape_officer'])
                 ->whereIn('permission_name', self::PP_ACCESS)->get()
                 ->each(function (object $row): void {
                     $scope = ['role_id' => 'penolong_pengarah', 'permission_name' => $row->permission_name,
@@ -47,7 +47,7 @@ final class LibrarySeeder extends Seeder
                 $this->grant($role, 'library.view');
             }
             // Checklist rules (document catalogue) are published by system admin only.
-            DB::table('core.role_permissions')->where('permission_name', 'bangunan.application.documents.configure')
+            DB::table('core.role_permissions')->whereIn('permission_name', ['bangunan.application.documents.configure', 'landskap.pl.documents.configure'])
                 ->where('role_id', '!=', 'system_admin')->delete();
         });
     }

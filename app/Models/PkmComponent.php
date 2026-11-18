@@ -12,7 +12,7 @@ class PkmComponent extends Model
 {
     use HasUlids;
 
-    protected $table = 'app_pkm_components';
+    protected $table = 'perancang.app_pkm_components';
 
     public function pkmApplication(): BelongsTo
     {

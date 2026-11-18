@@ -2,7 +2,7 @@
 @section('title', 'Permohonan LJUP')
 @section('content')
 <div class="page-heading">
-    <div><span class="eyebrow">iNDECS Kejuruteraan · Jabatan Kejuruteraan</span><h1>Permohonan Lampu Jalan (LJUP)</h1>
+    <div><span class="eyebrow">iNDECS Engineering · Jabatan Kejuruteraan</span><h1>Permohonan Lampu Jalan (LJUP)</h1>
         <p>Permohonan yang telah melalui semakan AIRS. Skor adalah panduan sahaja; keputusan rasmi dibuat oleh pegawai.</p></div>
 </div>
 <section class="content-card">

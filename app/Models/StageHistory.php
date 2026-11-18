@@ -21,6 +21,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 ])]
 class StageHistory extends Model
 {
+    protected $table = 'core.stage_histories';
+
     protected static function booted(): void
     {
         static::updating(function (): never {

@@ -20,25 +20,25 @@ final class ApplicationLauncher
 
         $applications = [];
         if ($user->canAccessPkm()) {
-            $applications[] = ['name' => 'iNDECS Perancang', 'department' => 'perancang', 'icon' => 'map', 'description' => 'Permohonan Kebenaran Merancang', 'url' => route('perancang.index')];
+            $applications[] = ['name' => 'iNDECS Planning', 'department' => 'perancang', 'icon' => 'map', 'description' => 'Jabatan Perancang Bandar', 'url' => route('perancang.index')];
         }
         if ($user->canAccessBangunan() || $user->canAccessBangunanLegacy()) {
-            $applications[] = ['name' => 'iNDECS Bangunan', 'department' => 'bangunan', 'icon' => 'building-2', 'description' => 'Pelan, permit dan rekod bangunan', 'url' => $user->canAccessBangunan() ? route('bangunan.index') : route('bangunan.legacy.index')];
+            $applications[] = ['name' => 'iNDECS Building', 'department' => 'bangunan', 'icon' => 'building-2', 'description' => 'Jabatan Bangunan', 'url' => $user->canAccessBangunan() ? route('bangunan.index') : route('bangunan.legacy.index')];
         }
         // Planned systems are visible to the administrator without advertising working navigation.
         $administrator = $user->role === 'system_admin' && DB::table('core.roles')->where('id', 'system_admin')->where('account_type', 'staff')->where('is_active', true)->exists();
         if ($administrator || $user->canAccessKejuruteraan()) {
-            $applications[] = ['name' => 'iNDECS Kejuruteraan', 'department' => 'kejuruteraan', 'icon' => 'ruler', 'description' => 'Pelan Lampu Jalan (LJUP) dan semakan AIRS',
+            $applications[] = ['name' => 'iNDECS Engineering', 'department' => 'kejuruteraan', 'icon' => 'ruler', 'description' => 'Jabatan Kejuruteraan',
                 'url' => $user->canAccessKejuruteraan() ? route('kejuruteraan.index') : null];
         }
-        if ($administrator) {
-            $applications[] = ['name' => 'iNDECS Landskap', 'department' => 'landskap', 'icon' => 'layers', 'description' => 'Pelan landskap', 'url' => null];
+        if ($administrator || $user->canAccessLandskap()) {
+            $applications[] = ['name' => 'iNDECS Landscape', 'department' => 'landskap', 'icon' => 'layers', 'description' => 'Jabatan Landskap',
+                'url' => $user->canAccessLandskap() ? route('landskap.index') : null];
         }
         if ($user->canAccessOsc()) {
-            $applications[] = ['name' => 'eOSC+', 'brand' => 'eosc', 'icon' => 'folder-open', 'description' => 'Agenda dan mesyuarat OSC', 'url' => route('osc.meetings.index')];
+            $applications[] = ['name' => 'NADI', 'brand' => 'eosc', 'icon' => 'folder-open', 'description' => 'Navigation, Analysis, Decisions & Intelligence · eOSC', 'url' => route('osc.meetings.index')];
         }
         if ($administrator) {
-            $applications[] = ['name' => 'AIRS', 'brand' => 'airs', 'icon' => 'search', 'description' => 'AI Review Studio · Semakan pelan', 'url' => $user->canAccessKejuruteraan() ? route('kejuruteraan.index') : null];
             $applications[] = ['name' => 'E-Plan Submission', 'brand' => 'esri', 'icon' => 'square-dashed', 'description' => 'Penghantaran data spatial', 'url' => 'https://spgis.mbsp.gov.my/ePlanSubmission'];
         }
 

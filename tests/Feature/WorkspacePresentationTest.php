@@ -26,7 +26,7 @@ final class WorkspacePresentationTest extends TestCase
     {
         $officer = User::query()->where('email', 'pegawai@indecs.test')->firstOrFail();
         $response = $this->actingAs($officer)->get(route('dashboard'));
-        $response->assertOk()->assertSee('iNDECS Perancang')->assertSee('Panduan AMIRA')
+        $response->assertOk()->assertSee('iNDECS Planning')->assertSee('Panduan AMIRA')
             ->assertDontSee('href="'.route('bangunan.index').'"', false)
             ->assertDontSee('href="'.route('bangunan.legacy.index').'"', false);
         $this->capture('perancang-dashboard', $response);
@@ -68,7 +68,7 @@ final class WorkspacePresentationTest extends TestCase
             'bangunan-legacy' => route('bangunan.legacy.index'),
         ];
         foreach ($pages as $name => $url) {
-            $response = $this->get($url)->assertOk()->assertSee('iNDECS Bangunan')
+            $response = $this->get($url)->assertOk()->assertSee('iNDECS Building')
                 ->assertSee('Perbualan AI AMIRA belum tersedia')
                 ->assertDontSee('href="'.route('perancang.index').'"', false);
             if (in_array($name, ['bangunan-show', 'bangunan-documents'], true)) {

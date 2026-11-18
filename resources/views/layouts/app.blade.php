@@ -5,15 +5,18 @@
     $canLegacy = $staff->canAccessBangunanLegacy();
     $canOsc = $staff->canAccessOsc();
     $canKejuruteraan = $staff->canAccessKejuruteraan();
+    $canLandskap = $staff->canAccessLandskap();
     $isOsc = request()->routeIs('osc.*');
     $isBangunan = ! $isOsc && request()->routeIs('bangunan.*');
     $isKejuruteraan = ! $isOsc && request()->routeIs('kejuruteraan.*');
-    $workspaceName = $isOsc ? 'eOSC+' : ($isBangunan ? 'iNDECS Bangunan' : ($isKejuruteraan ? 'iNDECS Kejuruteraan' : 'iNDECS Perancang'));
-    $workspaceShort = $isOsc ? 'eOSC+' : ($isBangunan ? 'Bangunan' : ($isKejuruteraan ? 'Kejuruteraan' : 'Perancang'));
-    $workspaceDepartment = $isOsc ? 'Mesyuarat OSC' : ($isBangunan ? 'Jabatan Bangunan' : ($isKejuruteraan ? 'Jabatan Kejuruteraan' : 'Jabatan Perancang Bandar'));
-    $workspaceDepartmentIcon = $isBangunan ? 'bangunan' : ($isKejuruteraan ? 'kejuruteraan' : 'perancang');
-    $homeUrl = $isOsc ? route('osc.meetings.index') : ($isBangunan ? ($canBangunan ? route('bangunan.index') : route('bangunan.legacy.index')) : ($isKejuruteraan ? route('kejuruteraan.index') : ($canBangunan ? route('perancang.index') : route('dashboard'))));
+    $isLandskap = ! $isOsc && request()->routeIs('landskap.*');
+    $workspaceName = $isOsc ? 'NADI' : ($isBangunan ? 'iNDECS Building' : ($isKejuruteraan ? 'iNDECS Engineering' : ($isLandskap ? 'iNDECS Landscape' : 'iNDECS Planning')));
+    $workspaceShort = $isOsc ? 'NADI' : ($isBangunan ? 'Building' : ($isKejuruteraan ? 'Engineering' : ($isLandskap ? 'Landscape' : 'Planning')));
+    $workspaceDepartment = $isOsc ? 'Mesyuarat OSC' : ($isBangunan ? 'Jabatan Bangunan' : ($isKejuruteraan ? 'Jabatan Kejuruteraan' : ($isLandskap ? 'Jabatan Landskap' : 'Jabatan Perancang Bandar')));
+    $workspaceDepartmentIcon = $isBangunan ? 'bangunan' : ($isKejuruteraan ? 'kejuruteraan' : ($isLandskap ? 'landskap' : 'perancang'));
+    $homeUrl = $isOsc ? route('osc.meetings.index') : ($isBangunan ? ($canBangunan ? route('bangunan.index') : route('bangunan.legacy.index')) : ($isKejuruteraan ? route('kejuruteraan.index') : ($isLandskap ? route('landskap.index') : ($canBangunan ? route('perancang.index') : route('dashboard')))));
     $canRegisterBangunan = $canBangunan && collect(\App\Models\BangunanApplication::TYPES)->contains(fn ($family) => $staff->canPerformBangunan('access', $family) && $staff->canPerformBangunan('register', $family));
+    $canRegisterLandskap = $canLandskap && $staff->canPerformLandskap('register');
 @endphp
 <!DOCTYPE html>
 <html lang="ms">
@@ -44,10 +47,11 @@
                 <summary><span><small>Ruang jabatan</small><strong>@if ($isOsc)<x-eosc-icon compact />@else<x-department-icon :department="$workspaceDepartmentIcon" compact />@endif{{ $workspaceShort }}</strong></span><x-icon name="chevron-down" /></summary>
                 <nav aria-label="Pilih ruang jabatan">
                     <a href="{{ route('home') }}"><x-icon name="layout-dashboard" />Semua aplikasi</a>
-                    @if ($canPerancang)<a href="{{ $canBangunan ? route('perancang.index') : route('dashboard') }}" @if (! $isBangunan && ! $isOsc && ! $isKejuruteraan) aria-current="page" @endif><x-department-icon department="perancang" compact />iNDECS Perancang</a>@endif
-                    @if ($canBangunan)<a href="{{ route('bangunan.index') }}" @if ($isBangunan && ! request()->routeIs('bangunan.legacy.*')) aria-current="page" @endif><x-department-icon department="bangunan" compact />iNDECS Bangunan</a>@elseif ($canLegacy)<a href="{{ route('bangunan.legacy.index') }}" aria-current="page"><x-department-icon department="bangunan" compact />Bangunan · Rekod warisan</a>@endif
-                    @if ($canKejuruteraan)<a href="{{ route('kejuruteraan.index') }}" @if ($isKejuruteraan) aria-current="page" @endif><x-department-icon department="kejuruteraan" compact />iNDECS Kejuruteraan</a>@endif
-                    @if ($canOsc)<a href="{{ route('osc.meetings.index') }}" @if ($isOsc) aria-current="page" @endif><x-eosc-icon compact />eOSC+</a>@endif
+                    @if ($canPerancang)<a href="{{ $canBangunan ? route('perancang.index') : route('dashboard') }}" @if (! $isBangunan && ! $isOsc && ! $isKejuruteraan && ! $isLandskap) aria-current="page" @endif><x-department-icon department="perancang" compact />iNDECS Planning</a>@endif
+                    @if ($canBangunan)<a href="{{ route('bangunan.index') }}" @if ($isBangunan && ! request()->routeIs('bangunan.legacy.*')) aria-current="page" @endif><x-department-icon department="bangunan" compact />iNDECS Building</a>@elseif ($canLegacy)<a href="{{ route('bangunan.legacy.index') }}" aria-current="page"><x-department-icon department="bangunan" compact />Building · Rekod warisan</a>@endif
+                    @if ($canKejuruteraan)<a href="{{ route('kejuruteraan.index') }}" @if ($isKejuruteraan) aria-current="page" @endif><x-department-icon department="kejuruteraan" compact />iNDECS Engineering</a>@endif
+                    @if ($canLandskap)<a href="{{ route('landskap.index') }}" @if ($isLandskap) aria-current="page" @endif><x-department-icon department="landskap" compact />iNDECS Landscape</a>@endif
+                    @if ($canOsc)<a href="{{ route('osc.meetings.index') }}" @if ($isOsc) aria-current="page" @endif><x-eosc-icon compact />NADI</a>@endif
                 </nav>
             </details>
             <nav class="primary-nav" aria-label="Navigasi utama">
@@ -62,12 +66,15 @@
                     <a href="{{ route('osc.meetings.index') }}" class="nav-link active" aria-current="page"><x-icon name="folder-open" />Mesyuarat OSC</a>
                 @elseif ($isKejuruteraan)
                     <a href="{{ route('kejuruteraan.index') }}" class="nav-link active" aria-current="page"><x-icon name="files" />Permohonan LJUP</a>
+                @elseif ($isLandskap)
+                    <a href="{{ route('landskap.index') }}" class="nav-link {{ request()->routeIs('landskap.index', 'landskap.show', 'landskap.documents.*', 'landskap.document-catalogue.*') ? 'active' : '' }}" @if (request()->routeIs('landskap.index', 'landskap.show', 'landskap.documents.*', 'landskap.document-catalogue.*')) aria-current="page" @endif><x-icon name="layout-dashboard" />Ringkasan &amp; permohonan</a>
+                    @if ($canRegisterLandskap)<a href="{{ route('landskap.create') }}" class="nav-link {{ request()->routeIs('landskap.create') ? 'active' : '' }}" @if (request()->routeIs('landskap.create')) aria-current="page" @endif><x-icon name="file-plus-2" />Daftar permohonan</a>@endif
                 @else
                     @if (! $canBangunan)<a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" @if (request()->routeIs('dashboard')) aria-current="page" @endif><x-icon name="layout-dashboard" />Ringkasan</a>@endif
                     <a href="{{ route('perancang.index') }}" class="nav-link {{ request()->routeIs('perancang.index', 'perancang.show') ? 'active' : '' }}" @if (request()->routeIs('perancang.index', 'perancang.show')) aria-current="page" @endif><x-icon name="files" />Permohonan PKM</a>
                     @if ($staff->canPerformPkm('perancang.pkm.register'))<a href="{{ route('perancang.create') }}" class="nav-link {{ request()->routeIs('perancang.create') ? 'active' : '' }}" @if (request()->routeIs('perancang.create')) aria-current="page" @endif><x-icon name="file-plus-2" />Daftar PKM</a>@endif
                 @endif
-                @if ($canOsc && ! $isOsc)<a href="{{ route('osc.meetings.index') }}" class="nav-link"><x-eosc-icon compact />eOSC+</a>@endif
+                @if ($canOsc && ! $isOsc)<a href="{{ route('osc.meetings.index') }}" class="nav-link"><x-eosc-icon compact />NADI</a>@endif
                 <span class="nav-label nav-label-spaced">Bantuan</span>
                 @if ($staff->canViewLibrary())<a href="{{ route('library.index') }}" class="nav-link {{ request()->routeIs('library.*') ? 'active' : '' }}" @if (request()->routeIs('library.*')) aria-current="page" @endif><x-icon name="files" />Perpustakaan jabatan</a>@endif
                 <button class="nav-link" type="button" data-amira-open aria-controls="amira-panel" aria-expanded="false"><x-icon name="messages-square" />Panduan AMIRA</button>

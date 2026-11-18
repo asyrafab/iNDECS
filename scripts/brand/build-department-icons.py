@@ -16,10 +16,10 @@ TOKENS = (ROOT / 'public/css/tokens.css').read_text(encoding='utf-8')
 GLYPHS = json.loads((Path(__file__).with_name('department-glyphs.json')).read_text(encoding='utf-8-sig'))
 PATTERNS = json.loads((Path(__file__).with_name('department-patterns.json')).read_text(encoding='utf-8'))
 DEPARTMENTS = [
-    ('perancang', 'P', 'Perancang Bandar', 'Kontur topografi'),
-    ('bangunan', 'B', 'Bangunan', 'Bumbung limas berjubin'),
-    ('kejuruteraan', 'K', 'Kejuruteraan', 'Struktur jambatan'),
-    ('landskap', 'L', 'Landskap', 'Dedaun botani'),
+    ('perancang', 'P', 'Planning', 'Kontur topografi'),
+    ('bangunan', 'B', 'Building', 'Bumbung limas berjubin'),
+    ('kejuruteraan', 'E', 'Engineering', 'Struktur jambatan'),
+    ('landskap', 'L', 'Landscape', 'Dedaun botani'),
 ]
 
 
@@ -132,7 +132,7 @@ def main():
                 props['--' + key] = token(key)
             styles = ';'.join(f'{key}:{value}' for key, value in props.items())
             (OUT / f'{dept}-{variant}.svg').write_text(
-                f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" role="img" aria-label="Jabatan {name}" style="{styles}">\n{markup}</svg>\n', encoding='utf-8')
+                f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" role="img" aria-label="iNDECS {name}" style="{styles}">\n{markup}</svg>\n', encoding='utf-8')
             symbols.append(f'<symbol id="{dept}-{variant}" viewBox="0 0 120 120">{markup}</symbol>')
     (OUT / 'sprite.svg').write_text('<svg xmlns="http://www.w3.org/2000/svg">\n' + '\n'.join(symbols) + '\n</svg>\n', encoding='utf-8')
     preview = ROOT / 'output/department-icons'

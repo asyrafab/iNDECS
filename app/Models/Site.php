@@ -17,6 +17,8 @@ use Illuminate\Database\Eloquent\Model;
 ])]
 class Site extends Model
 {
+    protected $table = 'core.sites';
+
     use HasUlids;
 
     protected function casts(): array

@@ -2,7 +2,7 @@
 @section('title', 'Permohonan Bangunan')
 @section('content')
 <div class="page-heading heading-with-action">
-    <div><span class="eyebrow">iNDECS Bangunan · Jabatan Bangunan</span><h1>Permohonan Bangunan</h1><p>Pantau permohonan, semakan dokumen dan tindakan dalam ruang kerja anda.</p></div>
+    <div><span class="eyebrow">iNDECS Building · Jabatan Bangunan</span><h1>Permohonan Bangunan</h1><p>Pantau permohonan, semakan dokumen dan tindakan dalam ruang kerja anda.</p></div>
     @if ($types->contains(fn ($type) => auth()->user()->canPerformBangunan('register', $type)))
         <a href="{{ route('bangunan.create') }}" class="button button-primary"><x-icon name="plus" />Daftar permohonan</a>
     @endif

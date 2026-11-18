@@ -328,7 +328,7 @@ final class BangunanDocumentVerificationTest extends TestCase
         $count = DB::table('core.role_permissions')->count();
         $this->seed(BangunanDocumentWorkflowSeeder::class);
         $this->seed(BangunanDocumentWorkflowSeeder::class);
-        $this->assertDatabaseCount('core.workflow_transitions', 20);
+        $this->assertDatabaseCount('core.workflow_transitions', 24);
         $this->assertDatabaseCount('core.role_permissions', $count);
         $this->assertDatabaseCount('core.document_catalogues', 0);
     }

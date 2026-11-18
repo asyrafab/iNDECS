@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable(['id', 'name', 'is_active'])]
 class Department extends Model
 {
+    protected $table = 'core.departments';
+
     public $incrementing = false;
 
     protected $keyType = 'string';

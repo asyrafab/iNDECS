@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'iNDECS Bangunan · Carian Rekod Warisan')
+@section('title', 'iNDECS Building · Carian Rekod Warisan')
 
 @section('content')
     <div class="page-heading heading-with-action">
         <div>
-            <span class="eyebrow">iNDECS Bangunan · Fasa A</span>
+            <span class="eyebrow">iNDECS Building · Fasa A</span>
             <h1>Carian Rekod Warisan</h1>
             <p>Semakan baca-sahaja ke atas salinan penyegerakan pangkalan data warisan Jabatan Bangunan sementara sistem lama kekal sebagai penulis.</p>
         </div>

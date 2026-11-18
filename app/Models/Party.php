@@ -9,5 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 #[Fillable(['party_type', 'name', 'registration_number', 'email', 'phone', 'address'])]
 class Party extends Model
 {
+    protected $table = 'core.parties';
+
     use HasUlids;
 }

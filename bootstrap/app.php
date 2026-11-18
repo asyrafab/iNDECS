@@ -3,6 +3,7 @@
 use App\Http\Middleware\EnsureBangunanAccess;
 use App\Http\Middleware\EnsureBangunanLegacyAccess;
 use App\Http\Middleware\EnsureKejuruteraanAccess;
+use App\Http\Middleware\EnsureLandskapAccess;
 use App\Http\Middleware\EnsureOscAccess;
 use App\Http\Middleware\EnsurePkmAccess;
 use App\Http\Middleware\EnsurePkmPermission;
@@ -29,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'perancang.permission' => EnsurePkmPermission::class,
             'public.access' => EnsurePublicAccess::class,
             'kejuruteraan.access' => EnsureKejuruteraanAccess::class,
+            'landskap.access' => EnsureLandskapAccess::class,
         ]);
         $middleware->redirectUsersTo(function (Request $request): string {
             $user = $request->user();
@@ -39,6 +41,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
             if ($user?->canAccessBangunan()) {
                 return route('bangunan.index');
+            }
+
+            if ($user?->canAccessLandskap() && ! $user->canAccessPkm()) {
+                return route('landskap.index');
             }
 
             if ($user?->canAccessBangunanLegacy() && ! $user->canAccessPkm()) {

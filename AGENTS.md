@@ -26,10 +26,10 @@ identity provider** for a family of cooperating systems:
 
 | Application | Department | Application types |
 |---|---|---|
-| iNDECS Perancang | Jabatan Perancang Bandar | PKM |
-| iNDECS Bangunan | Jabatan Bangunan | PB, PBK, PBS, PMT, TEL |
-| iNDECS Kejuruteraan | Jabatan Kejuruteraan | PKT, PKP |
-| iNDECS Landskap | Jabatan Landskap | PL |
+| iNDECS Planning | Jabatan Perancang Bandar | PKM |
+| iNDECS Building | Jabatan Bangunan | PB, PBK, PBS, PMT, TEL |
+| iNDECS Engineering | Jabatan Kejuruteraan | PKT, PKP |
+| iNDECS Landscape | Jabatan Landskap | PL |
 
 | Cooperating system | Relationship |
 |---|---|
@@ -140,7 +140,7 @@ Light and dark modes are token-only: `data-theme` on `<html>`, switched by
 
 - ADR-371 adopts department artwork in existing permission-filtered application tiles (64px), workspace switcher entries/summary and departmental topbar context (compact 32px). `.application-icon-department` removes the extra rounded/tinted icon container. Planned K/L tiles remain unlinked and keep existing visibility checks. System/public branding and nondepartment entries keep their identities; action icons stay Lucide. This supersedes the initial preview-only delivery boundary below.
 
-- K subsequently follows the same raster-backed approach as L: `scripts/brand/kejuruteraan-soft.png` preserves the owner's supplied K reference with quieter blueprint lines (ADR-370). Its supplied dimension labels are decorative artwork only. K/L use embedded images in the shared SVG wrappers; P/B remain vector. Do not regenerate K from the superseded authored bridge geometry.
+- E (Jabatan Kejuruteraan / iNDECS Engineering, replacing K) follows the same raster-backed approach as L: `scripts/brand/kejuruteraan-soft.png` preserves the owner's supplied blueprint bridge reference with quieter blueprint lines and a centred white `E` (ADR-370). Its supplied dimension labels are decorative artwork only. E/L use embedded images in the shared SVG wrappers; P/B remain vector. Do not regenerate E from the superseded authored bridge geometry.
 
 - L artwork update under ADR-370: use the owner's supplied `scripts/brand/landskap-approved.png` directly through the generated L SVG wrappers. This is intentionally raster-backed artwork preserving the exact reference, not a pure-vector redraw. Do not replace it with the rejected procedural botanical patterns. P/B/K remain vector.
 
@@ -512,6 +512,32 @@ The shared service connector, review workspace and payment/version guards are im
 The architectural introduction adds `.building-garden`: natural grass inside the lower-right circular landscape element, with a stone walking path along its arc. SVG clips/masks follow the approved logo footprint; the path is wider inward during the material phase for legibility. It fades into the unchanged shared logo at the existing symbol transition. Preserve existing planting and timing. Reduced motion hides the material garden and shows the final mark. The lawn and stone texture join the existing asset decode/failure fallback. Provenance is in `public/img/brand/README.md`.
 
 ADR-382 refines the opening garden with `.building-garden-edging`, `.building-garden-joints` and `.building-garden-contact`: narrow textured stone borders within the existing footprint, fine paving joints and a restrained grass contact seam. They share the garden animation; the final mark and timing stay unchanged.
+
+
+## Standard department database structure (2026-11-17)
+
+ADR-393 standardises storage across all four departments. Operational applications,
+parties, sites, lots, documents, requirements, references, histories and audit live in
+`core`; public identity and Laravel infrastructure remain in `public`. Department
+extensions use an `application_id` ULID primary/foreign key, timestamps and restrictive
+deletion. Prefixes: `perancang.app_pkm_`, `bangunan.app_pb_`,
+`kejuruteraan.app_pkt_` / `app_pkp_` / `app_ljup_`, `landskap.app_pl_`.
+`App\Support\DepartmentStructure` is the storage registry; it grants no access.
+Bangunan's numeric `id` remains a unique compatibility identifier. PostgreSQL guards
+extension type and creates engineering/landscape extension rows atomically.
+
+`core.completeness_reviews` / `core.completeness_items` hold completeness cycles for
+any department. Existing PKM classes are compatibility adapters preserving audit
+identifiers; catalogue snapshots remain in the distinct shared document-checklist
+model. Preserve existing workflow rules and in-flight state during schema changes.
+
+Draft project particulars live in departmental `*_draft_particulars` tables through
+`HasExtensionAttributes`; use the existing `ApplicantDraft` model API inside the
+existing authorised, locked transaction. Query-builder bulk writes bypass this API
+and must explicitly target the appropriate extension. LJUP journey lighting snapshots
+live in `kejuruteraan.app_ljup_check_particulars`, independently of editable drafts.
+PKT/PKP/PL registration is inactive infrastructure only; no new intake is enabled.
+See `docs/runbooks/department-database-standardisation.md` for migration and recovery.
 
 ## Officer technical comments (2026-11-17)
 

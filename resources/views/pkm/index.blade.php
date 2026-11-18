@@ -5,7 +5,7 @@
 @section('content')
     <div class="page-heading heading-with-action">
         <div>
-            <span class="eyebrow">iNDECS Perancang · Jabatan Perancang Bandar</span>
+            <span class="eyebrow">iNDECS Planning · Jabatan Perancang Bandar</span>
             <h1>Permohonan PKM</h1>
             <p>Daftar, cari dan jejak permohonan Kebenaran Merancang.</p>
         </div>

@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['application_id', 'party_id', 'role', 'is_primary', 'submitted_snapshot'])]
 class ApplicationParty extends Model
 {
+    protected $table = 'core.application_parties';
+
     public function application(): BelongsTo
     {
         return $this->belongsTo(Application::class);

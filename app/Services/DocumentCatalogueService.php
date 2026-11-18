@@ -27,6 +27,7 @@ final class DocumentCatalogueService
         return match (true) {
             in_array($type, BangunanApplication::TYPES, true) => ['department' => 'JBANG', 'prefix' => 'bina_'],
             $type === 'LJUP' => ['department' => 'JKEJ', 'prefix' => 'kej_'],
+            $type === 'PL' => ['department' => 'JLAND', 'prefix' => 'land_'],
             default => null,
         };
     }
@@ -48,6 +49,7 @@ final class DocumentCatalogueService
         return match (self::scope($type)['department'] ?? null) {
             'JBANG' => $actor->canPerformBangunan('access', $type) && $actor->canPerformBangunan('documents.configure', $type),
             'JKEJ' => $actor->canPerformLjup('documents.configure'),
+            'JLAND' => $actor->canPerformLandskap('access') && $actor->canPerformLandskap('documents.configure'),
             default => false,
         };
     }

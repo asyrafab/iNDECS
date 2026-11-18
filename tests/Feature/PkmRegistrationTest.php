@@ -33,7 +33,7 @@ class PkmRegistrationTest extends TestCase
         $this->assertSame(ApplicationStage::Registration, $application->current_stage);
         $this->assertSame(ApplicationStatus::Submitted, $application->current_status);
 
-        $this->assertDatabaseHas('app_pkm_applications', [
+        $this->assertDatabaseHas('perancang.app_pkm_applications', [
             'application_id' => $application->id,
             'permission_category' => 'Pembangunan Baharu',
             'proposed_land_use' => 'Perumahan',

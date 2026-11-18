@@ -159,6 +159,7 @@
             document.body.classList.remove('welcome-is-introducing');
             delete document.documentElement.dataset.welcome;
             scheduleCarousel();
+            ensureGardenLoop();
         };
         if (immediate || reducedMotion()) hide();
         else {
@@ -222,7 +223,11 @@
     const loginTrigger = document.querySelector('[data-welcome-login]');
     const gallery = document.querySelector('[data-welcome-carousel]');
     const photos = [...document.querySelectorAll('[data-welcome-photo]')];
+    const gardenCircle = document.querySelector('[data-welcome-garden]');
     const slides = JSON.parse(document.getElementById('welcome-slides')?.textContent || '[]');
+    const squareIndices = gardenCircle && !gardenCircle.hidden
+        ? slides.map((slide, index) => (!slide.image?.startsWith('garden-') ? index : -1)).filter(index => index >= 0)
+        : [];
     let nextImage = photos.length;
     let phase = 0;
     let frameRequest = 0;
@@ -247,8 +252,9 @@
     const setting = name => parseFloat(getComputedStyle(gallery).getPropertyValue(name));
 
     function replacePhoto(photo, desired) {
-        for (let attempt = 0; attempt < slides.length; attempt++) {
-            const candidate = attempt === 0 && desired !== undefined ? desired : nextImage++ % slides.length;
+        const pool = squareIndices.length ? squareIndices : slides.map((_, index) => index);
+        for (let attempt = 0; attempt < pool.length; attempt++) {
+            const candidate = attempt === 0 && desired !== undefined ? desired : pool[nextImage++ % pool.length];
             if (!cachedImages[candidate]?.ready) continue;
             const slide = slides[candidate];
             const image = photo.querySelector('img');
@@ -269,7 +275,7 @@
             const opacity = gallery.dataset.motionState === 'resting' ? 1 : Math.min(1, Math.max(0, (position + .25) / .25), Math.max(0, (1.25 - position) / .25));
             photo.style.setProperty('--photo-position', position.toFixed(5));
             photo.style.setProperty('--photo-opacity', opacity.toFixed(4));
-            photo.style.setProperty('--photo-layer', String(Math.round(position * 2) + 1));
+            photo.style.setProperty('--photo-layer', String(Math.max(1, Math.round(position * 2) + 1)));
         });
         gallery.dataset.travelPosition = phase.toFixed(5);
         gallery.dataset.travelVelocity = currentVelocity.toFixed(4);
@@ -370,7 +376,11 @@
     async function changeSlides(direction) {
         await imagesReady;
         parkImmediately();
-        photos.forEach(photo => replacePhoto(photo, (Number(photo.dataset.photoIndex) + direction + slides.length) % slides.length));
+        const pool = squareIndices.length ? squareIndices : slides.map((_, index) => index);
+        photos.forEach(photo => {
+            const currentPos = Math.max(0, pool.indexOf(Number(photo.dataset.photoIndex)));
+            replacePhoto(photo, pool[(currentPos + direction + pool.length) % pool.length]);
+        });
         gallery.querySelector('[data-carousel-status]').textContent = 'Imej baharu dipaparkan';
     }
     gallery?.addEventListener('pointermove', event => {
@@ -393,6 +403,16 @@
             return;
         }
         if (event.pointerType !== 'mouse' || event.buttons !== 0) return;
+        if (event.target.closest('[data-welcome-garden]')) {
+            if (pointerVelocity !== 0) {
+                pointerVelocity = 0;
+                hoverPending = false;
+                gallery.dataset.pointerSpeed = '0';
+                gallery.dataset.speedTier = '0';
+                scheduleCarousel();
+            }
+            return;
+        }
         // Pointer position steers the whole region, including gaps between boxes.
         if (lastRelease && Math.hypot(event.clientX - lastRelease.x, event.clientY - lastRelease.y) < 3) return;
         lastRelease = null;
@@ -422,6 +442,7 @@
     });
     gallery?.addEventListener('pointerdown', event => {
         if (!event.isPrimary || event.button !== 0 || loginDialog?.open || !entrance.hidden) return;
+        if (event.target.closest('[data-welcome-garden]')) return;
         event.preventDefault();
         if (gallery.contains(document.activeElement)) document.activeElement.blur();
         cancelAnimationFrame(frameRequest);
@@ -480,6 +501,241 @@
         changeSlides(['ArrowRight', 'ArrowUp'].includes(event.key) ? 1 : -1);
     });
     parkImmediately();
+
+    const gardenGrass = gardenCircle?.querySelector('[data-garden-grass]');
+    const gardenPlants = gardenCircle?.querySelector('[data-garden-plants]');
+    const gardenBlades = [];
+    const parkPlants = [];
+    const windGusts = [];
+    let gardenFrame = 0;
+    let gardenPrevTime;
+    let gardenPointer = null;
+
+    function initInteractiveGarden() {
+        if (!gardenCircle || gardenCircle.hidden || !gardenGrass || !gardenPlants || gardenBlades.length) return;
+        const grassFragment = document.createDocumentFragment();
+        const classes = ['welcome-garden-blade-deep', 'welcome-garden-blade-mid', 'welcome-garden-blade-light'];
+        let seed = 17;
+        const rand = () => {
+            seed = (seed * 16807) % 2147483647;
+            return (seed - 1) / 2147483646;
+        };
+        for (let ring = 10; ring <= 47; ring += 5.2) {
+            const count = Math.max(8, Math.round(ring * 0.62));
+            for (let i = 0; i < count; i++) {
+                const angle = (i / count) * Math.PI * 2 + rand() * 0.35;
+                const radius = ring + (rand() - 0.5) * 3.4;
+                const x = 60 + Math.cos(angle) * radius;
+                const y = 60 + Math.sin(angle) * radius;
+                if (x < 34 && y < 34) continue;
+                const length = 3.6 + rand() * 2.6;
+                const baseLean = (rand() - 0.35) * 1.4;
+                const node = svgNode('path', {
+                    class: classes[i % classes.length],
+                    d: `M${x.toFixed(2)} ${y.toFixed(2)}Q${(x + baseLean * 0.5).toFixed(2)} ${(y - length * 0.55).toFixed(2)} ${(x + baseLean).toFixed(2)} ${(y - length).toFixed(2)}`,
+                });
+                grassFragment.append(node);
+                gardenBlades.push({ node, x, y, length, baseLean, dx: 0, dy: 0, vx: 0, vy: 0, phase: rand() * Math.PI * 2 });
+            }
+        }
+        gardenGrass.append(grassFragment);
+
+        const plantSpecs = [
+            { x: 92, y: 46, size: 17, rot: 18, href: '#welcome-plant-photo', viewBox: '0 0 20 20' },
+            { x: 99, y: 66, size: 19, rot: 74, href: '#welcome-plant-photo', viewBox: '0 0 20 20' },
+            { x: 91, y: 86, size: 18, rot: 142, href: '#welcome-plant-photo', viewBox: '0 0 20 20' },
+            { x: 74, y: 97, size: 19, rot: 215, href: '#welcome-plant-photo', viewBox: '0 0 20 20' },
+            { x: 52, y: 98, size: 16, rot: 288, href: '#welcome-plant-photo', viewBox: '0 0 20 20' },
+            { x: 77, y: 73, size: 22, rot: 35, href: '#welcome-palm-photo', viewBox: '0 0 26 26' },
+            { x: 63, y: 84, size: 16, rot: 112, href: '#welcome-plant-photo', viewBox: '0 0 20 20' },
+        ];
+        const plantFragment = document.createDocumentFragment();
+        plantSpecs.forEach((spec, idx) => {
+            const group = svgNode('g', {
+                class: 'welcome-garden-plant',
+                transform: `translate(${spec.x} ${spec.y}) rotate(${spec.rot}) scale(1)`,
+                'data-garden-plant-index': String(idx),
+            });
+            const crop = svgNode('svg', {
+                x: -spec.size / 2, y: -spec.size / 2,
+                width: spec.size, height: spec.size,
+                viewBox: spec.viewBox,
+            });
+            crop.append(svgNode('use', { href: spec.href }));
+            group.append(crop);
+            plantFragment.append(group);
+            parkPlants.push({ ...spec, node: group, tx: 0, ty: 0, r: 0, s: 0, vx: 0, vy: 0, vr: 0, vs: 0 });
+        });
+        gardenPlants.append(plantFragment);
+    }
+
+    function renderGardenStatic() {
+        gardenBlades.forEach(b => {
+            b.dx = 0; b.dy = 0; b.vx = 0; b.vy = 0;
+            b.node.setAttribute('d', `M${b.x.toFixed(2)} ${b.y.toFixed(2)}Q${(b.x + b.baseLean * 0.5).toFixed(2)} ${(b.y - b.length * 0.55).toFixed(2)} ${(b.x + b.baseLean).toFixed(2)} ${(b.y - b.length).toFixed(2)}`);
+        });
+        parkPlants.forEach(p => {
+            p.tx = 0; p.ty = 0; p.r = 0; p.s = 0; p.vx = 0; p.vy = 0; p.vr = 0; p.vs = 0;
+            p.node.setAttribute('transform', `translate(${p.x} ${p.y}) rotate(${p.rot}) scale(1)`);
+        });
+    }
+
+    function tickGarden(timestamp) {
+        gardenFrame = 0;
+        if (!gardenCircle || reducedMotion() || document.hidden || !entrance.hidden) {
+            gardenPrevTime = undefined;
+            if (reducedMotion()) renderGardenStatic();
+            return;
+        }
+        const dt = gardenPrevTime === undefined ? 0.016 : Math.min((timestamp - gardenPrevTime) / 1000, 0.05);
+        gardenPrevTime = timestamp;
+        const t = timestamp / 1000;
+
+        for (let i = windGusts.length - 1; i >= 0; i--) {
+            windGusts[i].radius += dt * 68;
+            windGusts[i].strength *= Math.exp(-dt * 3.2);
+            if (windGusts[i].strength < 0.08) windGusts.splice(i, 1);
+        }
+
+        gardenBlades.forEach(b => {
+            const wave = Math.sin(t * 2.3 - (b.x * 0.085 + b.y * 0.06) + b.phase * 0.35)
+                + 0.55 * Math.sin(t * 4.1 - b.x * 0.14 + b.y * 0.05);
+            let targetX = b.baseLean + wave * 2.35;
+            let targetY = Math.abs(wave) * 0.65;
+
+            windGusts.forEach(g => {
+                const dist = Math.hypot(b.x - g.x, b.y - g.y);
+                const band = Math.abs(dist - g.radius);
+                if (band < 14 && dist > 0.1) {
+                    const push = (1 - band / 14) * g.strength * 4.5;
+                    targetX += ((b.x - g.x) / dist) * push;
+                    targetY += ((b.y - g.y) / dist) * push * 0.7;
+                }
+            });
+
+            b.vx += (targetX - b.dx) * 26 * dt;
+            b.vy += (targetY - b.dy) * 26 * dt;
+            const damping = Math.exp(-7.5 * dt);
+            b.vx *= damping;
+            b.vy *= damping;
+            b.dx += b.vx * dt * 12;
+            b.dy += b.vy * dt * 12;
+
+            const tipX = b.x + Math.max(-6.5, Math.min(6.5, b.dx));
+            const tipY = b.y - b.length + Math.max(-2.5, Math.min(3.5, b.dy));
+            const ctrlX = b.x + (tipX - b.x) * 0.42;
+            const ctrlY = b.y - b.length * 0.58 + (b.dy * 0.25);
+            b.node.setAttribute('d', `M${b.x.toFixed(2)} ${b.y.toFixed(2)}Q${ctrlX.toFixed(2)} ${ctrlY.toFixed(2)} ${tipX.toFixed(2)} ${tipY.toFixed(2)}`);
+        });
+
+        parkPlants.forEach((p, idx) => {
+            const breeze = Math.sin(t * 2.1 - (p.x * 0.07 + p.y * 0.05) + idx);
+            const targetTx = breeze * 0.85;
+            const targetTy = Math.cos(t * 1.8 + idx) * 0.45;
+            const targetR = breeze * 4.2;
+
+            p.vx += (targetTx - p.tx) * 28 * dt;
+            p.vy += (targetTy - p.ty) * 28 * dt;
+            p.vr += (targetR - p.r) * 24 * dt;
+            p.vs += (0 - p.s) * 34 * dt;
+            const damp = Math.exp(-6.2 * dt);
+            p.vx *= damp; p.vy *= damp; p.vr *= damp; p.vs *= damp;
+            p.tx += p.vx * dt * 10;
+            p.ty += p.vy * dt * 10;
+            p.r += p.vr * dt * 10;
+            p.s += p.vs * dt * 10;
+
+            const scale = 1 + Math.max(-0.12, Math.min(0.22, p.s));
+            p.node.setAttribute(
+                'transform',
+                `translate(${(p.x + p.tx).toFixed(2)} ${(p.y + p.ty).toFixed(2)}) rotate(${(p.rot + p.r).toFixed(2)}) scale(${scale.toFixed(3)})`
+            );
+        });
+
+        gardenFrame = requestAnimationFrame(tickGarden);
+    }
+
+    function ensureGardenLoop() {
+        if (!gardenCircle || gardenCircle.hidden) return;
+        initInteractiveGarden();
+        if (reducedMotion()) {
+            if (gardenFrame) { cancelAnimationFrame(gardenFrame); gardenFrame = 0; }
+            renderGardenStatic();
+            return;
+        }
+        if (!gardenFrame && !document.hidden && entrance.hidden) {
+            gardenPrevTime = undefined;
+            gardenFrame = requestAnimationFrame(tickGarden);
+        }
+    }
+
+    function toGardenCoords(clientX, clientY) {
+        const rect = gardenCircle.getBoundingClientRect();
+        if (!rect.width || !rect.height) return null;
+        return {
+            x: ((clientX - rect.left) / rect.width) * 120,
+            y: ((clientY - rect.top) / rect.height) * 120,
+        };
+    }
+
+    gallery?.addEventListener('pointermove', event => {
+        if (!gardenCircle || gardenCircle.hidden || reducedMotion() || !entrance.hidden) return;
+        const pt = toGardenCoords(event.clientX, event.clientY);
+        if (!pt) return;
+        const distFromCenter = Math.hypot(pt.x - 60, pt.y - 60);
+        if (distFromCenter > 68) {
+            gardenPointer = null;
+            return;
+        }
+        const vx = gardenPointer ? Math.max(-18, Math.min(18, pt.x - gardenPointer.x)) : 1.8;
+        const vy = gardenPointer ? Math.max(-18, Math.min(18, pt.y - gardenPointer.y)) : 0.8;
+        gardenPointer = pt;
+
+        gardenBlades.forEach(b => {
+            const d = Math.hypot(b.x - pt.x, b.y - pt.y);
+            if (d < 22) {
+                const influence = (1 - d / 22);
+                b.vx += (vx * 1.35 + (b.x - pt.x) * 0.28) * influence;
+                b.vy += (vy * 0.9 + (b.y - pt.y) * 0.22) * influence;
+            }
+        });
+        parkPlants.forEach(p => {
+            const d = Math.hypot(p.x - pt.x, p.y - pt.y);
+            if (d < 24) {
+                const influence = (1 - d / 24);
+                p.vx += vx * 0.55 * influence;
+                p.vy += vy * 0.55 * influence;
+                p.vr += (vx - vy) * 2.4 * influence;
+                p.vs += 0.045 * influence;
+            }
+        });
+        ensureGardenLoop();
+    });
+
+    gardenCircle?.addEventListener('pointerdown', event => {
+        if (reducedMotion() || !entrance.hidden) return;
+        const pt = toGardenCoords(event.clientX, event.clientY);
+        if (!pt) return;
+        windGusts.push({ x: pt.x, y: pt.y, radius: 2, strength: 1.5 });
+        parkPlants.forEach(p => {
+            const d = Math.hypot(p.x - pt.x, p.y - pt.y);
+            if (d < 34) {
+                const boost = 1 - d / 34;
+                const nx = d > 0.1 ? (p.x - pt.x) / d : 0.7;
+                const ny = d > 0.1 ? (p.y - pt.y) / d : 0.7;
+                p.vx += nx * 5.5 * boost;
+                p.vy += ny * 5.5 * boost;
+                p.vr += (d < 14 ? 42 : 24) * boost;
+                p.vs += 0.22 * boost;
+            }
+        });
+        ensureGardenLoop();
+    });
+
+    document.addEventListener('visibilitychange', ensureGardenLoop);
+    motion.addEventListener('change', ensureGardenLoop);
+    initInteractiveGarden();
+    ensureGardenLoop();
     document.addEventListener('keydown', event => {
         if (event.key !== 'Escape') return;
         choices.forEach(choice => { if (choice.open) { choice.open = false; choice.querySelector('summary').focus(); } });

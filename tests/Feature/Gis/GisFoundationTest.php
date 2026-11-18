@@ -20,7 +20,7 @@ final class GisFoundationTest extends TestCase
         foreach (['gis_layers', 'gis_layer_snapshots', 'gis_features', 'osc_legacy_papers', 'osc_layout_images'] as $table) {
             $this->assertTrue(Schema::hasTable("core.$table"), "core.$table is missing");
         }
-        $this->assertTrue(Schema::hasColumn('sites', 'boundary'));
+        $this->assertTrue(Schema::hasColumn('core.sites', 'boundary'));
         $this->assertTrue(Schema::hasColumn('core.osc_agenda_items', 'boundary'));
     }
 

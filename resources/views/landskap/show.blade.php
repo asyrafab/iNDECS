@@ -1,0 +1,33 @@
+@extends('layouts.app')
+@section('title', $application->application_reference)
+@section('content')
+<div class="record-heading"><div><a href="{{ route('landskap.index') }}" class="back-link">Kembali ke senarai</a><div class="record-reference-row"><span class="record-type">{{ $application->application_type_id }}</span><span class="record-reference">{{ $application->application_reference }}</span><span class="status-badge status-{{ $application->current_status->value }}">{{ $application->current_status->label() }}</span></div><h1>{{ $application->title }}</h1><p>{{ $application->description }}</p></div>@include('partials.osc-propose-button')</div>
+@if ($errors->any())<div class="alert alert-error" role="alert"><div>@foreach ($errors->all() as $error)<p>{{ $error }}</p>@endforeach</div></div>@endif
+@include('partials.record-navigation', ['recordNavigation' => ['Ringkasan' => '#ringkasan', 'Borang Jabatan' => '#borang-jabatan', 'Dokumen' => route('landskap.documents.index', $application), 'Pemohon & Perunding' => '#pihak', 'Tapak & Lot' => '#tapak', 'Garis Masa' => '#garis-masa', 'Sejarah Audit' => '#audit']])
+<section class="workflow-banner"><div class="workflow-current"><div><small>Peringkat semasa</small><strong>{{ $application->current_stage->label() }}</strong></div></div><div class="workflow-meta"><span>Versi rekod</span><strong>{{ $application->row_version }}</strong></div></section>
+<div class="record-layout"><div class="record-main">
+<section class="content-card detail-card" id="ringkasan"><div class="card-heading"><h2>Ringkasan permohonan</h2></div><dl class="detail-grid">
+    <div><dt>Jenis</dt><dd>{{ $application->applicationType->name }}</dd></div><div><dt>Rujukan OSC</dt><dd>{{ $application->external_reference ?: 'Tidak berkenaan' }}</dd></div><div><dt>Tarikh penerimaan</dt><dd>{{ $application->submission_date->format('d/m/Y') }}</dd></div><div><dt>Keutamaan</dt><dd>{{ ['normal' => 'Normal', 'high' => 'Tinggi', 'urgent' => 'Segera'][$application->priority] ?? $application->priority }}</dd></div>
+</dl></section>
+<section class="content-card detail-card" id="dokumen"><h2>Dokumen</h2><p>Semak dokumen, revisi dan keputusan pengesahan pegawai.</p><a class="button button-secondary" href="{{ route('landskap.documents.index', $application) }}">Buka dokumen dan pengesahan</a></section>
+<section class="content-card detail-card" id="borang-jabatan"><div class="card-heading"><h2>Borang Jabatan Landskap</h2></div><dl class="detail-grid">
+    <div><dt>Kategori landskap</dt><dd>{{ $application->landscape?->landscape_category ?? '—' }}</dd></div>
+    <div><dt>Kawasan lapang (m²)</dt><dd>{{ $application->landscape?->open_space_area ?? '—' }}</dd></div>
+    <div><dt>Softscape (m²)</dt><dd>{{ $application->landscape?->softscape_area ?? '—' }}</dd></div>
+    <div><dt>Hardscape (m²)</dt><dd>{{ $application->landscape?->hardscape_area ?? '—' }}</dd></div>
+    <div><dt>Pokok sedia ada</dt><dd>{{ $application->landscape?->existing_trees ?? '—' }}</dd></div>
+    <div><dt>Pokok dikekalkan</dt><dd>{{ $application->landscape?->retained_trees ?? '—' }}</dd></div>
+    <div><dt>Pokok dicadangkan</dt><dd>{{ $application->landscape?->proposed_trees ?? '—' }}</dd></div>
+    <div><dt>Spesies dicadangkan</dt><dd>{{ $application->landscape?->proposed_species ?: '—' }}</dd></div>
+    <div><dt>Tanaman penampan</dt><dd>{{ $application->landscape?->buffer_planting ?: '—' }}</dd></div>
+    <div><dt>Kemudahan rekreasi</dt><dd>{{ $application->landscape?->recreation_facilities ?: '—' }}</dd></div>
+    <div><dt>Syarat tanaman gantian</dt><dd>{{ $application->landscape?->replacement_conditions ?: '—' }}</dd></div>
+</dl></section>
+<section class="content-card detail-card" id="pihak"><div class="card-heading"><h2>Pemohon &amp; Perunding</h2></div><div class="party-list">@foreach ($application->applicationParties as $party)<article><div><small>{{ $party->role === 'applicant' ? 'Pemohon' : 'Perunding' }}</small><strong>{{ $party->submitted_snapshot['name'] }}</strong><span>{{ $party->submitted_snapshot['registration_number'] ?? '' }}</span><span>{{ $party->submitted_snapshot['email'] ?? '' }}</span><span>{{ $party->submitted_snapshot['phone'] ?? '' }}</span><span>{{ $party->submitted_snapshot['address'] ?? '' }}</span></div></article>@endforeach</div></section>
+<section class="content-card detail-card" id="tapak"><div class="card-heading"><h2>Tapak &amp; Lot</h2></div>@foreach ($application->sites as $site)<p>{{ $site->development_address }}</p><p>{{ $site->mukim }} · {{ $site->district }}</p>@endforeach<div class="lot-chips">@foreach ($application->lots as $lot)<div class="lot-chip"><span>No. lot</span><strong>{{ $lot->lot_number }}</strong><small>{{ $lot->mukim }}</small></div>@endforeach</div><div class="form-divider"></div>@include('partials.gis-boundary-field', ['application' => $application])</section>
+<section class="content-card detail-card" id="audit"><div class="card-heading"><h2>Sejarah Audit</h2></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Masa</th><th>Tindakan</th><th>Pelaku</th></tr></thead><tbody>@foreach ($audit as $entry)<tr><td>{{ \Illuminate\Support\Carbon::parse($entry->created_at)->format('d/m/Y H:i') }}</td><td>{{ $entry->event }}</td><td>{{ $entry->actor_name }}</td></tr>@endforeach</tbody></table></div></section>
+</div><aside class="record-side">
+<section class="side-card"><h2>Tindakan pegawai</h2>@forelse ($transitions as $transition)<form method="POST" action="{{ route('landskap.transition', $application) }}" class="application-form" data-confirm="{{ $transition->label }}?">@csrf<input type="hidden" name="action" value="{{ $transition->action }}"><input type="hidden" name="row_version" value="{{ $application->row_version }}"><label class="field"><span>Catatan tindakan</span><textarea name="remarks" rows="3" maxlength="2000">{{ old('remarks') }}</textarea></label><button class="button button-primary" type="submit">{{ $transition->label }}</button></form>@empty<p>Tiada tindakan peralihan tersedia pada peringkat ini untuk peranan anda.</p>@endforelse</section>
+<section class="side-card" id="garis-masa"><h2>Garis Masa</h2><ol class="timeline">@foreach ($application->stageHistory as $history)<li><span class="timeline-marker"></span><div><strong>{{ $history->new_stage->label() }}</strong><span>{{ $history->new_status->label() }}</span><span>{{ $history->actor?->name }}</span><time datetime="{{ $history->created_at->toIso8601String() }}">{{ $history->created_at->format('d/m/Y H:i') }}</time><span>{{ $history->remarks }}</span></div></li>@endforeach</ol></section>
+</aside></div>
+@endsection
