@@ -520,3 +520,7 @@ ADR-394 uses `.technical-review`, `.technical-review-tools`, `.technical-finding
 ## Officer plan viewer (2026-11-18)
 
 ADR-395 adds recorded application background above the review and a `.technical-review-desk` with a sticky `.technical-plan` beside `.technical-review-comments`. `officer-documents.js` selects only same-origin URLs from the check's manifest-filtered document list; evidence links and finding navigation update the named iframe/page without submitting comments. Preserve scoped private document authorization, original historical versions and delayed historical iframe loading. Do not embed HTML/SVG/archives or substitute MATRIX fields for authoritative background. Narrow screens stack the viewer and comments; existing unsaved-edit safeguards stay active.
+
+## Resizable officer review (2026-11-18)
+
+ADR-396 adds `.technical-panel-divider` and progressive `.technical-review-desk.is-resizable` / `.is-narrow` states through `officer-panel-split.js`. Read minimum pane width/default ratio from tokens. Pointer/keyboard resizing must retain comments and the existing iframe; disable iframe pointer events only during capture. Persist only a numeric per-user layout ratio, tolerate unavailable storage, preserve readable widths and stack on narrow screens. Focus mode is a separate proposal in ADR-396, not implemented by this increment.

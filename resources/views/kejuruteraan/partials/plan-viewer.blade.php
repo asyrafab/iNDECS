@@ -1,5 +1,5 @@
-<aside @class(['technical-plan', 'technical-plan-empty' => $check['documents'] === []]) data-review-viewer aria-label="Pelan dan dokumen semakan">
-    <div class="technical-plan-head"><h4><x-icon name="file-text" />Pelan & dokumen</h4><span class="muted">Semakan {{ $check['number'] }}</span></div>
+<aside id="technical-plan-{{ $check['number'] }}" @class(['technical-plan', 'technical-plan-empty' => $check['documents'] === []]) data-review-viewer aria-label="Pelan dan dokumen semakan">
+    <div class="technical-plan-head"><h4><x-icon name="file-text" />Pelan & dokumen</h4><span class="muted">Semakan {{ $check['number'] }}</span><button type="button" class="button button-ghost button-small" data-review-split-reset hidden>Tetapan lebar asal</button></div>
     @if ($check['documents'] !== [])
         <label class="field"><span>Dokumen bagi semakan ini</span><select data-review-document aria-controls="technical-document-{{ $check['number'] }}">
             @foreach ($check['documents'] as $document)<option value="{{ $document['id'] }}" data-document-url="{{ $document['url'] }}">{{ $document['name'] }} · versi {{ $document['revision'] }}</option>@endforeach

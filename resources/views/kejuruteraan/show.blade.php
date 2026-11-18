@@ -47,4 +47,5 @@
 @include('kejuruteraan.partials.recommendations')
 <script src="{{ asset('js/officer-review.js') }}" defer></script>
 <script src="{{ asset('js/officer-documents.js') }}" defer></script>
+<script src="{{ asset('js/officer-panel-split.js') }}" defer></script>
 @endsection

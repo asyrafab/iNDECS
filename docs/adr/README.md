@@ -159,3 +159,5 @@ Date: YYYY-MM-DD. Status: Proposed | Accepted | Superseded by ADR-MMM.
 - [ADR-394: Officer technical-comment workspace](ADR-394-officer-technical-comment-workspace.md) - compact evidence-first findings, explicit filters and protected unsaved comments.
 
 - [ADR-395: Plan viewer and application background](ADR-395-officer-plan-viewer-and-application-background.md) - in-page document review beside comments and recorded application context.
+
+- [ADR-396: Resizable review panels](ADR-396-resizable-review-panels.md) - accessible panel resizing; focused review mode proposed separately.

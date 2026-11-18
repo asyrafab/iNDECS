@@ -20,9 +20,13 @@
         <div class="technical-review-actions"><button type="button" class="button button-secondary button-small" data-review-next>Belum diulas seterusnya<x-icon name="arrow-down" /></button><button type="button" class="button button-ghost button-small" data-review-collapse>Ringkaskan senarai</button></div>
         <p class="muted technical-review-results" data-review-results role="status" aria-live="polite"></p>
     </div>
-    <div class="technical-review-desk">
+    <div class="technical-review-desk" data-review-split data-review-user="{{ auth()->id() }}">
         @include('kejuruteraan.partials.plan-viewer')
-        <div class="technical-review-comments">
+        <div class="technical-panel-divider" data-review-divider role="separator" aria-orientation="vertical" aria-label="Ubah lebar panel pelan dan ulasan" aria-controls="technical-plan-{{ $check['number'] }} technical-comments-{{ $check['number'] }}" aria-describedby="technical-divider-help-{{ $check['number'] }}" tabindex="0" hidden>
+            <span class="technical-divider-grip" aria-hidden="true"><x-icon name="grip-vertical" /></span>
+            <span class="sr-only" id="technical-divider-help-{{ $check['number'] }}">Seret untuk mengubah lebar. Gunakan anak panah kiri atau kanan, Home atau End. Tekan Enter atau klik dua kali untuk tetapan asal. Escape membatalkan seretan.</span>
+        </div>
+        <div class="technical-review-comments" id="technical-comments-{{ $check['number'] }}">
     <div class="technical-finding-list" id="review-list-{{ $check['number'] }}">
     @foreach ($check['items'] as $item)
         @php
