@@ -294,3 +294,12 @@
   --color-review-attention-bg: #40351e; --color-review-attention-text: #f1cc7d;
   --color-review-compliant-bg: #173c31; --color-review-compliant-text: #93dab0;
 }
+
+/* ADR-401: owner-selected bright yellow capsule and stable collapsed rail. */
+:root {
+  --color-review-attention-bg: #ffdf00;
+  --color-review-attention-text: #000000;
+  --size-review-task-rail: 80px;
+  --size-review-task-rail-narrow: 128px;
+  --width-review-task-tool: 480px;
+}

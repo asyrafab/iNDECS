@@ -1878,3 +1878,16 @@ html[data-amira-entrance="pending"] [data-amira-entrance] .amira-counter-compose
 .review-task-reset { margin: 0 var(--space-3) var(--space-3); font-size: var(--font-size-xs); }
 .review-task-dragging, .review-task-dragging * { cursor: grabbing; user-select: none; }
 .review-task-dragging .officer-review-page iframe { pointer-events: none; }
+
+/* ADR-401: expansion is isolated from the document/comment layout. */
+.officer-review-page { --review-status-height: var(--size-review-task-rail); }
+.review-task-status { height: var(--review-status-height); }
+.review-task-tool { position: absolute; top: var(--space-2); right: 0; width: var(--width-review-task-tool); max-width: 100%; border-radius: calc(var(--review-status-height) / 2); transition: border-radius var(--duration-normal) var(--ease-standard); }
+.review-task-tool[open] { border-radius: var(--radius-lg); }
+.review-task-toggle { padding-inline: var(--space-5); }
+@supports (interpolate-size: allow-keywords) {
+  .review-task-tool { interpolate-size: allow-keywords; }
+  .review-task-tool::details-content { block-size: 0; overflow: clip; transition: block-size var(--duration-normal) var(--ease-standard), content-visibility var(--duration-normal) allow-discrete; }
+  .review-task-tool[open]::details-content { block-size: auto; }
+}
+@media (max-width: 600px) { .officer-review-page { --review-status-height: var(--size-review-task-rail-narrow); } }

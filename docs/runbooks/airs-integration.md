@@ -57,6 +57,8 @@ ADR-400 adds a dedicated drag grip (mouse/pen/touch or arrow keys; Shift moves f
 
 Dark tool colours describe the advisory score: red below `AIRS_SCORE_THRESHOLD` (default 50), amber up to `AIRS_OFFICER_SCORE_GOOD_THRESHOLD` (default 80), green from that visual boundary. The green boundary is clamped to at least the red boundary; unavailable/deferred scores stay navy. These colours are separate from saved-comment progress and official decisions.
 
+ADR-401 changes the yellow band to bright yellow with black text/outline. The collapsed tool has semicircular ends and morphs into the expanded card where supported; reduced motion disables this animation. Its collapsed rail stays the same size when toggled, so the plan, comment sections and divider no longer move or resize with the tool.
+
 ## Verification
 
 `php artisan test` (uses `indecs_test`, the fake AI provider and a sync `airs` queue). The real-package acceptance test runs with `PLAN_REVIEW_GREEN_CAMOUR_PATH="<folder of the 12 PDFs>" php artisan test --filter=GreenCamourAcceptanceTest`.
