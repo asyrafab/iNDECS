@@ -7,3 +7,5 @@ Apply an owner-authorised visual exception to the floating review tool only: a t
 Use an opaque gloss fallback when backdrop filtering is unavailable; print retains a plain solid surface. No new motion, image assets, layout measurements, workflow changes or dependencies are introduced.
 
 Owner refinement: increase glass transparency (yellow about 65%, dark score bands about 80%) and lighten red/green foregrounds with a softer highlight to retain text contrast. Dark-band controls darken on hover while yellow controls use light fills to preserve contrast. Keep text itself fully opaque, with solid fallback and the same layout/interaction behavior.
+
+Owner refinement: red and green now use light coral/mint glass at the same approximately 65% opacity as yellow, with fully opaque black labels and the same light sheen/control fills. This supersedes the earlier dark red/green treatment; the white rim and advisory score thresholds remain unchanged.

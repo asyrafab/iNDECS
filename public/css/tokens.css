@@ -328,3 +328,11 @@
 
 /* ADR-403: thicker white glass rim. */
 :root { --rule-review-glass: 3px; --color-review-glass-border: #ffffffe6; }
+
+/* Owner refinement: equally light red/yellow/green glass score states. */
+:root {
+  --color-review-critical-bg: #ffbaba; --color-review-critical-text: #000000;
+  --color-review-compliant-bg: #9beaaf; --color-review-compliant-text: #000000;
+  --color-review-glass-critical: #ffbabaa6;
+  --color-review-glass-compliant: #9beaafa6;
+}

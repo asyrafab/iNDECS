@@ -1921,3 +1921,6 @@ html[data-amira-entrance="pending"] [data-amira-entrance] .amira-counter-compose
 .review-task-preview select { color: var(--color-text); background: var(--color-surface); }
 .review-task-preview-badge, .review-task-preview-restore { border: var(--rule-hair) solid currentColor; border-radius: var(--radius-sm); padding: var(--space-1) var(--space-2); color: var(--task-text); background: transparent; font: inherit; }
 .review-task-preview-restore { cursor: pointer; }
+
+/* Match the lighter red/green score bands to the yellow glass treatment. */
+.review-task-tool:is([data-score-tone="critical"], [data-score-tone="compliant"]) { --task-gloss: var(--color-review-gloss-attention-highlight); --color-review-glass-control: var(--color-review-glass-attention-control); --color-review-glass-control-hover: var(--color-review-glass-attention-control-hover); }
