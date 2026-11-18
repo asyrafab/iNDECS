@@ -104,3 +104,18 @@ returns a stale conflict. Browser acceptance should cover supervisor creation,
 own/team filtering, officer start/completion, escaped notes/history and denied
 cross-department access. Keep the existing GitHub billing and unpatched
 development-dependency advisory limitations visible; do not claim hosted CI green.
+
+Local checkouts normally share the same `indecs_test` database: do not run their
+refresh/migration suites concurrently. A separate checkout alone does not isolate
+database state. If another task is testing, use a separate disposable PostgreSQL
+instance and select its port through `DB_PORT`, retaining the database name
+`indecs_test` and every safety check. This validation used loopback port 5548;
+the normal application and shared test server on 5434 were not moved or renamed.
+
+Verification on 18 November 2026: clean committed queue source passed 911 PHP
+tests with 4666 assertions (two optional fixtures skipped), 40 JavaScript tests,
+Pint, the guarded migration round-trip and production build. The focused task
+and real two-writer concurrency suites passed 20 tests / 149 assertions. An
+isolated browser journey verified supervisor creation/assignment, officer start
+and completion with pinned evidence, and completed-queue filtering; the linked
+application stayed registration/submitted, unassigned, at row version 1.

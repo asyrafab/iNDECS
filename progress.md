@@ -20,10 +20,13 @@ audited download. Migration rollback refuses existing tasks. Source and operatin
 instructions are in `docs/runbooks/officer-work-queue.md`; normal application
 migrations and role grants have not been applied by this increment.
 
-Initial full regression: 910 PHP tests / 4658 assertions passed, two optional
-fixtures skipped. Latest focused task/concurrency verification: 20 tests / 149
-assertions passed, including the Malaysian-midnight edge case added afterwards.
-All 40 JavaScript tests, migration round-trip and production build passed.
+Final full regression on the clean queue checkout and a private temporary
+PostgreSQL instance: 911 PHP tests / 4666 assertions passed, two optional fixtures
+skipped. Focused task/concurrency verification: 20 tests / 149 assertions passed,
+including the Malaysian-midnight edge case. All 40 JavaScript tests, Pint,
+migration round-trip and production build passed. The separate loopback instance
+on port 5548 retained the `indecs_test` safety guard; shared-server resets from
+concurrent tests had interrupted earlier attempts, not the final isolated run.
 Browser verification used isolated test data: supervisor create/assign, officer
 start/complete with evidence and completed-queue filtering succeeded; the source
 application remained registration/submitted, unassigned, at row version 1.
