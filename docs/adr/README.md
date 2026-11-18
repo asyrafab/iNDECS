@@ -161,3 +161,21 @@ Date: YYYY-MM-DD. Status: Proposed | Accepted | Superseded by ADR-MMM.
 - [ADR-395: Plan viewer and application background](ADR-395-officer-plan-viewer-and-application-background.md) - in-page document review beside comments and recorded application context.
 
 - [ADR-396: Resizable review panels](ADR-396-resizable-review-panels.md) - accessible panel resizing; focused review mode proposed separately.
+
+- [ADR-397: Focus Review and save comment / next finding](ADR-397-focus-review-and-save-next.md) - one active finding beside the plan, expandable context and save-before-advance navigation.
+
+- [ADR-398: Persistent officer task status and advisory score](ADR-398-floating-review-task-status.md) - top-right saved progress and advisory score remain visible while scrolling.
+
+- [ADR-399: Collapsible floating review task tool](ADR-399-collapsible-review-task-tool.md) - compact default strip with explicit expansion and a distinct teal tool treatment.
+
+- [ADR-400: Movable review tool and advisory colours](ADR-400-draggable-advisory-review-tool.md) - bounded dragging, unresolved navigation and advisory score bands.
+
+- [ADR-401: Capsule review tool and isolated expansion](ADR-401-capsule-tool-and-isolated-expansion.md) - bright yellow/black, shape morphing and stable review layout.
+
+- [ADR-402: Glossy glass review tool](ADR-402-glossy-glass-review-tool.md) - owner-approved, tool-only gradient/glass finish with an opaque fallback.
+
+- [ADR-403: Simplified glass tool controls](ADR-403-simplified-glass-tool-controls.md) - bare grip, shorter score label, removed reset/legend and white glass rim.
+
+- [ADR-404: Local task-tool display preview](ADR-404-local-task-tool-preview.md) - retired; temporary controls removed, actual score/status drives the tool.
+
+- [ADR-405: Persistent floating-tool layout](ADR-405-persistent-floating-tool-layout.md) - per-officer position and disclosure preferences survive save/next.

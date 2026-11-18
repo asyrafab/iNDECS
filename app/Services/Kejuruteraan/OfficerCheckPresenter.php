@@ -7,6 +7,7 @@ namespace App\Services\Kejuruteraan;
 use App\Airs\Models\GeneratedReport;
 use App\Airs\Models\ProfileFieldReview;
 use App\Airs\Models\ReviewCase;
+use App\Airs\Models\ReviewFinding;
 use App\Airs\Models\ReviewFindingFeedback;
 use App\Airs\Models\ReviewRule;
 use App\Airs\Models\ReviewVersion;
@@ -77,6 +78,24 @@ final class OfficerCheckPresenter
         }
 
         return $items;
+    }
+
+    /** Report order, scoped actual findings, and saved officer feedback determine the next task. */
+    public function nextUnreviewed(ReviewVersion $version, string $currentId): ?string
+    {
+        $ordered = array_values(array_unique(array_column($this->itemsFor($version), 'finding_id')));
+        $valid = ReviewFinding::query()->where('review_version_id', $version->id)->whereIn('id', $ordered)->pluck('id')->all();
+        $ordered = array_values(array_intersect($ordered, $valid));
+        $reviewed = ReviewFindingFeedback::query()->whereIn('review_finding_id', $valid)->pluck('review_finding_id')->all();
+        $index = array_search($currentId, $ordered, true);
+        $index = $index === false ? -1 : $index;
+        foreach (array_merge(array_slice($ordered, $index + 1), array_slice($ordered, 0, $index + 1)) as $id) {
+            if ($id !== $currentId && ! in_array($id, $reviewed, true)) {
+                return $id;
+            }
+        }
+
+        return null;
     }
 
     private function check(ReviewCase $case, ReviewVersion $version): array

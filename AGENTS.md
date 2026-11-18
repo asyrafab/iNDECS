@@ -524,3 +524,25 @@ ADR-395 adds recorded application background above the review and a `.technical-
 ## Resizable officer review (2026-11-18)
 
 ADR-396 adds `.technical-panel-divider` and progressive `.technical-review-desk.is-resizable` / `.is-narrow` states through `officer-panel-split.js`. Read minimum pane width/default ratio from tokens. Pointer/keyboard resizing must retain comments and the existing iframe; disable iframe pointer events only during capture. Persist only a numeric per-user layout ratio, tolerate unavailable storage, preserve readable widths and stack on narrow screens. Focus mode is a separate proposal in ADR-396, not implemented by this increment.
+
+## Focus Review (2026-11-18)
+
+ADR-397 makes `review=focus` the default LJUP officer view; `review=overview` retains the complete overview. `.review-context-disclosure`, `.review-secondary-details`, `.review-analysis-details`, `.review-filter-disclosure` and `.technical-review-queue` keep context expandable and one active finding beside the resizable plan. Save/next uses the existing append-only feedback service, then selects the next unreviewed scoped finding server-side. Never advance on validation failure or treat completion as an official decision. Queue navigation preserves page-local edits; comments are never stored in browser storage.
+
+## Persistent review task summary (2026-11-18)
+
+ADR-398 adds `.review-task-status`, `.review-task-card`, `.review-task-progress` and `.review-task-score`: a sticky top-right summary of the final/latest check, saved officer-comment progress and advisory score. Header/summary measurements in `officer-review.js` keep the plan, divider and finding anchors clear. Never count unsaved text as completed work or show a stale profile score as current.
+
+ADR-399 refines the summary into a native `.review-task-tool` disclosure, collapsed by default, with `.review-task-toggle` and `.review-task-compact-score` keeping saved progress and the advisory score visible. Use the soft teal ground, accent border and Lucide task icon to distinguish this floating tool; disclosure changes remeasure its sticky offset without touching comments or documents.
+
+ADR-400 adds `officer-task-tool.js` for bounded pointer/keyboard movement, cancellation/reset and explicit next-unsettled navigation. Dark semantic tool tokens colour the advisory score red below `airs.score_threshold`, amber below `airs.officer_score_good_threshold` (default 80), and green at/above it; deferred/unknown stays navy. Unsettled includes unreviewed or saved assessments other than Ditunaikan/Tidak berkaitan. Never treat colour as approval or navigation as saving; keep positioning page-local.
+
+ADR-401 supersedes the dark amber tool surface with owner-requested bright yellow/black tokens. The collapsed tool has capsule ends and morphs into its expanded card with optional CSS interpolation. Its stable sticky rail must never change height on disclosure; only header height may update review-wide offsets. Keep reduced-motion and native disclosure fallbacks.
+
+ADR-402 records the owner-requested glossy glass exception for `.review-task-tool` only: token-defined gradient, translucent score surface, backdrop blur and inset sheen. Preserve opaque fallback, bright yellow/black attention, readable text and stable capsule layout; do not extend glass/gradients to other workspace sections.
+
+ADR-403 removes the floating tool reset/legend and Home reset shortcut, shortens its collapsed score label to Skor, renders a bare drag grip with retained keyboard focus, and replaces the outer outline with a thicker white glass token border.
+
+ADR-404 is retired: its temporary colour/status preview controls and overrides are removed. The floating tool uses only server-derived score bands, task status and saved progress in every environment.
+
+ADR-405 supersedes page-local-only positioning with a versioned, per-officer localStorage preference containing only open/closed state and numeric viewport coordinates. Restore and clamp after save/next or reload; cancelled drags must not overwrite it. Missing/corrupt/blocked storage must leave the tool usable. Never store comments, scores, application/document identifiers or URLs.

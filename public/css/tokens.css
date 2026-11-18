@@ -287,3 +287,62 @@
 @media (prefers-reduced-motion: reduce) {
   :root { --duration-fast: 0ms; --duration-normal: 0ms; --duration-slow: 0ms; --scale-application-hover: 1; }
 }
+
+/* ADR-400: deliberately dark semantic review-tool surfaces in either theme. */
+:root {
+  --color-review-critical-bg: #482a33; --color-review-critical-text: #ffb3b3;
+  --color-review-attention-bg: #40351e; --color-review-attention-text: #f1cc7d;
+  --color-review-compliant-bg: #173c31; --color-review-compliant-text: #93dab0;
+}
+
+/* ADR-401: owner-selected bright yellow capsule and stable collapsed rail. */
+:root {
+  --color-review-attention-bg: #ffdf00;
+  --color-review-attention-text: #000000;
+  --size-review-task-rail: 80px;
+  --size-review-task-rail-narrow: 128px;
+  --width-review-task-tool: 480px;
+}
+
+/* ADR-402: owner-requested glass exception, floating review tool only. */
+:root {
+  --color-review-glass-neutral: #102a43cc;
+  --color-review-glass-critical: #482a33cc;
+  --color-review-glass-attention: #ffdf00a6;
+  --color-review-glass-compliant: #173c31cc;
+  --color-review-gloss-highlight: #ffffff14;
+  --color-review-gloss-attention-highlight: #ffffff4d;
+  --color-review-gloss-clear: #ffffff00;
+  --color-review-gloss-shade: #0000001a;
+  --color-review-glass-control: #0000001a;
+  --color-review-glass-control-hover: #00000026;
+  --blur-review-glass: 12px;
+  --saturation-review-glass: 1.3;
+  --shadow-review-glass: inset 0 1px 0 #ffffff80, inset 0 -1px 0 #00000026, 0 8px 24px #102a4326;
+}
+
+/* Clearer glass with fully opaque, high-contrast score-band labels. */
+:root { --color-review-critical-text: #ffe4e4; --color-review-compliant-text: #e2ffe9; }
+
+:root { --color-review-glass-attention-control: #ffffff12; --color-review-glass-attention-control-hover: #ffffff24; }
+
+/* ADR-403: thicker white glass rim. */
+:root { --rule-review-glass: 3px; --color-review-glass-border: #ffffffe6; }
+
+/* Owner refinement: equally light red/yellow/green glass score states. */
+:root {
+  --color-review-critical-bg: #ffbaba; --color-review-critical-text: #000000;
+  --color-review-compliant-bg: #9beaaf; --color-review-compliant-text: #000000;
+  --color-review-glass-critical: #ffbabaa6;
+  --color-review-glass-compliant: #9beaafa6;
+}
+
+/* Owner refinement: stronger glass colour separation, including neutral. */
+:root {
+  --color-review-critical-bg: #ff949c; --color-review-glass-critical: #ff949ccc;
+  --color-review-compliant-bg: #50d982; --color-review-glass-compliant: #50d982cc;
+  --color-review-glass-attention: #ffdf00cc;
+  --color-review-neutral-bg: #8eb9d5; --color-review-neutral-text: #000000;
+  --color-review-glass-neutral: #8eb9d5cc;
+  --color-review-gloss-attention-highlight: #ffffff33;
+}

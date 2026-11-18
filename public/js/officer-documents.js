@@ -47,7 +47,7 @@
             if (show(link.dataset.reviewEvidence, link.dataset.reviewPage)) event.preventDefault();
         }));
         const rows = [...root.querySelectorAll('[data-review-finding]')];
-        rows.forEach(row => row.addEventListener('toggle', () => { if (row.open) showFinding(row); }));
+        rows.forEach(row => row.addEventListener('toggle', () => { if (row.open && (!historical || historical.open)) showFinding(row); }));
         const initialize = () => {
             if (historical && !historical.open) return;
             const active = rows.find(row => `#${row.id}` === location.hash) || rows.find(row => row.open);
