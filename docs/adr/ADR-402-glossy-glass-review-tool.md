@@ -9,3 +9,5 @@ Use an opaque gloss fallback when backdrop filtering is unavailable; print retai
 Owner refinement: increase glass transparency (yellow about 65%, dark score bands about 80%) and lighten red/green foregrounds with a softer highlight to retain text contrast. Dark-band controls darken on hover while yellow controls use light fills to preserve contrast. Keep text itself fully opaque, with solid fallback and the same layout/interaction behavior.
 
 Owner refinement: red and green now use light coral/mint glass at the same approximately 65% opacity as yellow, with fully opaque black labels and the same light sheen/control fills. This supersedes the earlier dark red/green treatment; the white rim and advisory score thresholds remain unchanged.
+
+Owner refinement: increase colour separation with more saturated coral/red, yellow and green at about 80% tint opacity, plus a light blue-grey neutral state. All use opaque black labels, a softer white sheen and the existing white glass rim. This supersedes the earlier pale score-band palette without changing thresholds or interactions.

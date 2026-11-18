@@ -336,3 +336,13 @@
   --color-review-glass-critical: #ffbabaa6;
   --color-review-glass-compliant: #9beaafa6;
 }
+
+/* Owner refinement: stronger glass colour separation, including neutral. */
+:root {
+  --color-review-critical-bg: #ff949c; --color-review-glass-critical: #ff949ccc;
+  --color-review-compliant-bg: #50d982; --color-review-glass-compliant: #50d982cc;
+  --color-review-glass-attention: #ffdf00cc;
+  --color-review-neutral-bg: #8eb9d5; --color-review-neutral-text: #000000;
+  --color-review-glass-neutral: #8eb9d5cc;
+  --color-review-gloss-attention-highlight: #ffffff33;
+}

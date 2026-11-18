@@ -1924,3 +1924,6 @@ html[data-amira-entrance="pending"] [data-amira-entrance] .amira-counter-compose
 
 /* Match the lighter red/green score bands to the yellow glass treatment. */
 .review-task-tool:is([data-score-tone="critical"], [data-score-tone="compliant"]) { --task-gloss: var(--color-review-gloss-attention-highlight); --color-review-glass-control: var(--color-review-glass-attention-control); --color-review-glass-control-hover: var(--color-review-glass-attention-control-hover); }
+
+/* Neutral is a distinct blue-grey glass state with the same dark labels. */
+.review-task-tool[data-score-tone="pending"] { --task-bg: var(--color-review-neutral-bg); --task-text: var(--color-review-neutral-text); --task-gloss: var(--color-review-gloss-attention-highlight); --color-review-glass-control: var(--color-review-glass-attention-control); --color-review-glass-control-hover: var(--color-review-glass-attention-control-hover); }
