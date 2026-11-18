@@ -287,3 +287,10 @@
 @media (prefers-reduced-motion: reduce) {
   :root { --duration-fast: 0ms; --duration-normal: 0ms; --duration-slow: 0ms; --scale-application-hover: 1; }
 }
+
+/* ADR-400: deliberately dark semantic review-tool surfaces in either theme. */
+:root {
+  --color-review-critical-bg: #482a33; --color-review-critical-text: #ffb3b3;
+  --color-review-attention-bg: #40351e; --color-review-attention-text: #f1cc7d;
+  --color-review-compliant-bg: #173c31; --color-review-compliant-text: #93dab0;
+}

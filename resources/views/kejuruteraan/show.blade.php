@@ -55,4 +55,5 @@
 <script src="{{ asset('js/officer-review.js') }}" defer></script>
 <script src="{{ asset('js/officer-documents.js') }}" defer></script>
 <script src="{{ asset('js/officer-panel-split.js') }}" defer></script>
+<script src="{{ asset('js/officer-task-tool.js') }}" defer></script>
 @endsection

@@ -167,3 +167,5 @@ Date: YYYY-MM-DD. Status: Proposed | Accepted | Superseded by ADR-MMM.
 - [ADR-398: Persistent officer task status and advisory score](ADR-398-floating-review-task-status.md) - top-right saved progress and advisory score remain visible while scrolling.
 
 - [ADR-399: Collapsible floating review task tool](ADR-399-collapsible-review-task-tool.md) - compact default strip with explicit expansion and a distinct teal tool treatment.
+
+- [ADR-400: Movable review tool and advisory colours](ADR-400-draggable-advisory-review-tool.md) - bounded dragging, unresolved navigation and advisory score bands.

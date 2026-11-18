@@ -35,6 +35,8 @@ return [
     'payment_driver' => env('AIRS_PAYMENT_DRIVER', 'staging'),
 
     'score_threshold' => (int) env('AIRS_SCORE_THRESHOLD', 50),
+    // Officer tool colour only; never changes the review engine or workflow.
+    'officer_score_good_threshold' => (int) env('AIRS_OFFICER_SCORE_GOOD_THRESHOLD', 80),
 
     'python' => [
         'binary' => env('AIRS_PYTHON_BINARY') ?: (PHP_OS_FAMILY === 'Windows'
