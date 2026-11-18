@@ -78,5 +78,27 @@
     if (typeof ResizeObserver === 'function') {
         const observer = new ResizeObserver(reflow); observer.observe(tool); observer.observe(header);
     }
+    const preview = tool.querySelector('[data-task-preview]');
+    if (preview) {
+        const colour = preview.querySelector('[data-task-preview-tone]');
+        const status = preview.querySelector('[data-task-preview-status]');
+        const label = tool.querySelector('[data-task-label]');
+        const badge = tool.querySelector('[data-task-preview-badge]');
+        const result = preview.querySelector('[data-task-preview-result]');
+        const recorded = {tone: tool.dataset.scoreTone, label: label.textContent};
+        const update = () => {
+            tool.dataset.scoreTone = ['pending', 'critical', 'attention', 'compliant'].includes(colour.value) ? colour.value : recorded.tone;
+            label.textContent = status.value || recorded.label;
+            const active = !!(colour.value || status.value);
+            badge.hidden = !active;
+            result.textContent = active ? 'Ujian paparan aktif. Rekod sebenar tidak berubah.' : 'Paparan sebenar.';
+            reflow();
+        };
+        colour.addEventListener('change', update); status.addEventListener('change', update);
+        preview.querySelector('[data-task-preview-restore]').addEventListener('click', () => {
+            colour.value = ''; status.value = ''; update();
+        });
+        preview.hidden = false;
+    }
     reflow();
 })();

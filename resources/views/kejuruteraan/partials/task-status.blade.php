@@ -24,13 +24,14 @@
             <button type="button" class="review-task-drag" data-task-drag hidden aria-label="Alih panel. Seret atau gunakan anak panah. Escape membatalkan seretan." title="Alih panel"><x-icon name="grip-vertical" /></button>
             <span>Semakan @if ($taskCompleted && $taskTotal > 0)<strong>{{ $taskReviewed }}/{{ $taskTotal }}</strong><span class="sr-only"> diulas</span>@endif</span>
             <span class="review-task-compact-score">Skor <strong>@if ($taskCompleted && $taskCheck['profile_stale'])Ditangguhkan @elseif ($taskCompleted && $taskCheck['officer_score'] !== null){{ $taskCheck['officer_score'] }}/100 @else Belum tersedia @endif</strong></span>
+            @if (app()->environment(['local', 'testing']))<span class="review-task-preview-badge" data-task-preview-badge hidden>Ujian</span>@endif
             @if ($taskUnsettled->isNotEmpty())<a class="review-task-jump" data-task-jump href="#finding-{{ $taskUnsettled->first()['finding_id'] }}" title="Lompat ke dapatan belum selesai">Belum selesai {{ $taskUnsettled->count() }}<x-icon name="arrow-down" /></a>@endif
             <x-icon name="chevron-down" class="review-task-chevron" />
         </summary>
         <div class="review-task-card">
         <div class="review-task-progress">
             <span class="eyebrow">Tugasan semakan @if ($taskCheck) · {{ $taskCheck['number'] }} @endif</span>
-            <strong>{{ $taskLabel }}</strong>
+            <strong data-task-label>{{ $taskLabel }}</strong>
             @if ($taskCompleted && $taskTotal > 0)<span class="muted">{{ $taskReviewed }} / {{ $taskTotal }} diulas · {{ $taskTotal - $taskReviewed }} berbaki</span>@endif
         </div>
         <div class="review-task-score">
@@ -44,5 +45,15 @@
             @endif
         </div>
         </div>
+        @if (app()->environment(['local', 'testing']))
+        <details class="review-task-preview" data-task-preview hidden>
+            <summary>Ujian paparan</summary>
+            <p>Pratonton warna dan status sahaja. Skor, kemajuan dan rekod sebenar tidak berubah.</p>
+            <label class="field"><span>Warna</span><select data-task-preview-tone><option value="">Warna sebenar</option><option value="pending">Neutral</option><option value="critical">Merah</option><option value="attention">Kuning</option><option value="compliant">Hijau</option></select></label>
+            <label class="field"><span>Status tugasan</span><select data-task-preview-status><option value="">Status sebenar</option><option>Belum bermula</option><option>Dalam semakan</option><option>Ulasan lengkap</option><option>Analisis sedang berjalan</option><option>Analisis gagal</option></select></label>
+            <button type="button" class="review-task-preview-restore" data-task-preview-restore>Paparan sebenar</button>
+            <p data-task-preview-result role="status" aria-live="polite">Paparan sebenar.</p>
+        </details>
+        @endif
     </details>
 </aside>

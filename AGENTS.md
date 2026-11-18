@@ -542,3 +542,5 @@ ADR-401 supersedes the dark amber tool surface with owner-requested bright yello
 ADR-402 records the owner-requested glossy glass exception for `.review-task-tool` only: token-defined gradient, translucent score surface, backdrop blur and inset sheen. Preserve opaque fallback, bright yellow/black attention, readable text and stable capsule layout; do not extend glass/gradients to other workspace sections.
 
 ADR-403 removes the floating tool reset/legend and Home reset shortcut, shortens its collapsed score label to Skor, renders a bare drag grip with retained keyboard focus, and replaces the outer outline with a thicker white glass token border.
+
+ADR-404 adds a local/testing-only Ujian paparan disclosure for floating-tool colour and task-label previews. Overrides must show an Ujian badge; never change scores, counters, findings, application state, storage or server data. Production does not render the controls; Paparan sebenar/reload restores recorded presentation.

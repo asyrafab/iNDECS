@@ -175,3 +175,5 @@ Date: YYYY-MM-DD. Status: Proposed | Accepted | Superseded by ADR-MMM.
 - [ADR-402: Glossy glass review tool](ADR-402-glossy-glass-review-tool.md) - owner-approved, tool-only gradient/glass finish with an opaque fallback.
 
 - [ADR-403: Simplified glass tool controls](ADR-403-simplified-glass-tool-controls.md) - bare grip, shorter score label, removed reset/legend and white glass rim.
+
+- [ADR-404: Local task-tool display preview](ADR-404-local-task-tool-preview.md) - labelled colour/status previews without record changes.

@@ -61,6 +61,8 @@ ADR-401 changes the yellow band to bright yellow with black text/outline. The co
 
 ADR-403 simplifies the tool: bare drag grip, **Skor** on the compact surface and a thicker white glass outline. Position reset (including Home) and the colour legend are removed; pointer/arrow movement and Escape cancellation remain. Expanded score context still states that it is not an official decision.
 
+ADR-404 exposes **Ujian paparan** inside the expanded floating tool in local/testing environments. Choose a colour and task label to inspect appearance; an **Ujian** badge identifies overrides. **Paparan sebenar** or reload restores recorded presentation. This changes neither score/counters nor any record, and is not rendered in production.
+
 ## Verification
 
 `php artisan test` (uses `indecs_test`, the fake AI provider and a sync `airs` queue). The real-package acceptance test runs with `PLAN_REVIEW_GREEN_CAMOUR_PATH="<folder of the 12 PDFs>" php artisan test --filter=GreenCamourAcceptanceTest`.
