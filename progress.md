@@ -2,6 +2,31 @@
 
 Last updated: 2026-11-19.
 
+## Engineering officer registration — 2026-11-19
+
+ADR-413 enables Daftar permohonan for PKT/PKP using a shared transactional core
+registration writer and Engineering's scoped validation. The flow allocates type/year
+references, snapshots parties, stores sites/lots and typed notes, and appends stage
+history/audit. Engineering lists, dashboard, detail pages and tasks expose authorised
+native records. LJUP is excluded from staff intake and retains its paid applicant
+journey; native permissions do not confer LJUP access. Technical units/catalogues,
+assessment transitions and official outcomes remain separate confirmed-policy work.
+
+Final clean-checkout validation on isolated PostgreSQL: 944 PHP tests passed,
+two optional fixtures skipped, 5,002 assertions. All 40 JavaScript tests, full Pint
+and the production build passed. Migration rollback/re-apply and refusal to roll
+back registered records were verified. Browser registration created both PKT and
+PKP test records with generated references, history/audit, list/dashboard visibility
+and no paid journeys; desktop/mobile forms were checked.
+
+Local activation applied only the new Engineering migration after a verified full
+backup: two permission definitions and 20 scoped/admin grants added, with activation
+audit ID 76. Existing roles, permission rows and unrelated workflow templates were
+preserved. No normal accounts or application records were created. Private backup,
+hash/receipts and verification are in `output/engineering-activation-2026-11-19/`.
+Read-only normal-database rendering verified the enabled PKT/PKP registration form.
+Concurrent legacy/GIS edits were excluded. See `docs/runbooks/engineering-registration.md`.
+
 ## Shared department menu across tasks and library — 2026-11-19
 
 ADR-412 extends retained department identity/navigation to officer tasks and

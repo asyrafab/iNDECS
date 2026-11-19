@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Models\BangunanApplication;
 use App\Models\User;
+use App\Services\Kejuruteraan\EngineeringApplicationAccess;
 use App\Services\Tasks\OfficerTaskAccess;
 use Illuminate\Http\Request;
 
@@ -22,6 +23,7 @@ final class DepartmentWorkspace
             'perancang' => $user->canPerformPkm('perancang.pkm.register'),
             'bangunan' => collect(BangunanApplication::TYPES)->contains(fn ($type) => $user->canPerformBangunan('access', $type) && $user->canPerformBangunan('register', $type)),
             'landskap' => $user->canPerformLandskap('register'),
+            'kejuruteraan' => app(EngineeringApplicationAccess::class)->types($user, 'register') !== [],
             default => false,
         };
         $item = fn (string $label, string $icon, ?string $url, array $patterns, string $reason = 'Tiada kebenaran akses') => [
@@ -35,7 +37,7 @@ final class DepartmentWorkspace
             $item('Dashboard jabatan', 'layout-dashboard', $native ? route($department.'.dashboard') : null, [$department.'.dashboard', ...($department === 'perancang' ? ['dashboard'] : [])]),
             $item('Permohonan', 'files', $native ? route($department.'.index') : ($legacy ? route('bangunan.legacy.index') : null), $native ? $records : ['bangunan.legacy.*']),
             $item('Daftar permohonan', 'file-plus-2', $register ? route($department.'.create') : null, [$department.'.create'],
-                $department === 'kejuruteraan' ? 'Pendaftaran pegawai belum tersedia' : 'Tiada kebenaran akses'),
+                'Tiada kebenaran akses'),
         ];
         if ($native && $legacy) {
             $work[] = $item('Carian Rekod Warisan', 'archive', route('bangunan.legacy.index'), ['bangunan.legacy.*']);

@@ -6,7 +6,7 @@ ADR-408 adds a dashboard to each existing departmental workspace:
 |---|---|---|
 | Perancang | `/perancang/dashboard` | PKM |
 | Bangunan | `/bangunan/dashboard` | Permitted PB / PBK / PBS / PMT / TEL families |
-| Kejuruteraan | `/kejuruteraan/dashboard` | LJUP; native PKT / PKP are not yet available |
+| Kejuruteraan | `/kejuruteraan/dashboard` | Authorised PKT / PKP / LJUP records |
 | Landskap | `/landskap/dashboard` | PL |
 
 The chooser, department switcher and staff landing routes open these pages.
@@ -25,7 +25,7 @@ ADR-412 extends retained context to Tugasan pegawai and Perpustakaan jabatan.
 All four departments share the same Ruang kerja functions (dashboard,
 applications, registration, officer tasks, meeting registration) and Bantuan
 functions (library, AMIRA guidance). Unavailable/unauthorised actions are disabled
-non-links. Engineering officer registration remains unavailable. Bangunan retains
+non-links. PKT/PKP officer registration is enabled under ADR-413. Bangunan retains
 its authorised legacy lookup as an extra. Task/library queries and selected
 filters remain unchanged; the remembered department controls navigation only.
 Existing application list and record links remain valid. `/dashboard` retains

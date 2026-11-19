@@ -221,10 +221,12 @@ final class BangunanRegistrationTest extends TestCase
     public function test_workflow_seeder_can_be_repeated_without_duplicates_or_rewriting_versions(): void
     {
         $before = DB::table('core.role_permissions')->count();
+        $templates = DB::table('core.workflow_templates')->count();
+        $transitions = DB::table('core.workflow_transitions')->count();
         $this->seed(BangunanWorkflowSeeder::class);
         $this->seed(BangunanWorkflowSeeder::class);
-        $this->assertDatabaseCount('core.workflow_templates', 6);
-        $this->assertDatabaseCount('core.workflow_transitions', 24);
+        $this->assertDatabaseCount('core.workflow_templates', $templates);
+        $this->assertDatabaseCount('core.workflow_transitions', $transitions);
         $this->assertDatabaseCount('core.role_permissions', $before);
     }
 

@@ -15,7 +15,7 @@
         </div>
     </div>
     @if ($department === 'kejuruteraan')
-        <p class="muted">Ringkasan ini meliputi LJUP. Permohonan PKT dan PKP belum tersedia dalam dashboard ini.</p>
+        <p class="muted">Permohonan PKT, PKP dan LJUP dipaparkan mengikut skop akses anda.</p>
     @endif
     <section class="metric-grid" aria-label="Metrik permohonan">
         @foreach ([['total', 'Jumlah permohonan', 'files', 'ink'], ['submitted', 'Dihantar', 'arrow-up-right', 'blue'], ['in_review', 'Dalam semakan', 'clock-3', 'amber'], ['approved', 'Diluluskan', 'check', 'green']] as [$key, $label, $icon, $colour])

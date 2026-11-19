@@ -59,7 +59,13 @@ class User extends Authenticatable
 
     public function canAccessKejuruteraan(): bool
     {
-        return $this->canPerformLjup('access');
+        return $this->canPerformLjup('access') || $this->canPerformEngineering('access', 'PKT') || $this->canPerformEngineering('access', 'PKP');
+    }
+
+    public function canPerformEngineering(string $action, string $type): bool
+    {
+        return in_array($type, ['PKT', 'PKP'], true)
+            && app(CorePermissionService::class)->userCan($this, 'kejuruteraan.application.'.$action, $this->department_id, $type);
     }
 
     /** PL (Jabatan Landskap) permissions: access, register, review, documents.upload, documents.verify, documents.configure. */
@@ -198,6 +204,7 @@ class User extends Authenticatable
         $canAccess = match ($application->application_type_id) {
             'PKM' => $this->canAccessPkm(),
             'PL' => $application->responsible_department_id === 'JLAND' && $this->canAccessLandskap(),
+            'PKT', 'PKP' => $application->responsible_department_id === 'JKEJ' && $this->canPerformEngineering('access', $application->application_type_id),
             default => $application->responsible_department_id === 'JBANG' && $this->canPerformBangunan('access', $application->application_type_id),
         };
 

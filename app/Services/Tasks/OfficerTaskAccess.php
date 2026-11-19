@@ -17,7 +17,7 @@ final class OfficerTaskAccess
     /** Supported record types, intersected with module access and explicit task authority. */
     public function types(User $actor, string $action = 'view'): array
     {
-        $types = ['PKM' => 'JPBD', 'PL' => 'JLAND', 'LJUP' => 'JKEJ'];
+        $types = ['PKM' => 'JPBD', 'PL' => 'JLAND', 'LJUP' => 'JKEJ', 'PKT' => 'JKEJ', 'PKP' => 'JKEJ'];
         foreach (BangunanApplication::TYPES as $type) {
             $types[$type] = 'JBANG';
         }
@@ -27,6 +27,7 @@ final class OfficerTaskAccess
                 'PKM' => $actor->canAccessPkm(),
                 'PL' => $actor->canAccessLandskap(),
                 'LJUP' => $actor->canPerformLjup('access'),
+                'PKT', 'PKP' => $actor->canPerformEngineering('access', $type),
                 default => $actor->canPerformBangunan('access', $type),
             };
 
@@ -79,7 +80,7 @@ final class OfficerTaskAccess
     public function recordUrl(Application $application): string
     {
         return route(match ($application->application_type_id) {
-            'PKM' => 'perancang.show', 'PL' => 'landskap.show', 'LJUP' => 'kejuruteraan.show', default => 'bangunan.show',
+            'PKM' => 'perancang.show', 'PL' => 'landskap.show', 'LJUP', 'PKT', 'PKP' => 'kejuruteraan.show', default => 'bangunan.show',
         }, $application);
     }
 }

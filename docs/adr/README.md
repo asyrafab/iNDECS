@@ -195,3 +195,5 @@ Date: YYYY-MM-DD. Status: Proposed | Accepted | Superseded by ADR-MMM.
 - [ADR-411: Meeting registration preserves departmental navigation](ADR-411-meeting-navigation-preserves-department.md)
 
 - [ADR-412: Shared departmental workspace menu](ADR-412-shared-department-workspace-menu.md)
+
+- [ADR-413: Engineering officer registration](ADR-413-engineering-officer-registration.md)

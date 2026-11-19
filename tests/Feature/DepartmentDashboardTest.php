@@ -76,7 +76,7 @@ final class DepartmentDashboardTest extends TestCase
         $officer = User::factory()->create(['role' => 'engineering_officer', 'department_id' => 'JKEJ', 'district' => 'Seberang Perai Tengah']);
         $record = $this->record('LJUP', 'JKEJ');
         $this->actingAs($officer)->get(route('dashboard'))->assertRedirect(route('kejuruteraan.dashboard'));
-        $this->get(route('kejuruteraan.dashboard'))->assertOk()->assertSee($record->application_reference)->assertSee('PKT dan PKP belum tersedia');
+        $this->get(route('kejuruteraan.dashboard'))->assertOk()->assertSee($record->application_reference)->assertSee('PKT, PKP dan LJUP');
     }
 
     public function test_bangunan_totals_exclude_unpermitted_families(): void
