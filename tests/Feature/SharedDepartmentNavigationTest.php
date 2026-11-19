@@ -57,7 +57,7 @@ final class SharedDepartmentNavigationTest extends TestCase
         $this->assertSame($activeLabel, trim($active->item(0)->textContent));
         $this->assertSame(1, $xpath->query('//details//a[@aria-current="location"]')->length);
         if ($department === 'kejuruteraan') {
-            $this->assertSame(1, $xpath->query('//nav[@class="primary-nav"]//span[@aria-disabled="true" and @title="Pendaftaran pegawai belum tersedia"]')->length);
+            $this->assertSame(1, $xpath->query('//nav[@class="primary-nav"]//a[@href="'.route('kejuruteraan.create').'"]')->length);
         }
     }
 

@@ -6,6 +6,7 @@ use App\Http\Controllers\BangunanDocumentCatalogueController;
 use App\Http\Controllers\BangunanDocumentController;
 use App\Http\Controllers\BangunanLegacyController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EngineeringRegistrationController;
 use App\Http\Controllers\Gis\BoundaryController;
 use App\Http\Controllers\Gis\TileController;
 use App\Http\Controllers\KejuruteraanApplicationController;
@@ -143,6 +144,8 @@ Route::middleware(['auth', 'bangunan.legacy'])->prefix('bangunan')->name('bangun
 
 // Jabatan Kejuruteraan: LJUP applications and their AIRS checks (ADR-383).
 Route::middleware(['auth', 'kejuruteraan.access'])->prefix('kejuruteraan')->name('kejuruteraan.')->group(function (): void {
+    Route::get('/create', [EngineeringRegistrationController::class, 'create'])->name('create');
+    Route::post('/', [EngineeringRegistrationController::class, 'store'])->name('store');
     Route::get('/dashboard', DashboardController::class)->defaults('department', 'kejuruteraan')->name('dashboard');
     Route::get('/', [KejuruteraanApplicationController::class, 'index'])->name('index');
     Route::get('/applications/{application}', [KejuruteraanApplicationController::class, 'show'])->whereUlid('application')->name('show');

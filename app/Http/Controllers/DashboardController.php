@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Enums\ApplicationStatus;
 use App\Models\Application;
 use App\Models\BangunanApplication;
+use App\Services\Kejuruteraan\EngineeringApplicationAccess;
 use App\Services\Tasks\OfficerTaskAccess;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -20,14 +21,14 @@ final class DashboardController extends Controller
             'perancang' => ['JPBD', 'Jabatan Perancang Bandar', ['PKM'], $actor->canAccessPkm()],
             'bangunan' => ['JBANG', 'Jabatan Bangunan', array_values(array_filter(BangunanApplication::TYPES,
                 fn (string $type) => $actor->canPerformBangunan('access', $type))), $actor->canAccessBangunan()],
-            'kejuruteraan' => ['JKEJ', 'Jabatan Kejuruteraan', ['LJUP'], $actor->canAccessKejuruteraan()],
+            'kejuruteraan' => ['JKEJ', 'Jabatan Kejuruteraan', [...app(EngineeringApplicationAccess::class)->types($actor), ...($actor->canPerformLjup('access') ? ['LJUP'] : [])], $actor->canAccessKejuruteraan()],
             'landskap' => ['JLAND', 'Jabatan Landskap', ['PL'], $actor->canAccessLandskap()],
             default => abort(404),
         };
         abort_unless($allowed, 403);
         $base = Application::query()->where('responsible_department_id', $departmentId)->whereIn('application_type_id', $types);
         if ($department === 'kejuruteraan') {
-            $base->visibleToLjupOfficer($actor);
+            $base = app(EngineeringApplicationAccess::class)->applications($actor);
         } else {
             $base->visibleTo($actor);
         }
@@ -54,6 +55,7 @@ final class DashboardController extends Controller
             'perancang' => $actor->canPerformPkm('perancang.pkm.register') ? route('perancang.create') : null,
             'bangunan' => collect($types)->contains(fn ($type) => $actor->canPerformBangunan('register', $type)) ? route('bangunan.create') : null,
             'landskap' => $actor->canPerformLandskap('register') ? route('landskap.create') : null,
+            'kejuruteraan' => app(EngineeringApplicationAccess::class)->types($actor, 'register') !== [] ? route('kejuruteraan.create') : null,
             default => null,
         };
 

@@ -18,6 +18,8 @@ final class OfficerTaskSeeder extends Seeder
                 $this->grant('system_admin', $action, null, null);
             }
             $modules = [
+                ['JKEJ', 'PKT', 'kejuruteraan.application.access', ['engineering_officer', 'senior_engineering_officer'], 'senior_engineering_officer'],
+                ['JKEJ', 'PKP', 'kejuruteraan.application.access', ['engineering_officer', 'senior_engineering_officer'], 'senior_engineering_officer'],
                 ['JPBD', 'PKM', 'perancang.pkm.access', ['planning_officer', 'senior_planning_officer'], 'senior_planning_officer'],
                 ['JLAND', 'PL', 'landskap.pl.access', ['landscape_officer', 'senior_landscape_officer'], 'senior_landscape_officer'],
                 ['JKEJ', 'LJUP', 'kejuruteraan.ljup.access', ['engineering_officer', 'senior_engineering_officer'], 'senior_engineering_officer'],

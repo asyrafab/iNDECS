@@ -164,11 +164,19 @@ indicator uses one square = standalone application, two = linked pair, three = d
 
 ## Working rules
 
+- ADR-413 enables scoped PKT/PKP officer registration through the shared core
+  `ApplicationRegistrationService` and Engineering's validated adapter. Preserve
+  atomic references, parties/sites/lots, typed extensions, stage history and audit.
+  Engineering lists/dashboard/tasks include authorised PKT/PKP records. LJUP
+  remains exclusively on its paid applicant journey; native access never implies
+  LJUP access. Technical units, catalogues and later assessment/outcome stages
+  remain unconfirmed; do not invent them or auto-advance registered records.
+
 - ADR-412 uses one `DepartmentWorkspace::menu()` definition and
   `partials/workspace-navigation.blade.php` for every department. Tasks, library
   and meeting registration keep the last authorised department's identity/menu.
   Common Ruang kerja/Bantuan actions remain in the same order; unavailable actions
-  use disabled non-links. Engineering officer registration is not yet available.
+  use disabled non-links. PKT/PKP officer registration follows ADR-413.
   Existing Bangunan legacy lookup remains an authorised extra. Menu context does
   not silently filter task/library records or grant access.
 
@@ -581,7 +589,9 @@ Draft project particulars live in departmental `*_draft_particulars` tables thro
 existing authorised, locked transaction. Query-builder bulk writes bypass this API
 and must explicitly target the appropriate extension. LJUP journey lighting snapshots
 live in `kejuruteraan.app_ljup_check_particulars`, independently of editable drafts.
-PKT/PKP/PL registration is inactive infrastructure only; no new intake is enabled.
+PKT/PKP staff registration is enabled under ADR-413; PL follows its existing
+registration workflow. Storage parity does not enable unimplemented assessment
+or official-outcome stages.
 See `docs/runbooks/department-database-standardisation.md` for migration and recovery.
 
 ## Officer technical comments (2026-11-17)

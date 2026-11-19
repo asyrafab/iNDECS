@@ -14,11 +14,14 @@ use App\Models\ApplicationDocument;
 use App\Models\ApplicationRecommendation;
 use App\Models\PaidCheckJourney;
 use App\Services\ApplicationRecommendationService;
+use App\Services\Kejuruteraan\EngineeringApplicationAccess;
 use App\Services\Kejuruteraan\LjupRecommendationSource;
 use App\Services\Kejuruteraan\OfficerCheckPresenter;
+use App\Support\DepartmentStructure;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -32,7 +35,7 @@ final class KejuruteraanApplicationController extends Controller
 
     public function index(Request $request): View
     {
-        $applications = Application::query()->visibleToLjupOfficer($request->user())
+        $applications = app(EngineeringApplicationAccess::class)->applications($request->user())
             ->orderByDesc('created_at')->orderByDesc('id')->paginate(25);
         $journeys = PaidCheckJourney::query()->whereIn('application_id', $applications->pluck('id'))->get()->keyBy('application_id');
 
@@ -41,6 +44,14 @@ final class KejuruteraanApplicationController extends Controller
 
     public function show(Request $request, string $application): View
     {
+        $native = app(EngineeringApplicationAccess::class)->applications($request->user())
+            ->whereIn('application_type_id', ['PKT', 'PKP'])->find($application);
+        if ($native) {
+            $native->load(['applicationType', 'sites', 'lots', 'applicationParties', 'stageHistory.actor']);
+
+            return view('kejuruteraan.native-show', ['application' => $native,
+                'notes' => DB::table(DepartmentStructure::applicationTable($native->application_type_id))->where('application_id', $native->id)->value('technical_notes')]);
+        }
         $record = $this->application($request, $application);
         $recommendationContext = null;
         $recommendations = collect();
@@ -144,6 +155,8 @@ final class KejuruteraanApplicationController extends Controller
 
     private function application(Request $request, string $id): Application
     {
+        abort_unless($request->user()->canPerformLjup('access'), 403);
+
         return Application::query()->visibleToLjupOfficer($request->user())->findOrFail($id);
     }
 }

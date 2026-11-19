@@ -63,7 +63,7 @@ final class DepartmentDatabaseStructureTest extends TestCase
         $this->assertFalse(Schema::hasColumn('core.applicant_drafts', 'lighting_types'));
         $this->assertFalse(Schema::hasColumn('core.paid_check_journeys', 'lighting_types'));
         $this->assertDatabaseHas('core.application_types', ['id' => 'PL', 'is_active' => true]);
-        $this->assertDatabaseHas('core.application_types', ['id' => 'PKT', 'is_active' => false]);
+        $this->assertDatabaseHas('core.application_types', ['id' => 'PKT', 'is_active' => true]);
     }
 
     public function test_database_rejects_a_cross_department_extension_even_for_raw_sql(): void
