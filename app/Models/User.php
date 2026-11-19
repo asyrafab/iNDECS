@@ -170,9 +170,10 @@ class User extends Authenticatable
     public function staffHomeRoute(): string
     {
         return match (true) {
-            $this->canAccessBangunan() => route('bangunan.index'),
+            $this->canAccessBangunan() => route('bangunan.dashboard'),
             $this->canAccessPkm() => route('dashboard'),
-            $this->canAccessLandskap() => route('landskap.index'),
+            $this->canAccessLandskap() => route('landskap.dashboard'),
+            $this->canAccessKejuruteraan() => route('kejuruteraan.dashboard'),
             $this->canAccessBangunanLegacy() => route('bangunan.legacy.index'),
             ! $this->canAccessOsc() && $this->canViewLibrary() => route('library.index'),
             default => route('osc.meetings.index'),

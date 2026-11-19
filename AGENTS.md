@@ -164,6 +164,11 @@ indicator uses one square = standalone application, two = linked pair, three = d
 
 ## Working rules
 
+- Department dashboards (ADR-408) share `dashboard.blade.php` and use
+  `.department-dashboard-grid` with the existing `.panel-stack`, metric cards,
+  detail grids and tables. The two-column overview stacks below 901px; task tables
+  scroll within their card. Counts and links retain module/type/district access.
+
 - The approved workspace (ADR-311) has a persistent navy sidebar shared by all
   departments. On desktop the `.sidebar-edge-toggle` arrow on its right edge collapses it (`html[data-sidebar="collapsed"]`,
   remembered in `localStorage` key `indecs.sidebar` and applied by `theme.js` before paint); below 901px it is the

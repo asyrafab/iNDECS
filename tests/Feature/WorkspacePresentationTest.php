@@ -89,9 +89,9 @@ final class WorkspacePresentationTest extends TestCase
     {
         $admin = User::factory()->create(['department_id' => 'JBANG', 'role' => 'system_admin']);
         $this->actingAs($admin)->get(route('bangunan.index'))->assertOk()
-            ->assertSee('href="'.route('perancang.index').'"', false);
+            ->assertSee('href="'.route('perancang.dashboard').'"', false);
         $this->get(route('perancang.index'))->assertOk()
-            ->assertSee('href="'.route('bangunan.index').'"', false)
+            ->assertSee('href="'.route('bangunan.dashboard').'"', false)
             ->assertDontSee('class="nav-link active" href="'.route('dashboard').'"', false);
     }
 

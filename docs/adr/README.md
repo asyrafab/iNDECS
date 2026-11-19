@@ -185,3 +185,5 @@ Date: YYYY-MM-DD. Status: Proposed | Accepted | Superseded by ADR-MMM.
 - [ADR-406: Guidance history preserves the applicant return URL](ADR-406-guidance-history-preserves-return-url.md)
 
 - [ADR-407: Shared application-linked officer work queue](ADR-407-shared-officer-work-queue.md)
+
+- [ADR-408: Authorised departmental dashboards](ADR-408-department-dashboards.md)

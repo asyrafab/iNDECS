@@ -20,20 +20,20 @@ final class ApplicationLauncher
 
         $applications = [];
         if ($user->canAccessPkm()) {
-            $applications[] = ['name' => 'iNDECS Planning', 'department' => 'perancang', 'icon' => 'map', 'description' => 'Jabatan Perancang Bandar', 'url' => route('perancang.index')];
+            $applications[] = ['name' => 'iNDECS Planning', 'department' => 'perancang', 'icon' => 'map', 'description' => 'Jabatan Perancang Bandar', 'url' => route('perancang.dashboard')];
         }
         if ($user->canAccessBangunan() || $user->canAccessBangunanLegacy()) {
-            $applications[] = ['name' => 'iNDECS Building', 'department' => 'bangunan', 'icon' => 'building-2', 'description' => 'Jabatan Bangunan', 'url' => $user->canAccessBangunan() ? route('bangunan.index') : route('bangunan.legacy.index')];
+            $applications[] = ['name' => 'iNDECS Building', 'department' => 'bangunan', 'icon' => 'building-2', 'description' => 'Jabatan Bangunan', 'url' => $user->canAccessBangunan() ? route('bangunan.dashboard') : route('bangunan.legacy.index')];
         }
         // Planned systems are visible to the administrator without advertising working navigation.
         $administrator = $user->role === 'system_admin' && DB::table('core.roles')->where('id', 'system_admin')->where('account_type', 'staff')->where('is_active', true)->exists();
         if ($administrator || $user->canAccessKejuruteraan()) {
             $applications[] = ['name' => 'iNDECS Engineering', 'department' => 'kejuruteraan', 'icon' => 'ruler', 'description' => 'Jabatan Kejuruteraan',
-                'url' => $user->canAccessKejuruteraan() ? route('kejuruteraan.index') : null];
+                'url' => $user->canAccessKejuruteraan() ? route('kejuruteraan.dashboard') : null];
         }
         if ($administrator || $user->canAccessLandskap()) {
             $applications[] = ['name' => 'iNDECS Landscape', 'department' => 'landskap', 'icon' => 'layers', 'description' => 'Jabatan Landskap',
-                'url' => $user->canAccessLandskap() ? route('landskap.index') : null];
+                'url' => $user->canAccessLandskap() ? route('landskap.dashboard') : null];
         }
         if ($user->canAccessOsc()) {
             $applications[] = ['name' => 'NADI', 'brand' => 'eosc', 'icon' => 'folder-open', 'description' => 'Navigation, Analysis, Decisions & Intelligence · eOSC', 'url' => route('osc.meetings.index')];

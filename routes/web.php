@@ -56,10 +56,13 @@ Route::get('/dashboard', function (Request $request) {
         return to_route('portal.home');
     }
     if ($request->user()->canAccessBangunan()) {
-        return to_route('bangunan.index');
+        return to_route('bangunan.dashboard');
     }
     if ($request->user()->canAccessLandskap() && ! $request->user()->canAccessPkm()) {
-        return to_route('landskap.index');
+        return to_route('landskap.dashboard');
+    }
+    if ($request->user()->canAccessKejuruteraan() && ! $request->user()->canAccessPkm()) {
+        return to_route('kejuruteraan.dashboard');
     }
     if ($request->user()->canAccessBangunanLegacy() && ! $request->user()->canAccessPkm()) {
         return to_route('bangunan.legacy.index');
@@ -75,6 +78,7 @@ Route::get('/dashboard', function (Request $request) {
 Route::middleware(['auth', 'perancang.access'])->group(function (): void {
 
     Route::prefix('perancang')->name('perancang.')->group(function (): void {
+        Route::get('/dashboard', DashboardController::class)->defaults('department', 'perancang')->name('dashboard');
         Route::get('/', [PkmApplicationController::class, 'index'])->name('index');
         Route::get('/create', [PkmApplicationController::class, 'create'])
             ->middleware('perancang.permission:perancang.pkm.register')
@@ -117,6 +121,7 @@ Route::middleware('auth')->prefix('library')->name('library.')->group(function (
 });
 
 Route::middleware(['auth', 'bangunan.access'])->prefix('bangunan')->name('bangunan.')->group(function (): void {
+    Route::get('/dashboard', DashboardController::class)->defaults('department', 'bangunan')->name('dashboard');
     Route::get('/', [BangunanApplicationController::class, 'index'])->name('index');
     Route::get('/create', [BangunanApplicationController::class, 'create'])->name('create');
     Route::post('/', [BangunanApplicationController::class, 'store'])->name('store');
@@ -138,6 +143,7 @@ Route::middleware(['auth', 'bangunan.legacy'])->prefix('bangunan')->name('bangun
 
 // Jabatan Kejuruteraan: LJUP applications and their AIRS checks (ADR-383).
 Route::middleware(['auth', 'kejuruteraan.access'])->prefix('kejuruteraan')->name('kejuruteraan.')->group(function (): void {
+    Route::get('/dashboard', DashboardController::class)->defaults('department', 'kejuruteraan')->name('dashboard');
     Route::get('/', [KejuruteraanApplicationController::class, 'index'])->name('index');
     Route::get('/applications/{application}', [KejuruteraanApplicationController::class, 'show'])->whereUlid('application')->name('show');
     Route::post('/applications/{application}/recommendations', [KejuruteraanApplicationController::class, 'storeRecommendation'])
@@ -152,6 +158,7 @@ Route::middleware(['auth', 'kejuruteraan.access'])->prefix('kejuruteraan')->name
 });
 
 Route::middleware(['auth', 'landskap.access'])->prefix('landskap')->name('landskap.')->group(function (): void {
+    Route::get('/dashboard', DashboardController::class)->defaults('department', 'landskap')->name('dashboard');
     Route::get('/', [LandskapApplicationController::class, 'index'])->name('index');
     Route::get('/create', [LandskapApplicationController::class, 'create'])->name('create');
     Route::post('/', [LandskapApplicationController::class, 'store'])->name('store');

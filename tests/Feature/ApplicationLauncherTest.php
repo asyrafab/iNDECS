@@ -26,7 +26,7 @@ final class ApplicationLauncherTest extends TestCase
         $credentials = ['email' => 'pegawai@indecs.test', 'password' => 'password', '_welcome_login' => '1'];
         $this->post(route('login.store'), $credentials)->assertRedirect(route('home'));
         $this->get(route('home'))->assertOk()->assertSee('data-application-launcher', false)
-            ->assertSee('href="'.route('perancang.index').'"', false)
+            ->assertSee('href="'.route('perancang.dashboard').'"', false)
             ->assertDontSee('href="'.route('bangunan.index').'"', false)
             ->assertSee('href="'.route('osc.meetings.index').'"', false)
             ->assertDontSee('AIRS')->assertDontSee('data-login-dialog', false);

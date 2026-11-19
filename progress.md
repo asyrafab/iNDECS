@@ -2,6 +2,29 @@
 
 Last updated: 2026-11-19.
 
+## Department dashboards — 2026-11-19
+
+Added read-only dashboards for Perancang, Bangunan, Kejuruteraan and Landskap
+under each department's `/dashboard` route (ADR-408). The chooser, department
+switcher, sidebar and staff landing redirects open the dashboards, with existing
+application lists and record links retained. Engineering currently covers LJUP;
+PKT/PKP remain unavailable. Existing Landskap role/module setup remains a separate
+local activation requirement. No migration, seed or permission change was made.
+
+Application totals, the complete status breakdown and recent records share an
+authorised department/type/district query. Building families respect individual
+grants; LJUP retains unlocated-record visibility. Active task totals, own work,
+manual overdue counts and recent task links reuse the approved task access rules.
+Dashboard GETs preserve applications and audit/history. Responses are not cached.
+
+Browser review covered all four departmental test-data previews, both themes,
+desktop and mobile. The overview stacks below 901px and tables scroll within
+cards. Isolated PostgreSQL validation excludes concurrent legacy/GIS edits.
+Final full Unit/Feature suite: 915 tests passed, two optional fixtures skipped,
+4,730 assertions. Final focused checks: 37 tests / 334 assertions; all 40
+JavaScript tests, full Pint and the production build pass. See
+`docs/runbooks/department-dashboards.md`.
+
 ## Local task-permission activation — 2026-11-19
 
 At the owner's explicit request, ran only `OfficerTaskSeeder` against the local

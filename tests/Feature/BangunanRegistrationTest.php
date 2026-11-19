@@ -214,8 +214,8 @@ final class BangunanRegistrationTest extends TestCase
 
     public function test_building_officer_home_and_login_route_to_operational_module(): void
     {
-        $this->get(route('dashboard'))->assertRedirect(route('bangunan.index'));
-        $this->get(route('login'))->assertRedirect(route('bangunan.index'));
+        $this->get(route('dashboard'))->assertRedirect(route('bangunan.dashboard'));
+        $this->get(route('login'))->assertRedirect(route('bangunan.dashboard'));
     }
 
     public function test_workflow_seeder_can_be_repeated_without_duplicates_or_rewriting_versions(): void
