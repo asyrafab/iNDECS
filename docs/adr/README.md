@@ -183,3 +183,5 @@ Date: YYYY-MM-DD. Status: Proposed | Accepted | Superseded by ADR-MMM.
 - [ADR-405: Persistent floating-tool layout](ADR-405-persistent-floating-tool-layout.md) - per-officer position and disclosure preferences survive save/next.
 
 - [ADR-406: Guidance history preserves the applicant return URL](ADR-406-guidance-history-preserves-return-url.md)
+
+- [ADR-407: Shared application-linked officer work queue](ADR-407-shared-officer-work-queue.md)

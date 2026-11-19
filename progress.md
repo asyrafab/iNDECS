@@ -1,6 +1,62 @@
 # iNDECS Progress
 
-Last updated: 2026-11-18.
+Last updated: 2026-11-19.
+
+## Local task-permission activation — 2026-11-19
+
+At the owner's explicit request, ran only `OfficerTaskSeeder` against the local
+`iNDECS` database after checking that the task migration was already applied.
+Created a full custom-format backup, recorded its SHA-256 and verified its archive
+directory before changing grants. Private backup, before/after receipts and the
+role/render checks are under ignored `output/task-permission-activation-2026-11-19/`.
+
+Committed three task permissions and 38 scoped grants in one transaction with
+the `officer_task_permissions_activated` audit event. Existing user roles,
+application workflow/assignment, task records and unrelated permissions were
+unchanged. Verified all six queue routes, successful queue rendering, supervisor
+assignment rights, ordinary-officer view/work-only rights and denial for public,
+inactive and library-only roles. No task records or user accounts were created.
+
+Perancang, Bangunan and LJUP are activated for their configured roles. Landskap
+officer roles/module grants are absent in this local database, so its setup
+remains pending. The approved task seeder preserves that module-access boundary;
+a separate reviewed Landskap setup is needed before task grants can be added.
+No unrelated seeder or migration was run. This local activation does not claim
+hosted CI or production acceptance.
+
+## Shared officer work queue — 2026-11-18
+
+Implemented ADR-407 on `codex/shared-officer-work-queue`: `/tugasan` provides
+own/team queues, application search, supervisor creation/reassignment/cancellation,
+assignee-only start/completion and immutable attributed history. The owner
+confirmed supervisor assignment and assigned-officer completion. Scoped task
+permissions intersect existing PKM/Bangunan/LJUP/PL access and district rules;
+LJUP's unlocated-record rule is preserved. Manual deadlines use the Malaysian
+display calendar and are not SLA deadlines. No application workflow/assignment,
+official outcome or AIRS finding changes when a task is completed.
+
+Task mutations, append-only action/evidence references and audit commit under a
+row lock and expected revision. Evidence pins scanned document revisions and
+checksums, protects referenced rows from deletion, and rechecks access/bytes on
+audited download. Migration rollback refuses existing tasks. Source and operating
+instructions are in `docs/runbooks/officer-work-queue.md`; normal application
+migrations and role grants have not been applied by this increment.
+
+Final full regression on the clean queue checkout and a private temporary
+PostgreSQL instance: 911 PHP tests / 4666 assertions passed, two optional fixtures
+skipped. Focused task/concurrency verification: 20 tests / 149 assertions passed,
+including the Malaysian-midnight edge case. All 40 JavaScript tests, Pint,
+migration round-trip and production build passed. The separate loopback instance
+on port 5548 retained the `indecs_test` safety guard; shared-server resets from
+concurrent tests had interrupted earlier attempts, not the final isolated run.
+Browser verification used isolated test data: supervisor create/assign, officer
+start/complete with evidence and completed-queue filtering succeeded; the source
+application remained registration/submitted, unassigned, at row version 1.
+Temporary browser server is stopped. Local evidence is in `output/work-queue-*`.
+
+Concurrent legacy-import/documentation work in the shared checkout is excluded
+from this increment. Review an isolated queue checkout; existing GitHub billing
+and unpatched picomatch advisory limitations still prevent a green hosted gate.
 
 ## Branch consolidation — 2026-11-18
 
