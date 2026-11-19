@@ -2,6 +2,19 @@
 
 Last updated: 2026-11-19.
 
+## Compact workspace navigation — 2026-11-19
+
+ADR-409 simplifies the shared sidebar at the owner's request. The native
+department switcher shows one compact current identity, hides alternate links
+while closed and omits the current workspace from its list. NADI now appears
+once, in that permission-filtered switcher. Department dashboard/record links
+precede shared officer tasks. Existing role checks and destinations are retained.
+
+Verified rendered navigation for transient administrator, planning, building and
+engineering roles without writing accounts or records. Browser verification
+covered closed/open switcher state, keyboard closure, alternate destinations and
+mobile menu open/close. Private preview: `output/sidebar-cleaned.jpg`.
+
 ## Department dashboards — 2026-11-19
 
 Added read-only dashboards for Perancang, Bangunan, Kejuruteraan and Landskap

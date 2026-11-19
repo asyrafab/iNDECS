@@ -797,6 +797,12 @@ h1, h2, h3, h4 { color: var(--color-navy); }
 .workspace-switcher small { display: block; color: var(--color-sidebar-muted); font-size: var(--font-size-xs); margin-bottom: var(--space-2); }
 .workspace-switcher strong, .workspace-switcher a { display: flex; align-items: center; gap: var(--space-2); font-weight: 500; }
 .workspace-switcher nav { display: grid; gap: var(--space-1); margin-top: var(--space-2); }
+.workspace-switcher:not([open]) > nav { display: none; }
+.workspace-current { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+.workspace-current small { margin-bottom: var(--space-1); }
+.workspace-switcher summary > .icon { flex: 0 0 auto; transition: transform var(--duration-fast) var(--ease-standard); }
+.workspace-switcher[open] summary > .icon { transform: rotate(180deg); }
+.workspace-switcher summary:hover { background: var(--color-sidebar-hover); border-radius: var(--radius-sm); }
 .workspace-switcher a { color: var(--color-sidebar-muted); padding: var(--space-3) var(--space-2); font-size: var(--font-size-sm); border-radius: var(--radius-sm); }
 .workspace-switcher a:hover, .workspace-switcher a[aria-current] { background: var(--color-sidebar-hover); color: var(--color-sidebar-text); }
 .nav-label { padding: var(--space-2) var(--space-3); color: var(--color-sidebar-muted); font-size: var(--font-size-xs); font-weight: 500; letter-spacing: .04em; text-transform: none; }

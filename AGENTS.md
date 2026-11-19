@@ -164,6 +164,11 @@ indicator uses one square = standalone application, two = linked pair, three = d
 
 ## Working rules
 
+- The workspace switcher (ADR-409) shows one compact current identity and hides
+  its alternate destinations while closed. Preserve native disclosure/keyboard
+  behaviour and permission filtering. NADI is reached through the switcher;
+  department menus put dashboards/records before shared officer tasks.
+
 - Department dashboards (ADR-408) share `dashboard.blade.php` and use
   `.department-dashboard-grid` with the existing `.panel-stack`, metric cards,
   detail grids and tables. The two-column overview stacks below 901px; task tables
