@@ -119,3 +119,23 @@ and real two-writer concurrency suites passed 20 tests / 149 assertions. An
 isolated browser journey verified supervisor creation/assignment, officer start
 and completion with pinned evidence, and completed-queue filtering; the linked
 application stayed registration/submitted, unassigned, at row version 1.
+
+## Local permission activation — 19 November 2026
+
+The owner explicitly approved activating task permissions in the local `iNDECS`
+database. Its task tables were already present. After a full custom-format backup
+and archive-directory verification, only `OfficerTaskSeeder` was run: three
+permission definitions and 38 scoped role grants committed with an administrative
+audit event. Existing user roles, application workflow/assignment, task records
+and unrelated permissions were preserved. No demo data, accounts or tasks were
+created. Role checks and queue rendering succeeded; six queue routes are registered.
+
+Perancang, Bangunan and LJUP have the underlying roles needed for these grants.
+Landskap's officer roles/module grants are absent in this local database and need
+separate reviewed setup before rerunning the task seeder. Preserve that boundary
+rather than granting module access as a side effect of task activation.
+
+Private backup, SHA-256, before/after grant receipts and verification results are
+kept in ignored `output/task-permission-activation-2026-11-19/`. Staff with the
+configured roles can refresh their workspace to see **Tugasan pegawai**; permission
+checks read current grants directly and require no session or password changes.

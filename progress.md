@@ -1,6 +1,28 @@
 # iNDECS Progress
 
-Last updated: 2026-11-18.
+Last updated: 2026-11-19.
+
+## Local task-permission activation — 2026-11-19
+
+At the owner's explicit request, ran only `OfficerTaskSeeder` against the local
+`iNDECS` database after checking that the task migration was already applied.
+Created a full custom-format backup, recorded its SHA-256 and verified its archive
+directory before changing grants. Private backup, before/after receipts and the
+role/render checks are under ignored `output/task-permission-activation-2026-11-19/`.
+
+Committed three task permissions and 38 scoped grants in one transaction with
+the `officer_task_permissions_activated` audit event. Existing user roles,
+application workflow/assignment, task records and unrelated permissions were
+unchanged. Verified all six queue routes, successful queue rendering, supervisor
+assignment rights, ordinary-officer view/work-only rights and denial for public,
+inactive and library-only roles. No task records or user accounts were created.
+
+Perancang, Bangunan and LJUP are activated for their configured roles. Landskap
+officer roles/module grants are absent in this local database, so its setup
+remains pending. The approved task seeder preserves that module-access boundary;
+a separate reviewed Landskap setup is needed before task grants can be added.
+No unrelated seeder or migration was run. This local activation does not claim
+hosted CI or production acceptance.
 
 ## Shared officer work queue — 2026-11-18
 
