@@ -164,6 +164,11 @@ indicator uses one square = standalone application, two = linked pair, three = d
 
 ## Working rules
 
+- ADR-411 removes the redundant Semua aplikasi switcher shortcut. Meeting
+  registration keeps the last authorised department's identity/menu using a
+  user-keyed session preference, revalidated on every render. Direct links fall
+  back to an authorised department; meeting-only users get no department links.
+
 - ADR-410 shows all staff applications in the chooser/switcher. Unauthorised
   entries are grey non-links with an accessible disabled state; route guards
   remain unchanged. `workspace-switcher.js` animates native disclosure height

@@ -2,6 +2,21 @@
 
 Last updated: 2026-11-19.
 
+## Meeting registration retains department navigation — 2026-11-19
+
+ADR-411 removes the redundant Semua aplikasi entry. `DepartmentWorkspace`
+remembers the last authorised department in a user-keyed session preference.
+Daftar Mesyuarat now retains that department's identity, dashboard, records and
+permitted registration links, while only the meeting link is active. Direct
+meeting links fall back to an authorised department; meeting-only users receive
+no invented departmental links. Remembered access is rechecked on every render.
+
+Verified 56 focused PHP tests / 497 assertions in a clean temporary checkout
+against isolated PostgreSQL, including all four departments, department changes,
+invalid preferences, revoked access and user-session isolation. Pint and browser
+verification passed. No normal-database seed/migration or permission change.
+Private sidebar preview: `output/meeting-department-navigation.jpg`.
+
 ## Workspace motion and application availability — 2026-11-19
 
 ADR-410 adds hover feedback and measured open/close motion to Ruang jabatan,
