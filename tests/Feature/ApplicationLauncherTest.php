@@ -84,6 +84,25 @@ final class ApplicationLauncherTest extends TestCase
         $this->artisan('staff:superadmin', ['staff_number' => '999999'])->assertFailed();
     }
 
+    public function test_staff_see_all_applications_without_receiving_unauthorised_links(): void
+    {
+        $user = User::query()->where('email', 'pegawai@indecs.test')->firstOrFail();
+        $entries = collect(app(ApplicationLauncher::class)->forUser($user))->keyBy('name');
+        $this->assertCount(7, $entries);
+        foreach (['iNDECS Building', 'iNDECS Engineering', 'iNDECS Landscape', 'E-Plan Submission', 'NADI'] as $name) {
+            $this->assertNull($entries[$name]['url'], $name);
+        }
+        $this->assertSame(route('osc.meetings.index'), $entries['Daftar Mesyuarat']['url']);
+        $this->actingAs($user)->get(route('perancang.dashboard'))->assertOk()
+            ->assertSee('iNDECS Landscape')->assertSee('aria-disabled="true"', false)->assertSee('Daftar Mesyuarat')
+            ->assertDontSee('href="'.route('landskap.dashboard').'"', false);
+        $this->get(route('landskap.dashboard'))->assertForbidden();
+        DB::table('core.role_permissions')->where('role_id', 'planning_officer')->where('permission_name', 'like', 'osc.%')->delete();
+        $entries = collect(app(ApplicationLauncher::class)->forUser($user))->keyBy('name');
+        $this->assertNull($entries['Daftar Mesyuarat']['url']);
+        $this->get(route('osc.meetings.index'))->assertForbidden();
+    }
+
     public function test_public_homepage_login_only_shows_public_account_access(): void
     {
         $user = User::factory()->create(['account_type' => 'public', 'role' => 'public_applicant', 'department_id' => null, 'email_verified_at' => now()]);

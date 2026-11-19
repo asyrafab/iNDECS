@@ -374,6 +374,12 @@ capped at 1440ms. Exponential coasting uses exact frame-independent integration.
 
 ## 13. Application chooser (ADR-344)
 
+ADR-410 (19 November 2026) updates staff visibility: show all departmental and
+cooperating application entries, with grey disabled non-links where access is
+absent or deployment is unavailable. Existing route guards remain unchanged.
+The switcher uses the same registry; Daftar Mesyuarat is a separate registration
+module under Ruang kerja, while NADI is the separate meeting application.
+
 The authenticated homepage opens `.application-dialog` with a responsive
 `.application-grid` of `.application-tile` entries and distinct local Lucide icons
 in `.application-icon`. Filter links server-side using existing module access

@@ -164,10 +164,17 @@ indicator uses one square = standalone application, two = linked pair, three = d
 
 ## Working rules
 
+- ADR-410 shows all staff applications in the chooser/switcher. Unauthorised
+  entries are grey non-links with an accessible disabled state; route guards
+  remain unchanged. `workspace-switcher.js` animates native disclosure height
+  using shared motion tokens, supports rapid reversal and honours reduced motion.
+  NADI is the separate meeting application (currently without a launch URL).
+  Existing `osc.*` registration is **Ruang kerja > Daftar Mesyuarat**.
+
 - The workspace switcher (ADR-409) shows one compact current identity and hides
   its alternate destinations while closed. Preserve native disclosure/keyboard
-  behaviour and permission filtering. NADI is reached through the switcher;
-  department menus put dashboards/records before shared officer tasks.
+  behaviour and permission checks. ADR-410 supersedes its NADI shortcut and
+  hidden unauthorised/current entries; registration is now Daftar Mesyuarat.
 
 - Department dashboards (ADR-408) share `dashboard.blade.php` and use
   `.department-dashboard-grid` with the existing `.panel-stack`, metric cards,

@@ -2,6 +2,26 @@
 
 Last updated: 2026-11-19.
 
+## Workspace motion and application availability — 2026-11-19
+
+ADR-410 adds hover feedback and measured open/close motion to Ruang jabatan,
+including rapid reversal, keyboard/native fallback and reduced-motion handling.
+Staff now see all four departments, NADI and E-Plan Submission in the switcher;
+unavailable entries are grey non-links with accessible disabled states. The
+homepage chooser uses the same availability registry and keeps Portal Awam
+separate. No permission, account or backend route was changed.
+
+Existing `osc.*` registration is now **Ruang kerja > Daftar Mesyuarat**. Its
+homepage module entry preserves meeting-only staff access. NADI remains a
+separate unavailable meeting application until its launch URL is configured.
+Registration context/heading no longer claims to be the NADI application.
+
+Validation: 52 focused PHP tests / 478 assertions and all 40 JavaScript tests
+passed, plus Pint, script syntax and four-role render checks. Browser checks
+covered hover scale, animated expansion/collapse, rapid reversal, keyboard,
+grey non-links, reduced motion and mobile navigation. The normal database was
+not seeded or migrated. Concurrent legacy/GIS edits remain excluded.
+
 ## Compact workspace navigation — 2026-11-19
 
 ADR-409 simplifies the shared sidebar at the owner's request. The native

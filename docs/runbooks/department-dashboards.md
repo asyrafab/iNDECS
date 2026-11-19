@@ -10,6 +10,11 @@ ADR-408 adds a dashboard to each existing departmental workspace:
 | Landskap | `/landskap/dashboard` | PL |
 
 The chooser, department switcher and staff landing routes open these pages.
+ADR-410 shows all staff applications in both selectors; absent access is a grey
+disabled non-link. Existing module guards remain authoritative. The native
+workspace switcher animates using shared motion tokens and honours reduced motion.
+**Daftar Mesyuarat** under **Ruang kerja** uses existing `osc.*` registration;
+NADI is a distinct unavailable application until its own launch URL is configured.
 Existing application list and record links remain valid. `/dashboard` retains
 the planning response and routes other staff to an authorised departmental page.
 Public accounts continue to use the public portal.

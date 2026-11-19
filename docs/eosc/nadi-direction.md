@@ -26,6 +26,11 @@ One NADI application can host meeting-specific modules. eOSC does not define the
 
 ## Intended eOSC journey
 
+Navigation clarification (ADR-410, 19 November 2026): iNDECS labels the existing
+registration workspace **Daftar Mesyuarat** under **Ruang kerja**. Its `osc.*`
+routes and access rules remain unchanged. NADI is listed separately as the
+meeting application, unavailable until a launch destination is configured.
+
 1. Officers register each paper in eOSC within iNDECS and assign it to the intended meeting, including papers without a linked departmental application where permitted.
 2. The secretary prepares and publishes the meeting agenda through the agreed preparation workflow. Exact ownership of agenda ordering/publishing screens is to be reconciled with the existing implementation.
 3. NADI opens the assigned eOSC meeting and its authorised, versioned papers; presenters and members work within the meeting context. They do not re-register the same papers in NADI.
