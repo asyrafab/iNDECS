@@ -185,3 +185,13 @@ Date: YYYY-MM-DD. Status: Proposed | Accepted | Superseded by ADR-MMM.
 - [ADR-406: Guidance history preserves the applicant return URL](ADR-406-guidance-history-preserves-return-url.md)
 
 - [ADR-407: Shared application-linked officer work queue](ADR-407-shared-officer-work-queue.md)
+
+- [ADR-408: Authorised departmental dashboards](ADR-408-department-dashboards.md)
+
+- [ADR-409: Compact workspace navigation](ADR-409-compact-workspace-navigation.md)
+
+- [ADR-410: Workspace motion and application availability](ADR-410-workspace-motion-and-application-availability.md)
+
+- [ADR-411: Meeting registration preserves departmental navigation](ADR-411-meeting-navigation-preserves-department.md)
+
+- [ADR-412: Shared departmental workspace menu](ADR-412-shared-department-workspace-menu.md)

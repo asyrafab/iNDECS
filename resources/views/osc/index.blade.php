@@ -5,7 +5,7 @@
     $badge = ['draft' => 'status-pending', 'agenda_published' => 'status-info', 'in_progress' => 'status-attention', 'closed' => 'status-compliant', 'minutes_confirmed' => 'status-compliant'];
 @endphp
 <div class="page-heading heading-with-action">
-    <div><span class="eyebrow">NADI · eOSC · Bilik mesyuarat OSC</span><h1>Mesyuarat OSC</h1><p>Mesyuarat Jawatankuasa OSC yang boleh anda lihat, beserta agenda dan kertas kerja.</p></div>
+    <div><span class="eyebrow">eOSC · Pendaftaran kertas mesyuarat</span><h1>Daftar Mesyuarat</h1><p>Mesyuarat Jawatankuasa OSC yang boleh anda lihat, beserta agenda dan kertas kerja.</p></div>
     @if ($canManage)
         <a href="{{ route('osc.meetings.create') }}" class="button button-primary"><x-icon name="plus" />Mesyuarat baharu</a>
     @endif

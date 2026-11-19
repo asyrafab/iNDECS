@@ -2,6 +2,93 @@
 
 Last updated: 2026-11-19.
 
+## Shared department menu across tasks and library — 2026-11-19
+
+ADR-412 extends retained department identity/navigation to officer tasks and
+the department library. One menu definition and partial now supply the same
+Ruang kerja/Bantuan functions for all four departments, including disabled
+non-links for unavailable actions. Engineering officer registration remains
+unavailable; Bangunan keeps authorised legacy lookup as an extra. Shared pages
+highlight only their own link. Record queries, filters and permissions are
+unchanged; no normal-database migration or seed was run.
+
+Validation on a clean checkout/isolated PostgreSQL: 116 focused tests passed,
+1,058 assertions, including every department's task/library navigation, uniform
+functions, active state, library-only access, meeting navigation and existing
+task/library authorisation. Pint and desktop/mobile browser checks passed.
+Private preview: `output/shared-library-navigation.jpg`.
+
+## Meeting registration retains department navigation — 2026-11-19
+
+ADR-411 removes the redundant Semua aplikasi entry. `DepartmentWorkspace`
+remembers the last authorised department in a user-keyed session preference.
+Daftar Mesyuarat now retains that department's identity, dashboard, records and
+permitted registration links, while only the meeting link is active. Direct
+meeting links fall back to an authorised department; meeting-only users receive
+no invented departmental links. Remembered access is rechecked on every render.
+
+Verified 56 focused PHP tests / 497 assertions in a clean temporary checkout
+against isolated PostgreSQL, including all four departments, department changes,
+invalid preferences, revoked access and user-session isolation. Pint and browser
+verification passed. No normal-database seed/migration or permission change.
+Private sidebar preview: `output/meeting-department-navigation.jpg`.
+
+## Workspace motion and application availability — 2026-11-19
+
+ADR-410 adds hover feedback and measured open/close motion to Ruang jabatan,
+including rapid reversal, keyboard/native fallback and reduced-motion handling.
+Staff now see all four departments, NADI and E-Plan Submission in the switcher;
+unavailable entries are grey non-links with accessible disabled states. The
+homepage chooser uses the same availability registry and keeps Portal Awam
+separate. No permission, account or backend route was changed.
+
+Existing `osc.*` registration is now **Ruang kerja > Daftar Mesyuarat**. Its
+homepage module entry preserves meeting-only staff access. NADI remains a
+separate unavailable meeting application until its launch URL is configured.
+Registration context/heading no longer claims to be the NADI application.
+
+Validation: 52 focused PHP tests / 478 assertions and all 40 JavaScript tests
+passed, plus Pint, script syntax and four-role render checks. Browser checks
+covered hover scale, animated expansion/collapse, rapid reversal, keyboard,
+grey non-links, reduced motion and mobile navigation. The normal database was
+not seeded or migrated. Concurrent legacy/GIS edits remain excluded.
+
+## Compact workspace navigation — 2026-11-19
+
+ADR-409 simplifies the shared sidebar at the owner's request. The native
+department switcher shows one compact current identity, hides alternate links
+while closed and omits the current workspace from its list. NADI now appears
+once, in that permission-filtered switcher. Department dashboard/record links
+precede shared officer tasks. Existing role checks and destinations are retained.
+
+Verified rendered navigation for transient administrator, planning, building and
+engineering roles without writing accounts or records. Browser verification
+covered closed/open switcher state, keyboard closure, alternate destinations and
+mobile menu open/close. Private preview: `output/sidebar-cleaned.jpg`.
+
+## Department dashboards — 2026-11-19
+
+Added read-only dashboards for Perancang, Bangunan, Kejuruteraan and Landskap
+under each department's `/dashboard` route (ADR-408). The chooser, department
+switcher, sidebar and staff landing redirects open the dashboards, with existing
+application lists and record links retained. Engineering currently covers LJUP;
+PKT/PKP remain unavailable. Existing Landskap role/module setup remains a separate
+local activation requirement. No migration, seed or permission change was made.
+
+Application totals, the complete status breakdown and recent records share an
+authorised department/type/district query. Building families respect individual
+grants; LJUP retains unlocated-record visibility. Active task totals, own work,
+manual overdue counts and recent task links reuse the approved task access rules.
+Dashboard GETs preserve applications and audit/history. Responses are not cached.
+
+Browser review covered all four departmental test-data previews, both themes,
+desktop and mobile. The overview stacks below 901px and tables scroll within
+cards. Isolated PostgreSQL validation excludes concurrent legacy/GIS edits.
+Final full Unit/Feature suite: 915 tests passed, two optional fixtures skipped,
+4,730 assertions. Final focused checks: 37 tests / 334 assertions; all 40
+JavaScript tests, full Pint and the production build pass. See
+`docs/runbooks/department-dashboards.md`.
+
 ## Local task-permission activation — 2026-11-19
 
 At the owner's explicit request, ran only `OfficerTaskSeeder` against the local

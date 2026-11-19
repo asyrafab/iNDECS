@@ -164,6 +164,36 @@ indicator uses one square = standalone application, two = linked pair, three = d
 
 ## Working rules
 
+- ADR-412 uses one `DepartmentWorkspace::menu()` definition and
+  `partials/workspace-navigation.blade.php` for every department. Tasks, library
+  and meeting registration keep the last authorised department's identity/menu.
+  Common Ruang kerja/Bantuan actions remain in the same order; unavailable actions
+  use disabled non-links. Engineering officer registration is not yet available.
+  Existing Bangunan legacy lookup remains an authorised extra. Menu context does
+  not silently filter task/library records or grant access.
+
+- ADR-411 removes the redundant Semua aplikasi switcher shortcut. Meeting
+  registration keeps the last authorised department's identity/menu using a
+  user-keyed session preference, revalidated on every render. Direct links fall
+  back to an authorised department; meeting-only users get no department links.
+
+- ADR-410 shows all staff applications in the chooser/switcher. Unauthorised
+  entries are grey non-links with an accessible disabled state; route guards
+  remain unchanged. `workspace-switcher.js` animates native disclosure height
+  using shared motion tokens, supports rapid reversal and honours reduced motion.
+  NADI is the separate meeting application (currently without a launch URL).
+  Existing `osc.*` registration is **Ruang kerja > Daftar Mesyuarat**.
+
+- The workspace switcher (ADR-409) shows one compact current identity and hides
+  its alternate destinations while closed. Preserve native disclosure/keyboard
+  behaviour and permission checks. ADR-410 supersedes its NADI shortcut and
+  hidden unauthorised/current entries; registration is now Daftar Mesyuarat.
+
+- Department dashboards (ADR-408) share `dashboard.blade.php` and use
+  `.department-dashboard-grid` with the existing `.panel-stack`, metric cards,
+  detail grids and tables. The two-column overview stacks below 901px; task tables
+  scroll within their card. Counts and links retain module/type/district access.
+
 - The approved workspace (ADR-311) has a persistent navy sidebar shared by all
   departments. On desktop the `.sidebar-edge-toggle` arrow on its right edge collapses it (`html[data-sidebar="collapsed"]`,
   remembered in `localStorage` key `indecs.sidebar` and applied by `theme.js` before paint); below 901px it is the

@@ -192,7 +192,7 @@ final class BangunanRegistrationTest extends TestCase
     {
         $record = app(BangunanRegistrationService::class)->register($this->payload(), $this->officer);
         DB::table('core.role_permissions')->where('role_id', 'building_officer')->whereIn('permission_name', ['bangunan.application.register', 'bangunan.application.review'])->delete();
-        $this->get(route('bangunan.index'))->assertOk()->assertDontSee('Daftar permohonan');
+        $this->get(route('bangunan.index'))->assertOk()->assertDontSee('href="'.route('bangunan.create').'"', false);
         $this->get(route('bangunan.create'))->assertForbidden();
         $this->post(route('bangunan.store'), $this->payload())->assertForbidden();
         $this->post(route('bangunan.transition', $record), $this->transitionPayload())->assertForbidden();
@@ -214,8 +214,8 @@ final class BangunanRegistrationTest extends TestCase
 
     public function test_building_officer_home_and_login_route_to_operational_module(): void
     {
-        $this->get(route('dashboard'))->assertRedirect(route('bangunan.index'));
-        $this->get(route('login'))->assertRedirect(route('bangunan.index'));
+        $this->get(route('dashboard'))->assertRedirect(route('bangunan.dashboard'));
+        $this->get(route('login'))->assertRedirect(route('bangunan.dashboard'));
     }
 
     public function test_workflow_seeder_can_be_repeated_without_duplicates_or_rewriting_versions(): void

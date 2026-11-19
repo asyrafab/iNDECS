@@ -94,10 +94,10 @@ final class LandskapWorkspaceTest extends TestCase
     {
         $this->get(route('home'))->assertOk()
             ->assertSee('iNDECS Landscape')
-            ->assertSee('href="'.route('landskap.index').'"', false)
+            ->assertSee('href="'.route('landskap.dashboard').'"', false)
             ->assertDontSee('href="'.route('bangunan.index').'"', false);
 
-        $this->get(route('dashboard'))->assertRedirect(route('landskap.index'));
+        $this->get(route('dashboard'))->assertRedirect(route('landskap.dashboard'));
         $this->get(route('landskap.index'))->assertOk()
             ->assertSee('iNDECS Landscape')
             ->assertSee('Jabatan Landskap')

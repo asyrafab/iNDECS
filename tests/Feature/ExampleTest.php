@@ -20,7 +20,7 @@ class ExampleTest extends TestCase
         $response
             ->assertOk()
             ->assertSee('iNDECS')
-            ->assertSee('Ringkasan PKM')
+            ->assertSee('Dashboard jabatan')
             ->assertDontSee('SKPB');
 
         $this->get(route('about'))->assertOk()->assertSee('Ruang kerja saya');

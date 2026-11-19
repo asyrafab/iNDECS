@@ -178,7 +178,7 @@ final class OscScreensTest extends TestCase
     {
         $application = $this->application();
         $this->actingAs($this->officer)->get(route('bangunan.show', $application))->assertOk()
-            ->assertSee('NADI')->assertSee('Bentang ke mesyuarat OSC')
+            ->assertSee('Daftar Mesyuarat')->assertSee('Bentang ke mesyuarat OSC')
             ->assertSee(route('osc.meetings.index', ['application' => $application->id]), false);
 
         $plain = User::factory()->create(['role' => 'planning_officer', 'department_id' => 'JPBD']);
@@ -189,7 +189,7 @@ final class OscScreensTest extends TestCase
         $noOsc = User::factory()->create(['role' => 'building_officer', 'department_id' => 'JBANG']);
         DB::table('core.role_permissions')->where('permission_name', 'like', 'osc.%')->where('role_id', 'building_officer')->delete();
         $this->actingAs($noOsc)->get(route('bangunan.show', $application))->assertOk()
-            ->assertDontSee('NADI')->assertDontSee('Bentang ke mesyuarat OSC');
+            ->assertDontSee('href="'.route('osc.meetings.index').'"', false)->assertDontSee('Bentang ke mesyuarat OSC');
     }
 
     public function test_pages_render_without_hard_coded_colours(): void

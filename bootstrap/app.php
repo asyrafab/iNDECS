@@ -40,11 +40,15 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             if ($user?->canAccessBangunan()) {
-                return route('bangunan.index');
+                return route('bangunan.dashboard');
             }
 
             if ($user?->canAccessLandskap() && ! $user->canAccessPkm()) {
-                return route('landskap.index');
+                return route('landskap.dashboard');
+            }
+
+            if ($user?->canAccessKejuruteraan() && ! $user->canAccessPkm()) {
+                return route('kejuruteraan.dashboard');
             }
 
             if ($user?->canAccessBangunanLegacy() && ! $user->canAccessPkm()) {

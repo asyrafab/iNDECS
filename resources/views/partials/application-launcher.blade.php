@@ -29,7 +29,7 @@
                         <span>{{ $application['description'] }}</span>
                     </a>
                 @else
-                    <div class="application-tile application-tile-unavailable">
+                    <div class="application-tile application-tile-unavailable" aria-disabled="true" title="{{ $application['unavailable'] ?? 'Tiada kebenaran akses' }}">
                         <span @class(['application-icon', 'application-icon-department' => isset($application['department']), 'application-icon-brand' => $brandLogo !== null, 'application-icon-esri' => ($application['brand'] ?? null) === 'esri'])>
                             @if (isset($application['department']))<x-department-icon :department="$application['department']" />@elseif ($brandLogo)<img class="application-brand-logo" src="{{ asset('img/'.$brandLogo) }}" alt="" aria-hidden="true" width="64" height="64">@else<x-icon :name="$application['icon']" />@endif
                         </span>

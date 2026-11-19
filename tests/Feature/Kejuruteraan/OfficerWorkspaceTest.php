@@ -129,6 +129,6 @@ final class OfficerWorkspaceTest extends TestCase
         $apps = app(ApplicationLauncher::class)->forUser($this->engineer());
         $tile = collect($apps)->firstWhere('name', 'iNDECS Engineering');
         $this->assertNotNull($tile);
-        $this->assertSame(route('kejuruteraan.index'), $tile['url']);
+        $this->assertSame(route('kejuruteraan.dashboard'), $tile['url']);
     }
 }
