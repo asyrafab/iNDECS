@@ -49,7 +49,7 @@ final class MeetingDepartmentNavigationTest extends TestCase
         $user = User::factory()->create(['role' => 'system_admin', 'department_id' => 'JPBD']);
         $this->actingAs($user)->get(route('bangunan.dashboard'))->assertOk();
         $this->get(route('perancang.dashboard'))->assertOk();
-        $this->get(route('osc.meetings.index'))->assertOk()->assertSee('Permohonan PKM')
+        $this->get(route('osc.meetings.index'))->assertOk()->assertSee('href="'.route('perancang.index').'"', false)
             ->assertSessionHas('workspace.department.'.$user->id, 'perancang');
     }
 
@@ -58,7 +58,7 @@ final class MeetingDepartmentNavigationTest extends TestCase
         $user = User::factory()->create(['role' => 'planning_officer', 'department_id' => 'JPBD']);
         foreach (['bangunan', ['invalid']] as $saved) {
             $this->actingAs($user)->withSession(['workspace.department.'.$user->id => $saved])
-                ->get(route('osc.meetings.index'))->assertOk()->assertSee('Permohonan PKM')
+                ->get(route('osc.meetings.index'))->assertOk()->assertSee('href="'.route('perancang.index').'"', false)
                 ->assertDontSee('href="'.route('bangunan.dashboard').'"', false);
         }
     }
@@ -80,7 +80,7 @@ final class MeetingDepartmentNavigationTest extends TestCase
         $first = User::factory()->create(['role' => 'system_admin', 'department_id' => 'JBANG']);
         $second = User::factory()->create(['role' => 'planning_officer', 'department_id' => 'JPBD']);
         $this->actingAs($first)->get(route('bangunan.dashboard'))->assertOk();
-        $this->actingAs($second)->get(route('osc.meetings.index'))->assertOk()->assertSee('Permohonan PKM')
+        $this->actingAs($second)->get(route('osc.meetings.index'))->assertOk()->assertSee('href="'.route('perancang.index').'"', false)
             ->assertDontSee('href="'.route('bangunan.dashboard').'"', false);
     }
 }

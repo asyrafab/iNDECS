@@ -2,6 +2,22 @@
 
 Last updated: 2026-11-19.
 
+## Shared department menu across tasks and library — 2026-11-19
+
+ADR-412 extends retained department identity/navigation to officer tasks and
+the department library. One menu definition and partial now supply the same
+Ruang kerja/Bantuan functions for all four departments, including disabled
+non-links for unavailable actions. Engineering officer registration remains
+unavailable; Bangunan keeps authorised legacy lookup as an extra. Shared pages
+highlight only their own link. Record queries, filters and permissions are
+unchanged; no normal-database migration or seed was run.
+
+Validation on a clean checkout/isolated PostgreSQL: 116 focused tests passed,
+1,058 assertions, including every department's task/library navigation, uniform
+functions, active state, library-only access, meeting navigation and existing
+task/library authorisation. Pint and desktop/mobile browser checks passed.
+Private preview: `output/shared-library-navigation.jpg`.
+
 ## Meeting registration retains department navigation — 2026-11-19
 
 ADR-411 removes the redundant Semua aplikasi entry. `DepartmentWorkspace`

@@ -2,7 +2,7 @@
     @continue(isset($application['module']))
     @php
         $available = filled($application['url']);
-        $current = isset($application['department']) && ! $isTasks && $application['department'] === $workspaceDepartmentIcon;
+        $current = isset($application['department']) && $application['department'] === $navigationDepartment;
         $reason = $application['unavailable'] ?? 'Tiada kebenaran akses';
     @endphp
     @if ($available)

@@ -39,6 +39,7 @@
   --width-esri-logo: 112px;
   --filter-esri-logo: none;
   --filter-unavailable: grayscale(1);
+  --opacity-control-disabled: .55;
   --filter-sidebar-provider: invert(1);
   --size-department-icon-compact: 32px;
   --size-department-icon-preview: 240px;

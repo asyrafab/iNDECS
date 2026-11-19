@@ -164,6 +164,14 @@ indicator uses one square = standalone application, two = linked pair, three = d
 
 ## Working rules
 
+- ADR-412 uses one `DepartmentWorkspace::menu()` definition and
+  `partials/workspace-navigation.blade.php` for every department. Tasks, library
+  and meeting registration keep the last authorised department's identity/menu.
+  Common Ruang kerja/Bantuan actions remain in the same order; unavailable actions
+  use disabled non-links. Engineering officer registration is not yet available.
+  Existing Bangunan legacy lookup remains an authorised extra. Menu context does
+  not silently filter task/library records or grant access.
+
 - ADR-411 removes the redundant Semua aplikasi switcher shortcut. Meeting
   registration keeps the last authorised department's identity/menu using a
   user-keyed session preference, revalidated on every render. Direct links fall

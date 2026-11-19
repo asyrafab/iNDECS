@@ -1,32 +1,19 @@
 @php
     $staff = auth()->user();
-    $canBangunan = $staff->canAccessBangunan();
-    $canPerancang = $staff->canAccessPkm();
-    $canLegacy = $staff->canAccessBangunanLegacy();
-    $canOsc = $staff->canAccessOsc();
-    $canKejuruteraan = $staff->canAccessKejuruteraan();
-    $canLandskap = $staff->canAccessLandskap();
-    $isTasks = request()->routeIs('tasks.*');
+    $workspaceContext = app(\App\Services\DepartmentWorkspace::class);
+    $navigationDepartment = $workspaceContext->resolve(request(), $staff);
+    $workspaceMenu = $workspaceContext->menu(request(), $staff, $navigationDepartment);
     $isOsc = request()->routeIs('osc.*');
-    $navigationDepartment = app(\App\Services\DepartmentWorkspace::class)->resolve(request(), $staff);
-    $isBangunan = (! $isOsc && request()->routeIs('bangunan.*')) || ($isOsc && $navigationDepartment === 'bangunan');
-    $isKejuruteraan = (! $isOsc && request()->routeIs('kejuruteraan.*')) || ($isOsc && $navigationDepartment === 'kejuruteraan');
-    $isLandskap = (! $isOsc && request()->routeIs('landskap.*')) || ($isOsc && $navigationDepartment === 'landskap');
-    $workspaceName = $isOsc && $navigationDepartment === null ? 'Daftar Mesyuarat' : ($isBangunan ? 'iNDECS Building' : ($isKejuruteraan ? 'iNDECS Engineering' : ($isLandskap ? 'iNDECS Landscape' : 'iNDECS Planning')));
-    $workspaceShort = $isOsc && $navigationDepartment === null ? 'Daftar Mesyuarat' : ($isBangunan ? 'Building' : ($isKejuruteraan ? 'Engineering' : ($isLandskap ? 'Landscape' : 'Planning')));
-    $workspaceDepartment = $isOsc && $navigationDepartment === null ? 'Pendaftaran kertas mesyuarat OSC' : ($isBangunan ? 'Jabatan Bangunan' : ($isKejuruteraan ? 'Jabatan Kejuruteraan' : ($isLandskap ? 'Jabatan Landskap' : 'Jabatan Perancang Bandar')));
-    $workspaceDepartmentIcon = $isBangunan ? 'bangunan' : ($isKejuruteraan ? 'kejuruteraan' : ($isLandskap ? 'landskap' : 'perancang'));
-    if ($isTasks) {
-        $workspaceName = 'iNDECS';
-        $workspaceShort = 'Tugasan pegawai';
-        $workspaceDepartment = 'Ruang kerja bersama';
-    }
-    $homeUrl = $isOsc && $navigationDepartment === null ? route('osc.meetings.index') : ($isBangunan ? ($canBangunan ? route('bangunan.dashboard') : route('bangunan.legacy.index')) : ($isKejuruteraan ? route('kejuruteraan.dashboard') : ($isLandskap ? route('landskap.dashboard') : route('perancang.dashboard'))));
-    if ($isTasks) {
-        $homeUrl = route('home');
-    }
-    $canRegisterBangunan = $canBangunan && collect(\App\Models\BangunanApplication::TYPES)->contains(fn ($family) => $staff->canPerformBangunan('access', $family) && $staff->canPerformBangunan('register', $family));
-    $canRegisterLandskap = $canLandskap && $staff->canPerformLandskap('register');
+    $identity = match ($navigationDepartment) {
+        'perancang' => ['iNDECS Planning', 'Planning', 'Jabatan Perancang Bandar'],
+        'bangunan' => ['iNDECS Building', 'Building', 'Jabatan Bangunan'],
+        'kejuruteraan' => ['iNDECS Engineering', 'Engineering', 'Jabatan Kejuruteraan'],
+        'landskap' => ['iNDECS Landscape', 'Landscape', 'Jabatan Landskap'],
+        default => ['iNDECS', $isOsc ? 'Daftar Mesyuarat' : 'Ruang kerja bersama', 'Ruang kerja bersama'],
+    };
+    [$workspaceName, $workspaceShort, $workspaceDepartment] = $identity;
+    $workspaceDepartmentIcon = $navigationDepartment;
+    $homeUrl = $workspaceMenu['work'][0]['url'] ?? $workspaceMenu['work'][1]['url'] ?? route('home');
 @endphp
 <!DOCTYPE html>
 <html lang="ms">
@@ -55,44 +42,13 @@
                 <span><strong>iNDECS</strong><small>Kawalan Pembangunan</small></span>
             </a>
             <details class="workspace-switcher">
-                <summary><span class="workspace-current">@if ($isTasks)<x-mark class="mark-reversed mark-small" />@elseif ($isOsc && $navigationDepartment === null)<x-eosc-icon compact />@else<x-department-icon :department="$workspaceDepartmentIcon" compact />@endif<span><small>Ruang jabatan</small><strong>{{ $workspaceShort }}</strong></span></span><x-icon name="chevron-down" /></summary>
+                <summary><span class="workspace-current">@if ($navigationDepartment)<x-department-icon :department="$workspaceDepartmentIcon" compact />@elseif ($isOsc)<x-eosc-icon compact />@else<x-mark class="mark-reversed mark-small" />@endif<span><small>Ruang jabatan</small><strong>{{ $workspaceShort }}</strong></span></span><x-icon name="chevron-down" /></summary>
                 <nav aria-label="Pilih ruang jabatan">
                     @include('partials.workspace-applications')
                 </nav>
             </details>
             <nav class="primary-nav" aria-label="Navigasi utama">
-                <span class="nav-label">Ruang kerja</span>
-                @if ($isTasks)
-                    @if ($canPerancang)<a class="nav-link" href="{{ route('perancang.index') }}"><x-department-icon department="perancang" compact />Permohonan Perancang</a>@endif
-                    @if ($canBangunan)<a class="nav-link" href="{{ route('bangunan.index') }}"><x-department-icon department="bangunan" compact />Permohonan Bangunan</a>@endif
-                    @if ($canKejuruteraan)<a class="nav-link" href="{{ route('kejuruteraan.index') }}"><x-department-icon department="kejuruteraan" compact />Permohonan LJUP</a>@endif
-                    @if ($canLandskap)<a class="nav-link" href="{{ route('landskap.index') }}"><x-department-icon department="landskap" compact />Permohonan Landskap</a>@endif
-                @elseif ($isBangunan)
-                    @if ($canBangunan)
-                    <a href="{{ route('bangunan.dashboard') }}" class="nav-link {{ request()->routeIs('bangunan.dashboard') ? 'active' : '' }}" @if (request()->routeIs('bangunan.dashboard')) aria-current="page" @endif><x-icon name="layout-dashboard" />Dashboard jabatan</a>
-                        <a href="{{ route('bangunan.index') }}" class="nav-link {{ request()->routeIs('bangunan.index', 'bangunan.show', 'bangunan.documents.*', 'bangunan.document-catalogue.*') ? 'active' : '' }}" @if (request()->routeIs('bangunan.index', 'bangunan.show', 'bangunan.documents.*', 'bangunan.document-catalogue.*')) aria-current="page" @endif><x-icon name="layout-dashboard" />Permohonan</a>
-                        @if ($canRegisterBangunan)<a href="{{ route('bangunan.create') }}" class="nav-link {{ request()->routeIs('bangunan.create') ? 'active' : '' }}" @if (request()->routeIs('bangunan.create')) aria-current="page" @endif><x-icon name="file-plus-2" />Daftar permohonan</a>@endif
-                    @endif
-                    @if ($canLegacy)<a href="{{ route('bangunan.legacy.index') }}" class="nav-link {{ request()->routeIs('bangunan.legacy.*') ? 'active' : '' }}" @if (request()->routeIs('bangunan.legacy.*')) aria-current="page" @endif><x-icon name="archive" />Carian Rekod Warisan</a>@endif
-                @elseif ($isOsc && $navigationDepartment === null)
-                    {{-- Meeting registration is shared below with its existing access guard. --}}
-                @elseif ($isKejuruteraan)
-                    <a href="{{ route('kejuruteraan.dashboard') }}" class="nav-link {{ request()->routeIs('kejuruteraan.dashboard') ? 'active' : '' }}" @if (request()->routeIs('kejuruteraan.dashboard')) aria-current="page" @endif><x-icon name="layout-dashboard" />Dashboard jabatan</a>
-                    <a href="{{ route('kejuruteraan.index') }}" class="nav-link {{ request()->routeIs('kejuruteraan.index', 'kejuruteraan.show') ? 'active' : '' }}" @if (request()->routeIs('kejuruteraan.index', 'kejuruteraan.show')) aria-current="page" @endif><x-icon name="files" />Permohonan LJUP</a>
-                @elseif ($isLandskap)
-                    <a href="{{ route('landskap.dashboard') }}" class="nav-link {{ request()->routeIs('landskap.dashboard') ? 'active' : '' }}" @if (request()->routeIs('landskap.dashboard')) aria-current="page" @endif><x-icon name="layout-dashboard" />Dashboard jabatan</a>
-                    <a href="{{ route('landskap.index') }}" class="nav-link {{ request()->routeIs('landskap.index', 'landskap.show', 'landskap.documents.*', 'landskap.document-catalogue.*') ? 'active' : '' }}" @if (request()->routeIs('landskap.index', 'landskap.show', 'landskap.documents.*', 'landskap.document-catalogue.*')) aria-current="page" @endif><x-icon name="layout-dashboard" />Permohonan</a>
-                    @if ($canRegisterLandskap)<a href="{{ route('landskap.create') }}" class="nav-link {{ request()->routeIs('landskap.create') ? 'active' : '' }}" @if (request()->routeIs('landskap.create')) aria-current="page" @endif><x-icon name="file-plus-2" />Daftar permohonan</a>@endif
-                @else
-                    <a href="{{ route('perancang.dashboard') }}" class="nav-link {{ request()->routeIs('dashboard', 'perancang.dashboard') ? 'active' : '' }}" @if (request()->routeIs('dashboard', 'perancang.dashboard')) aria-current="page" @endif><x-icon name="layout-dashboard" />Dashboard jabatan</a>
-                    <a href="{{ route('perancang.index') }}" class="nav-link {{ request()->routeIs('perancang.index', 'perancang.show') ? 'active' : '' }}" @if (request()->routeIs('perancang.index', 'perancang.show')) aria-current="page" @endif><x-icon name="files" />Permohonan PKM</a>
-                    @if ($staff->canPerformPkm('perancang.pkm.register'))<a href="{{ route('perancang.create') }}" class="nav-link {{ request()->routeIs('perancang.create') ? 'active' : '' }}" @if (request()->routeIs('perancang.create')) aria-current="page" @endif><x-icon name="file-plus-2" />Daftar PKM</a>@endif
-                @endif
-                @if (app(\App\Services\Tasks\OfficerTaskAccess::class)->types($staff) !== [])<a href="{{ route('tasks.index') }}" class="nav-link {{ $isTasks ? 'active' : '' }}" @if ($isTasks) aria-current="page" @endif><x-icon name="files" />Tugasan pegawai</a>@endif
-                @if ($canOsc)<a href="{{ route('osc.meetings.index') }}" class="nav-link {{ $isOsc ? 'active' : '' }}" @if ($isOsc) aria-current="page" @endif><x-icon name="folder-open" />Daftar Mesyuarat</a>@endif
-                <span class="nav-label nav-label-spaced">Bantuan</span>
-                @if ($staff->canViewLibrary())<a href="{{ route('library.index') }}" class="nav-link {{ request()->routeIs('library.*') ? 'active' : '' }}" @if (request()->routeIs('library.*')) aria-current="page" @endif><x-icon name="files" />Perpustakaan jabatan</a>@endif
-                <button class="nav-link" type="button" data-amira-open aria-controls="amira-panel" aria-expanded="false"><x-icon name="messages-square" />Panduan AMIRA</button>
+                @include('partials.workspace-navigation')
             </nav>
             <div class="sidebar-note"><x-mark class="mark-reversed mark-small" /><div><strong>Persekitaran iNDECS</strong><small>Majlis Bandaraya Seberang Perai</small></div></div>
         </aside>
@@ -100,7 +56,7 @@
         <div class="page-shell">
             <header class="topbar">
                 <button class="menu-button icon-button" type="button" data-menu-toggle aria-label="Buka menu" aria-expanded="false" aria-controls="sidebar"><x-icon name="menu" /></button>
-                <div class="topbar-context">@if ($isTasks)<x-mark class="mark-small" />@elseif ($isOsc && $navigationDepartment === null)<x-eosc-icon compact />@else<x-department-icon :department="$workspaceDepartmentIcon" compact />@endif<div><strong>{{ $workspaceName }}</strong><span>{{ $workspaceDepartment }}</span></div></div>
+                <div class="topbar-context">@if ($navigationDepartment)<x-department-icon :department="$workspaceDepartmentIcon" compact />@elseif ($isOsc)<x-eosc-icon compact />@else<x-mark class="mark-small" />@endif<div><strong>{{ $workspaceName }}</strong><span>{{ $workspaceDepartment }}</span></div></div>
                 <div class="topbar-actions">
                     @include('partials.theme-control')
                     <button class="button button-secondary button-small amira-toggle" type="button" data-amira-open aria-controls="amira-panel" aria-expanded="false"><x-icon name="messages-square" /><span>AMIRA</span></button>

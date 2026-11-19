@@ -192,7 +192,7 @@ final class BangunanRegistrationTest extends TestCase
     {
         $record = app(BangunanRegistrationService::class)->register($this->payload(), $this->officer);
         DB::table('core.role_permissions')->where('role_id', 'building_officer')->whereIn('permission_name', ['bangunan.application.register', 'bangunan.application.review'])->delete();
-        $this->get(route('bangunan.index'))->assertOk()->assertDontSee('Daftar permohonan');
+        $this->get(route('bangunan.index'))->assertOk()->assertDontSee('href="'.route('bangunan.create').'"', false);
         $this->get(route('bangunan.create'))->assertForbidden();
         $this->post(route('bangunan.store'), $this->payload())->assertForbidden();
         $this->post(route('bangunan.transition', $record), $this->transitionPayload())->assertForbidden();

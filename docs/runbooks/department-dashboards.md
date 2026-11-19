@@ -20,6 +20,14 @@ authorised department menu while using Daftar Mesyuarat. The user-keyed session
 preference stores only the department identifier, revalidates current access and
 falls back safely for direct meeting links. Meeting-only users do not receive
 department links. Daftar Mesyuarat alone is marked active on meeting pages.
+
+ADR-412 extends retained context to Tugasan pegawai and Perpustakaan jabatan.
+All four departments share the same Ruang kerja functions (dashboard,
+applications, registration, officer tasks, meeting registration) and Bantuan
+functions (library, AMIRA guidance). Unavailable/unauthorised actions are disabled
+non-links. Engineering officer registration remains unavailable. Bangunan retains
+its authorised legacy lookup as an extra. Task/library queries and selected
+filters remain unchanged; the remembered department controls navigation only.
 Existing application list and record links remain valid. `/dashboard` retains
 the planning response and routes other staff to an authorised departmental page.
 Public accounts continue to use the public portal.

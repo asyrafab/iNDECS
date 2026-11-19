@@ -1954,3 +1954,7 @@ html[data-amira-entrance="pending"] [data-amira-entrance] .amira-counter-compose
 /* ADR-408: departmental overview, with independent narrow-screen stacking. */
 .department-dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.8fr) minmax(0, .7fr); gap: var(--space-6); align-items: start; }
 @media (max-width: 900px) { .department-dashboard-grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* ADR-412: shared actions retain their place without granting unavailable access. */
+.nav-link[aria-disabled="true"] { cursor: not-allowed; opacity: var(--opacity-control-disabled); filter: var(--filter-unavailable); }
+.nav-link[aria-disabled="true"]:is(:hover, :active) { background: transparent; color: var(--color-sidebar-muted); }

@@ -193,3 +193,5 @@ Date: YYYY-MM-DD. Status: Proposed | Accepted | Superseded by ADR-MMM.
 - [ADR-410: Workspace motion and application availability](ADR-410-workspace-motion-and-application-availability.md)
 
 - [ADR-411: Meeting registration preserves departmental navigation](ADR-411-meeting-navigation-preserves-department.md)
+
+- [ADR-412: Shared departmental workspace menu](ADR-412-shared-department-workspace-menu.md)
